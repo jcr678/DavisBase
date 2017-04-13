@@ -1,5 +1,6 @@
 package parser;
 
+import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
 /**
@@ -16,5 +17,5 @@ public interface StatementInterface {
 
     public JSONObject getAttributes(String query);
 
-    public JSONObject getChildren(String query);
+    public JSONArray getChildren(String query);
 }

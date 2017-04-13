@@ -1,7 +1,9 @@
+import common.CatalogDB;
 import common.Constants;
 import common.Utils;
 import parser.QueryParser;
 
+import java.io.File;
 import java.util.Scanner;
 
 /**
@@ -21,7 +23,7 @@ public class DavisBase {
     static Scanner scanner = new Scanner(System.in).useDelimiter(";");
 
     public static void main(String args[]) {
-
+        initializeDatabase();
         QueryParser parser = new QueryParser();
 
         /* Display the welcome screen */
@@ -56,4 +58,16 @@ public class DavisBase {
         System.out.println(Utils.line("-",80));
     }
 
+    public static void initializeDatabase() {
+        File baseDir = new File(Constants.DEFAULT_DATA_DIRNAME);
+        if(baseDir.exists()) {
+            File catalogDir = new File(Constants.DEFAULT_DATA_DIRNAME + "/" + Constants.DEFAULT_CATALOG_DATABASENAME);
+            if(!catalogDir.exists()) {
+                if(catalogDir.mkdir()) {
+                    new CatalogDB().createCatalogDB();
+                }
+            }
+        }
+
+    }
 }

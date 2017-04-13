@@ -79,10 +79,10 @@ public class CreateStatement implements StatementInterface {
                 StorageManager manager = new StorageManager();
                 String tableName = (String) createTableJSON.get(TABLE_NAME);
                 if(isSystemTable) {
-                    manager.createFile(Constants.DEFAULT_DATA_DIRNAME + "/" + databaseName, tableName + Constants.DEFAULT_FILE_EXTENSION);
+                    manager.createTable(Constants.DEFAULT_DATA_DIRNAME + "/" + databaseName, tableName + Constants.DEFAULT_FILE_EXTENSION);
                 }
                 else if(!isSystemTable) {
-                    manager.createFile(Constants.DEFAULT_DATA_DIRNAME + "/" + databaseName + "/" + tableName, tableName + "/" + Constants.DEFAULT_FILE_EXTENSION);
+                    manager.createTable(Constants.DEFAULT_DATA_DIRNAME + "/" + databaseName + "/" + tableName, tableName + "/" + Constants.DEFAULT_FILE_EXTENSION);
                 }
             }
         }

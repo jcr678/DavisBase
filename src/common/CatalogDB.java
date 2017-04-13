@@ -14,13 +14,13 @@ public class CatalogDB {
     public boolean createCatalogDB() {
         StorageManager manager = new StorageManager();
         CreateStatement statement = new CreateStatement();
-        manager.createFile(Utils.getSystemDatabasePath(), Constants.SYSTEM_TABLES_TABLENAME + Constants.DEFAULT_FILE_EXTENSION);
-        manager.createFile(Utils.getSystemDatabasePath(), Constants.SYSTEM_COLUMNS_TABLENAME + Constants.DEFAULT_FILE_EXTENSION);
+        manager.createTable(Utils.getSystemDatabasePath(), Constants.SYSTEM_TABLES_TABLENAME + Constants.DEFAULT_FILE_EXTENSION);
+        manager.createTable(Utils.getSystemDatabasePath(), Constants.SYSTEM_COLUMNS_TABLENAME + Constants.DEFAULT_FILE_EXTENSION);
         List<String> columnNameList = new ArrayList<>();
         List<String> columnDataTypeList = new ArrayList<>();
         List<String> columnKeyConstraintList = new ArrayList<>();
         List<String> columnNullConstraintList = new ArrayList<>();
-        int startingRowId = statement.updateSystemTablesTable(Constants.SYSTEM_TABLES_TABLENAME, columnNameList.size());
+        int startingRowId = statement.updateSystemTablesTable(Constants.SYSTEM_TABLES_TABLENAME, 5);
         if(startingRowId != -1) {
             columnNameList.add("rowid");
             columnNameList.add("table_name");
@@ -44,7 +44,7 @@ public class CatalogDB {
             columnNullConstraintList.add("NO");
             statement.updateSystemColumnsTable(Constants.SYSTEM_TABLES_TABLENAME, startingRowId, columnNameList, columnDataTypeList, columnKeyConstraintList, columnNullConstraintList);
         }
-        startingRowId = statement.updateSystemTablesTable(Constants.SYSTEM_COLUMNS_TABLENAME, 6);
+        startingRowId = statement.updateSystemTablesTable(Constants.SYSTEM_COLUMNS_TABLENAME, 7);
         if(startingRowId != -1) {
             columnNameList.clear();
             columnDataTypeList.clear();

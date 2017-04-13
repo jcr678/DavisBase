@@ -20,13 +20,28 @@ public class StorageManager {
 
     public static String DEFAULT_DATA_PATH = Constants.DEFAULT_DATA_DIRNAME;
 
-    public boolean createFile(String filePath, String fileName) {
+    public boolean createDatabase(String databaseName) {
         try {
-            File dirFile = new File(filePath);
+            File dirFile = new File(DEFAULT_DATA_PATH + "/" + databaseName);
+            if(dirFile.exists()) {
+                System.out.println("Database " + databaseName + " already exists!");
+                return false;
+            }
+            return dirFile.mkdir();
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    public boolean createTable(String databaseName, String tableName) {
+        try {
+            File dirFile = new File(databaseName);
             if(!dirFile.exists()) {
                 dirFile.mkdir();
             }
-            File file = new File(filePath + "/" + fileName);
+            File file = new File(databaseName + "/" + tableName);
             if(file.exists()) {
                 return false;
             }
@@ -52,6 +67,10 @@ public class StorageManager {
                 RandomAccessFile randomAccessFile = new RandomAccessFile(file, "rw");
                 Page page = getPage(file, record.getRowId());
                 if(page == null) return false;
+                if(!checkSpaceRequirements(page, record)) {
+                    System.out.println("Page Over Flow!");
+                    return false;
+                }
                 short address = (short) getAddress(file, record.getRowId(), page.getPageNumber());
                 page.setNumberOfCells((byte)(page.getNumberOfCells() + 1));
                 page.setStartingAddress((short) (page.getStartingAddress() - record.getSize() - record.getHeaderSize()));
@@ -76,6 +95,15 @@ public class StorageManager {
             e.printStackTrace();
             return false;
         }
+    }
+
+    private boolean checkSpaceRequirements(Page page, DataRecord record) {
+        if(page != null && record != null) {
+            short endingAddress = page.getStartingAddress();
+            short startingAddress = (short) (Page.getHeaderFixedLength() + (page.getRecordAddressList().size() * Short.BYTES));
+            return (record.getSize() + record.getHeaderSize() + Short.BYTES) <= (endingAddress - startingAddress);
+        }
+        return false;
     }
 
     private Page getPage(File file, int rowId) {
@@ -315,8 +343,9 @@ public class StorageManager {
                                 return record;
                             }
                         }
-                        if(page.getPageType() == Page.RIGHTMOST_PAGE)
+                        if(page.getRightNodeAddress() == Page.RIGHTMOST_PAGE)
                             break;
+                        page = readPageHeader(randomAccessFile, page.getRightNodeAddress());
                     }
                 }
             }

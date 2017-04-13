@@ -10,6 +10,7 @@ import storage.StorageManager;
 import storage.model.DataRecord;
 import storage.model.Page;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -100,7 +101,12 @@ public class CreateStatement implements StatementInterface {
          *      5       nxt_avl_col_tbl_rowid                   INT
          */
         StorageManager manager = new StorageManager();
-        if(manager.findRecord(Utils.getSystemDatabasePath(), Constants.SYSTEM_TABLES_TABLENAME, (byte) 1, new DT_Text(tableName)) == null) {
+        List<Byte> columnIndexList = new ArrayList<>();
+        columnIndexList.add((byte) 1);
+        List<Object> valueList = new ArrayList<>();
+        valueList.add(new DT_Text(tableName));
+        List<DataRecord> result = manager.findRecord(Utils.getSystemDatabasePath(), Constants.SYSTEM_TABLES_TABLENAME, columnIndexList, valueList, true);
+        if(result != null && result.size() == 0) {
             int returnValue = 1;
             Page<DataRecord> page = manager.getLastRecordAndPage(Utils.getSystemDatabasePath(), Constants.SYSTEM_TABLES_TABLENAME);
             //Check if record exists
@@ -123,7 +129,7 @@ public class CreateStatement implements StatementInterface {
                 record.getColumnValueList().add(new DT_Int(columnCount + 1));
             }
             else {
-                DT_Int startingColumnIndex = (DT_Int) lastRecord.getColumnValueList().get(3);
+                DT_Int startingColumnIndex = (DT_Int) lastRecord.getColumnValueList().get(4);
                 returnValue = startingColumnIndex.getValue();
                 record.getColumnValueList().add(new DT_Int(returnValue));
                 record.getColumnValueList().add(new DT_Int(returnValue + columnCount));

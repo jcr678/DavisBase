@@ -32,4 +32,11 @@ public interface StatementKeywords {
     String HELP_STATEMENT = "help";
     int EXIT_STATEMENT_CODE = 100;
     int HELP_STATEMENT_CODE = 101;
+
+    //Where condition keywords
+    short EQUALS = 0;
+    short LESS_THAN = 1;
+    short GREATER_THAN = 2;
+    short LESS_THAN_EQUALS = 3;
+    short GREATER_THAN_EQUALS = 4;
 }

@@ -7,7 +7,9 @@ public class DT_Text {
 
     private String value;
 
-    public static final byte serialCode = 0x0C;
+    public static final byte valueSerialCode = 0x0C;
+
+    public static final byte nullSerialCode = 0x00;
 
     private boolean isNull;
 
@@ -17,7 +19,7 @@ public class DT_Text {
     }
 
     public DT_Text(String value) {
-        this(value == null ? "" : value, value == null);
+        this(value, value == null);
     }
 
     public DT_Text(String value, boolean isNull) {
@@ -35,9 +37,9 @@ public class DT_Text {
 
     public byte getSerialCode() {
         if(isNull)
-            return serialCode;
+            return nullSerialCode;
         else
-            return (byte)(serialCode + this.value.length());
+            return (byte)(valueSerialCode + this.value.length());
     }
 
     public boolean isNull() {
@@ -48,5 +50,9 @@ public class DT_Text {
         isNull = aNull;
     }
 
-    public int getSize() { return this.value.length(); }
+    public int getSize() {
+        if(isNull)
+            return 0;
+        return this.value.length();
+    }
 }

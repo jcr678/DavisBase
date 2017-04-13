@@ -11,6 +11,7 @@ import storage.model.PointerRecord;
 import java.io.File;
 import java.io.IOException;
 import java.io.RandomAccessFile;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -272,7 +273,8 @@ public class StorageManager {
                         break;
 
                     case Constants.TEXT:
-                        randomAccessFile.writeBytes(((DT_Text) object).getValue());
+                        if(((DT_Text) object).getValue() != null)
+                            randomAccessFile.writeBytes(((DT_Text) object).getValue());
                         break;
 
                     default:
@@ -286,67 +288,79 @@ public class StorageManager {
         return true;
     }
 
-    public DataRecord findRecord(String databaseName, String tableName, byte columnIndex, Object value) {
+    public List<DataRecord> findRecord(String databaseName, String tableName, List<Byte> columnIndexList, List<Object> valueList, boolean getOne) {
         try {
             File file = new File(databaseName + "/" + tableName + Constants.DEFAULT_FILE_EXTENSION);
             if (file.exists()) {
                 RandomAccessFile randomAccessFile = new RandomAccessFile(file, "r");
-                if(columnIndex > 0) {
+                if(columnIndexList.size() > 0) {
                     Page page = getFirstPage(file);
                     DataRecord record;
+                    List<DataRecord> matchRecords = new ArrayList<>();
                     boolean isMatch = false;
-                    while (true) {
+                    byte columnIndex;
+                    Object value;
+                    while (page != null) {
                         for (Object offset : page.getRecordAddressList()) {
                             record = getDataRecord(randomAccessFile, page.getPageNumber(), (short) offset);
-                            if(record != null && record.getColumnValueList().size() > columnIndex) {
-                                Object object = record.getColumnValueList().get(columnIndex);
-                                switch (Utils.resolveClass(value)) {
-                                    case Constants.TINYINT:
-                                        isMatch = ((DT_TinyInt) value).getValue() == ((DT_TinyInt) object).getValue();
-                                        break;
+                            for(int i = 0; i < columnIndexList.size(); i++) {
+                                columnIndex = columnIndexList.get(i);
+                                value = valueList.get(i);
+                                if (record != null && record.getColumnValueList().size() > columnIndex) {
+                                    Object object = record.getColumnValueList().get(columnIndex);
+                                    switch (Utils.resolveClass(value)) {
+                                        case Constants.TINYINT:
+                                            isMatch = ((DT_TinyInt) value).getValue() == ((DT_TinyInt) object).getValue();
+                                            break;
 
-                                    case Constants.SMALLINT:
-                                        isMatch = ((DT_SmallInt) value).getValue() == ((DT_SmallInt) object).getValue();
-                                        break;
+                                        case Constants.SMALLINT:
+                                            isMatch = ((DT_SmallInt) value).getValue() == ((DT_SmallInt) object).getValue();
+                                            break;
 
-                                    case Constants.INT:
-                                        isMatch = ((DT_Int) value).getValue() == ((DT_Int) object).getValue();
-                                        break;
+                                        case Constants.INT:
+                                            isMatch = ((DT_Int) value).getValue() == ((DT_Int) object).getValue();
+                                            break;
 
-                                    case Constants.BIGINT:
-                                        isMatch = ((DT_BigInt) value).getValue() == ((DT_BigInt) object).getValue();
-                                        break;
+                                        case Constants.BIGINT:
+                                            isMatch = ((DT_BigInt) value).getValue() == ((DT_BigInt) object).getValue();
+                                            break;
 
-                                    case Constants.REAL:
-                                        isMatch = ((DT_Real) value).getValue() == ((DT_Real) object).getValue();
-                                        break;
+                                        case Constants.REAL:
+                                            isMatch = ((DT_Real) value).getValue() == ((DT_Real) object).getValue();
+                                            break;
 
-                                    case Constants.DOUBLE:
-                                        isMatch = ((DT_Double) value).getValue() == ((DT_Double) object).getValue();
-                                        break;
+                                        case Constants.DOUBLE:
+                                            isMatch = ((DT_Double) value).getValue() == ((DT_Double) object).getValue();
+                                            break;
 
-                                    case Constants.DATE:
-                                        isMatch = ((DT_Date) value).getValue() == ((DT_Date) object).getValue();
-                                        break;
+                                        case Constants.DATE:
+                                            isMatch = ((DT_Date) value).getValue() == ((DT_Date) object).getValue();
+                                            break;
 
-                                    case Constants.DATETIME:
-                                        isMatch = ((DT_DateTime) value).getValue() == ((DT_DateTime) object).getValue();
-                                        break;
+                                        case Constants.DATETIME:
+                                            isMatch = ((DT_DateTime) value).getValue() == ((DT_DateTime) object).getValue();
+                                            break;
 
-                                    case Constants.TEXT:
-                                        isMatch = ((DT_Text) value).getValue().equalsIgnoreCase(((DT_Text) object).getValue());
-                                        break;
+                                        case Constants.TEXT:
+                                            isMatch = ((DT_Text) value).getValue().equalsIgnoreCase(((DT_Text) object).getValue());
+                                            break;
+                                    }
                                 }
                             }
                             if(isMatch) {
-                                randomAccessFile.close();
-                                return record;
+                                matchRecords.add(record);
+                                if(getOne) {
+                                    randomAccessFile.close();
+                                    return matchRecords;
+                                }
                             }
                         }
                         if(page.getRightNodeAddress() == Page.RIGHTMOST_PAGE)
                             break;
                         page = readPageHeader(randomAccessFile, page.getRightNodeAddress());
                     }
+                    randomAccessFile.close();
+                    return matchRecords;
                 }
             }
             else {
@@ -436,9 +450,7 @@ public class StorageManager {
                 }
                 for (byte i = 0; i < numberOfColumns; i++) {
                     switch (serialTypeCodes[i]) {
-                        case DT_TinyInt.nullSerialCode:
-                            record.getColumnValueList().add(new DT_TinyInt(randomAccessFile.readByte(), true));
-                            break;
+                        //case DT_TinyInt.nullSerialCode is overridden with DT_Text
 
                         case DT_TinyInt.valueSerialCode:
                             record.getColumnValueList().add(new DT_TinyInt(randomAccessFile.readByte()));
@@ -492,13 +504,16 @@ public class StorageManager {
                             record.getColumnValueList().add(new DT_DateTime(randomAccessFile.readLong()));
                             break;
 
-                        case DT_Text.serialCode:
+                        case DT_Text.nullSerialCode:
                             record.getColumnValueList().add(new DT_Text(null));
+
+                        case DT_Text.valueSerialCode:
+                            record.getColumnValueList().add(new DT_Text(""));
                             break;
 
                         default:
-                            if (serialTypeCodes[i] > DT_Text.serialCode) {
-                                byte length = (byte) (serialTypeCodes[i] - DT_Text.serialCode);
+                            if (serialTypeCodes[i] > DT_Text.valueSerialCode) {
+                                byte length = (byte) (serialTypeCodes[i] - DT_Text.valueSerialCode);
                                 char[] text = new char[length];
                                 for (byte j = 0; j < length; j++) {
                                     text[j] = (char) randomAccessFile.readByte();

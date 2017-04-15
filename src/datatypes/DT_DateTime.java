@@ -1,25 +1,17 @@
 package datatypes;
 
+import common.Constants;
+import datatypes.base.DT_Numeric;
+
 import java.util.Date;
 
 /**
  * Created by dakle on 10/4/17.
  */
-public class DT_DateTime {
-
-    private long value;
-
-    public static final byte valueSerialCode = 0x0A;
-
-    public static final byte nullSerialCode = 0x03;
-
-    private boolean isNull;
-
-    public static final short BYTES = Long.BYTES;
+public class DT_DateTime extends DT_Numeric<Long> {
 
     public DT_DateTime() {
-        value = 0;
-        isNull = true;
+        this(0, true);
     }
 
     public DT_DateTime(Long value) {
@@ -27,16 +19,9 @@ public class DT_DateTime {
     }
 
     public DT_DateTime(long value, boolean isNull) {
+        super(Constants.DATE_TIME_SERIAL_TYPE_CODE, Constants.EIGHT_BYTE_NULL_SERIAL_TYPE_CODE, Long.BYTES);
         this.value = value;
         this.isNull = isNull;
-    }
-
-    public long getValue() {
-        return value;
-    }
-
-    public void setValue(long value) {
-        this.value = value;
     }
 
     public String getStringValue() {
@@ -44,18 +29,31 @@ public class DT_DateTime {
         return date.toString();
     }
 
-    public byte getSerialCode() {
-        if(isNull)
-            return nullSerialCode;
-        else
-            return valueSerialCode;
+    @Override
+    public void increment(Long value) {
+        this.value += value;
     }
 
-    public boolean isNull() {
-        return isNull;
-    }
+    @Override
+    public boolean compare(DT_Numeric<Long> object2, short condition) {
+        switch (condition) {
+            case DT_Numeric.EQUALS:
+                return value == object2.getValue();
 
-    public void setNull(boolean aNull) {
-        isNull = aNull;
+            case DT_Numeric.GREATER_THAN:
+                return value > object2.getValue();
+
+            case DT_Numeric.LESS_THAN:
+                return value < object2.getValue();
+
+            case DT_Numeric.GREATER_THAN_EQUALS:
+                return value >= object2.getValue();
+
+            case DT_Numeric.LESS_THAN_EQUALS:
+                return value <= object2.getValue();
+
+            default:
+                return false;
+        }
     }
 }

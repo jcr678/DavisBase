@@ -18,9 +18,15 @@ public class DataRecord {
 
     private int rowId;
 
+    private int pageLocated;
+
+    private short offset;
+
     public DataRecord() {
         size = 0;
         columnValueList = new ArrayList<>();
+        pageLocated = -1;
+        offset = -1;
     }
 
     public List<Object> getColumnValueList() {
@@ -43,28 +49,28 @@ public class DataRecord {
         this.size = (short) (this.columnValueList.size() + 1);
         for(Object object: columnValueList) {
             if(object.getClass().equals(DT_TinyInt.class)) {
-                this.size += DT_TinyInt.BYTES;
+                this.size += ((DT_TinyInt) object).getSIZE();
             }
             else if(object.getClass().equals(DT_SmallInt.class)) {
-                this.size += DT_SmallInt.BYTES;
+                this.size += ((DT_SmallInt) object).getSIZE();
             }
             else if(object.getClass().equals(DT_Int.class)) {
-                this.size += DT_Int.BYTES;
+                this.size += ((DT_Int) object).getSIZE();
             }
             else if(object.getClass().equals(DT_BigInt.class)) {
-                this.size += DT_BigInt.BYTES;
+                this.size += ((DT_BigInt) object).getSIZE();
             }
             else if(object.getClass().equals(DT_Real.class)) {
-                this.size += DT_Real.BYTES;
+                this.size += ((DT_Real) object).getSIZE();
             }
             else if(object.getClass().equals(DT_Double.class)) {
-                this.size += DT_Double.BYTES;
+                this.size += ((DT_Double) object).getSIZE();
             }
             else if(object.getClass().equals(DT_DateTime.class)) {
-                size += DT_DateTime.BYTES;
+                size += ((DT_DateTime) object).getSIZE();
             }
             else if(object.getClass().equals(DT_Date.class)) {
-                this.size += DT_Date.BYTES;
+                this.size += ((DT_Date) object).getSIZE();
             }
             else if(object.getClass().equals(DT_Text.class)) {
                 this.size += ((DT_Text) object).getSize();
@@ -78,6 +84,22 @@ public class DataRecord {
 
     public void setRowId(int rowId) {
         this.rowId = rowId;
+    }
+
+    public int getPageLocated() {
+        return pageLocated;
+    }
+
+    public void setPageLocated(int pageLocated) {
+        this.pageLocated = pageLocated;
+    }
+
+    public short getOffset() {
+        return offset;
+    }
+
+    public void setOffset(short offset) {
+        this.offset = offset;
     }
 
     public byte[] getSerialTypeCodes() {

@@ -45,11 +45,17 @@ public class Page<T> {
         this.pageRecords = new ArrayList<>();
     }
 
-    public static Page createNewEmptyPage() {
-        Page<DataRecord> page = new Page<>();
+    public Page(int pageNumber) {
+        this.recordAddressList = new ArrayList<>();
+        this.pageRecords = new ArrayList<>();
+        this.pageNumber = pageNumber;
+        this.startingAddress = (short) (PAGE_SIZE - 1);
+    }
+
+    public static <T> Page<T> createNewEmptyPage(T object) {
+        Page<T> page = new Page<>(0);
         page.setPageType(Page.LEAF_TABLE_PAGE);
         page.setRightNodeAddress(Page.RIGHTMOST_PAGE);
-        page.setStartingAddress((short)(Page.PAGE_SIZE - 1));
         page.setNumberOfCells((byte)0x00);
         page.setRecordAddressList(new ArrayList<>());
         page.setPageRecords(new ArrayList<>());
@@ -66,6 +72,10 @@ public class Page<T> {
 
     public byte getNumberOfCells() {
         return numberOfCells;
+    }
+
+    public short getBaseAddress() {
+        return (short) (pageNumber * PAGE_SIZE);
     }
 
     public void setNumberOfCells(byte numberOfCells) {

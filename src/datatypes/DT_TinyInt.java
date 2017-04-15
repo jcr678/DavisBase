@@ -1,23 +1,15 @@
 package datatypes;
 
+import common.Constants;
+import datatypes.base.DT_Numeric;
+
 /**
  * Created by dakle on 10/4/17.
  */
-public class DT_TinyInt {
-
-    private byte value;
-
-    public static final byte valueSerialCode = 0x04;
-
-    public static final byte nullSerialCode = 0x00;
-
-    private boolean isNull;
-
-    public static final byte BYTES = Byte.BYTES;
+public class DT_TinyInt extends DT_Numeric<Byte> {
 
     public DT_TinyInt() {
-        value = 0;
-        isNull = true;
+        this((byte) 0, true);
     }
 
     public DT_TinyInt(Byte value) {
@@ -25,30 +17,36 @@ public class DT_TinyInt {
     }
 
     public DT_TinyInt(byte value, boolean isNull) {
+        super(Constants.TINY_INT_SERIAL_TYPE_CODE, Constants.ONE_BYTE_NULL_SERIAL_TYPE_CODE, Byte.BYTES);
         this.value = value;
         this.isNull = isNull;
     }
 
-    public byte getValue() {
-        return value;
+    @Override
+    public void increment(Byte value) {
+        this.value = (byte)(this.value + value);
     }
 
-    public void setValue(byte value) {
-        this.value = value;
-    }
+    @Override
+    public boolean compare(DT_Numeric<Byte> object2, short condition) {
+        switch (condition) {
+            case DT_Numeric.EQUALS:
+                return value == object2.getValue();
 
-    public byte getSerialCode() {
-        if(isNull)
-            return nullSerialCode;
-        else
-            return valueSerialCode;
-    }
+            case DT_Numeric.GREATER_THAN:
+                return value > object2.getValue();
 
-    public boolean isNull() {
-        return isNull;
-    }
+            case DT_Numeric.LESS_THAN:
+                return value < object2.getValue();
 
-    public void setNull(boolean aNull) {
-        isNull = aNull;
+            case DT_Numeric.GREATER_THAN_EQUALS:
+                return value >= object2.getValue();
+
+            case DT_Numeric.LESS_THAN_EQUALS:
+                return value <= object2.getValue();
+
+            default:
+                return false;
+        }
     }
 }

@@ -2,6 +2,7 @@ import common.CatalogDB;
 import common.Constants;
 import common.Utils;
 import parser.QueryParser;
+import test.Test;
 
 import java.io.File;
 import java.util.Scanner;
@@ -24,6 +25,8 @@ public class DavisBase {
 
     public static void main(String args[]) {
         initializeDatabase();
+        new Test().run(1);
+
         QueryParser parser = new QueryParser();
 
         /* Display the welcome screen */

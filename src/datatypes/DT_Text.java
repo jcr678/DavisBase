@@ -1,21 +1,15 @@
 package datatypes;
 
+import common.Constants;
+import datatypes.base.DT;
+
 /**
  * Created by dakle on 10/4/17.
  */
-public class DT_Text {
-
-    private String value;
-
-    public static final byte valueSerialCode = 0x0C;
-
-    public static final byte nullSerialCode = 0x00;
-
-    private boolean isNull;
+public class DT_Text extends DT<String> {
 
     public DT_Text() {
-        value = "";
-        isNull = true;
+        this("", true);
     }
 
     public DT_Text(String value) {
@@ -23,16 +17,9 @@ public class DT_Text {
     }
 
     public DT_Text(String value, boolean isNull) {
+        super(Constants.TEXT_SERIAL_TYPE_CODE, Constants.ONE_BYTE_NULL_SERIAL_TYPE_CODE);
         this.value = value;
         this.isNull = isNull;
-    }
-
-    public String getValue() {
-        return value;
-    }
-
-    public void setValue(String value) {
-        this.value = value;
     }
 
     public byte getSerialCode() {
@@ -40,14 +27,6 @@ public class DT_Text {
             return nullSerialCode;
         else
             return (byte)(valueSerialCode + this.value.length());
-    }
-
-    public boolean isNull() {
-        return isNull;
-    }
-
-    public void setNull(boolean aNull) {
-        isNull = aNull;
     }
 
     public int getSize() {

@@ -4,6 +4,7 @@ import common.Constants;
 import common.Utils;
 import console.ConsoleWriter;
 import datatypes.*;
+import datatypes.base.DT_Numeric;
 import storage.model.DataRecord;
 import storage.model.Page;
 import storage.model.PointerRecord;
@@ -19,7 +20,7 @@ import java.util.List;
  */
 public class StorageManager {
 
-    public static String DEFAULT_DATA_PATH = Constants.DEFAULT_DATA_DIRNAME;
+    private String DEFAULT_DATA_PATH = Constants.DEFAULT_DATA_DIRNAME;
 
     public boolean createDatabase(String databaseName) {
         try {
@@ -48,7 +49,7 @@ public class StorageManager {
             }
             if(file.createNewFile()) {
                 RandomAccessFile randomAccessFile;
-                Page page = Page.createNewEmptyPage();
+                Page<DataRecord> page = Page.createNewEmptyPage(new DataRecord());
                 randomAccessFile = new RandomAccessFile(file, "rw");
                 randomAccessFile.setLength(Page.PAGE_SIZE);
                 return writePageHeader(randomAccessFile, page);
@@ -66,27 +67,44 @@ public class StorageManager {
             File file = new File(databaseName + "/" + tableName + Constants.DEFAULT_FILE_EXTENSION);
             if (file.exists()) {
                 RandomAccessFile randomAccessFile = new RandomAccessFile(file, "rw");
-                Page page = getPage(file, record.getRowId());
+                Page page = getPage(randomAccessFile, record, 0);
                 if(page == null) return false;
                 if(!checkSpaceRequirements(page, record)) {
-                    System.out.println("Page Over Flow!");
-                    return false;
+                    int pageCount = (int) (randomAccessFile.length() / Page.PAGE_SIZE);
+                    switch (pageCount) {
+                        case 1:
+                            PointerRecord pointerRecord = splitPage(randomAccessFile, page, record, 1, 2);
+                            Page<PointerRecord> pointerRecordPage = Page.createNewEmptyPage(pointerRecord);
+                            pointerRecordPage.setPageNumber(0);
+                            pointerRecordPage.setPageType(Page.INTERIOR_TABLE_PAGE);
+                            pointerRecordPage.setNumberOfCells((byte) 1);
+                            pointerRecordPage.setStartingAddress((short)(pointerRecordPage.getStartingAddress() - pointerRecord.getSize()));
+                            pointerRecordPage.setRightNodeAddress(2);
+                            pointerRecordPage.getRecordAddressList().add((short) (pointerRecordPage.getStartingAddress() + 1));
+                            pointerRecord.setOffset((short) (pointerRecordPage.getStartingAddress() + 1));
+                            this.writePageHeader(randomAccessFile, pointerRecordPage);
+                            this.writeRecord(randomAccessFile, pointerRecord);
+                            break;
+
+                        default:
+                            if(pageCount > 1) {
+                                System.out.println("Well things look pretty darn bad");
+                            }
+                            break;
+                    }
+                    randomAccessFile.close();
+                    return true;
                 }
                 short address = (short) getAddress(file, record.getRowId(), page.getPageNumber());
+//                System.out.println(address);
                 page.setNumberOfCells((byte)(page.getNumberOfCells() + 1));
                 page.setStartingAddress((short) (page.getStartingAddress() - record.getSize() - record.getHeaderSize()));
                 page.getRecordAddressList().add((short)(page.getStartingAddress() + 1));
+                record.setPageLocated(page.getPageNumber());
+                record.setOffset((short)(page.getStartingAddress() + 1));
                 this.writePageHeader(randomAccessFile, page);
-                this.writeRecord(randomAccessFile, record, (short)(page.getStartingAddress() + 1));
+                this.writeRecord(randomAccessFile, record);
                 randomAccessFile.close();
-                /*
-                 * Check if page has space.
-                 * if yes:
-                 *      write the record, modify the header
-                 *    no:
-                 *      split the page
-                 * Update data in system tables.
-                 */
             } else {
                 ConsoleWriter.displayMessage("File " + tableName + " does not exist");
             }
@@ -107,19 +125,218 @@ public class StorageManager {
         return false;
     }
 
-    private Page getPage(File file, int rowId) {
+    private PointerRecord splitPage(RandomAccessFile randomAccessFile, Page page, DataRecord record, int pageNumber1, int pageNumber2) {
         try {
-            RandomAccessFile randomAccessFile = new RandomAccessFile(file, "r");
-            Page page = readPageHeader(randomAccessFile, 0);
-            int pageNumber;
-            while (page.getPageType() == Page.INTERIOR_TABLE_PAGE) {
-                pageNumber = binarySearch(randomAccessFile, rowId, page.getNumberOfCells(), randomAccessFile.getFilePointer(), Page.INTERIOR_TABLE_PAGE);
-                if(pageNumber == -1) return null;
-                page = readPageHeader(randomAccessFile, pageNumber);
+            if (page != null && record != null) {
+                int location = -1;
+                PointerRecord pointerRecord = new PointerRecord();
+                if(page.getPageType() == Page.INTERIOR_TABLE_PAGE) {
+                    return null;
+                }
+                location = binarySearch(randomAccessFile, record.getRowId(), page.getNumberOfCells(), ((page.getPageNumber() * Page.PAGE_SIZE) + Page.getHeaderFixedLength()), page.getPageType());
+                randomAccessFile.setLength(Page.PAGE_SIZE * (pageNumber2 + 1));
+                if(location == page.getNumberOfCells()) {
+                    Page<DataRecord> page1 = new Page<>(pageNumber1);
+                    page1.setPageType(page.getPageType());
+                    page1.setNumberOfCells(page.getNumberOfCells());
+                    page1.setRightNodeAddress(pageNumber2);
+                    page1.setStartingAddress(page.getStartingAddress());
+                    page1.setRecordAddressList(page.getRecordAddressList());
+                    this.writePageHeader(randomAccessFile, page1);
+                    List<DataRecord> records = copyRecords(randomAccessFile, (page.getPageNumber() * Page.PAGE_SIZE), page.getRecordAddressList(), (byte) 0, page.getNumberOfCells(), page1.getPageNumber(), record);
+                    for(DataRecord object: records) {
+                        this.writeRecord(randomAccessFile, object);
+                    }
+                    Page<DataRecord> page2 = new Page<>(pageNumber2);
+                    page2.setPageType(page.getPageType());
+                    page2.setNumberOfCells((byte) 1);
+                    page2.setRightNodeAddress(page.getRightNodeAddress());
+                    page2.setStartingAddress((short) (page2.getStartingAddress() - record.getSize() - record.getHeaderSize()));
+                    page2.getRecordAddressList().add((short) (page2.getStartingAddress() + 1));
+                    this.writePageHeader(randomAccessFile, page2);
+                    record.setPageLocated(page2.getPageNumber());
+                    record.setOffset((short) (page2.getStartingAddress() + 1));
+                    this.writeRecord(randomAccessFile, record);
+                }
+                else {
+                    //Handle this when a record is being inserted in middle
+                }
+                pointerRecord.setLeftPageNumber(pageNumber1);
+                pointerRecord.setKey(record.getRowId());
+                return pointerRecord;
             }
-            return page;
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    private PointerRecord splitPage(RandomAccessFile randomAccessFile, Page page, PointerRecord record, int pageNumber1, int pageNumber2) {
+        try {
+            if (page != null && record != null) {
+                int location = -1;
+                PointerRecord pointerRecord = new PointerRecord();
+                if(page.getPageType() == Page.LEAF_TABLE_PAGE) {
+                    return null;
+                }
+                location = binarySearch(randomAccessFile, record.getKey(), page.getNumberOfCells(), ((page.getPageNumber() * Page.PAGE_SIZE) + Page.getHeaderFixedLength()), page.getPageType());
+                if(location == page.getNumberOfCells()) {
+                    Page<PointerRecord> page1 = new Page<>(pageNumber1);
+                    page1.setPageType(page.getPageType());
+                    page1.setNumberOfCells(page.getNumberOfCells());
+                    page1.setRightNodeAddress(pageNumber2);
+//                    for(Object offset : page.getRecordAddressList()) {
+//                        page1.getRecordAddressList().add((short) offset);
+//                    }
+                    page1.setRecordAddressList(page.getRecordAddressList());
+                    page1.setPageNumber(pageNumber1);
+                    randomAccessFile.seek(Page.PAGE_SIZE * page1.getPageNumber());
+                    this.writePageHeader(randomAccessFile, page1);
+                    List<PointerRecord> records = copyRecords(randomAccessFile, (page.getPageNumber() * Page.PAGE_SIZE), page.getRecordAddressList(), (byte) 0, page.getNumberOfCells(), page1.getPageNumber(), record);
+                    for(PointerRecord object: records) {
+                        this.writeRecord(randomAccessFile, object);
+                    }
+                    Page<PointerRecord> page2 = new Page<>(pageNumber2);
+                    page2.setPageType(page.getPageType());
+                    page2.setNumberOfCells((byte) 1);
+                    page2.setRightNodeAddress(page.getRightNodeAddress());
+                    page2.setStartingAddress((short) (page2.getStartingAddress() - record.getSize()));
+                    page2.getRecordAddressList().add((short) (page2.getStartingAddress() - page2.getBaseAddress() + 1));
+                    page2.setPageNumber(pageNumber2);
+                    randomAccessFile.seek(page2.getBaseAddress());
+                    this.writePageHeader(randomAccessFile, page2);
+                    this.writeRecord(randomAccessFile, record);
+                }
+                else {
+                    //Handle this when a record is being inserted in middle
+                }
+                pointerRecord.setLeftPageNumber(pageNumber1);
+                pointerRecord.setKey(record.getKey());
+                return pointerRecord;
+            }
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    private <T> List<T> copyRecords(RandomAccessFile randomAccessFile, long pageStartAddress, List<Short> recordAddresses, byte startIndex, byte endIndex, int pageNumber, T object) {
+        try {
+            List<T> records = new ArrayList<>();
+            byte numberOfRecords;
+            byte[] serialTypeCodes;
+            for (byte i = startIndex; i < endIndex; i++) {
+                randomAccessFile.seek(pageStartAddress + recordAddresses.get(i));
+                if(object.getClass().equals(PointerRecord.class)) {
+                    PointerRecord record = new PointerRecord();
+                    record.setLeftPageNumber(randomAccessFile.readInt());
+                    record.setKey(randomAccessFile.readInt());
+                    records.add((T) record);
+                }
+                else if(object.getClass().equals(DataRecord.class)) {
+                    DataRecord record = new DataRecord();
+                    record.setPageLocated(pageNumber);
+                    record.setOffset(recordAddresses.get(i));
+                    record.setSize(randomAccessFile.readShort());
+                    record.setRowId(randomAccessFile.readInt());
+                    numberOfRecords = randomAccessFile.readByte();
+                    serialTypeCodes = new byte[numberOfRecords];
+                    for(byte j = 0; j < numberOfRecords; j++) {
+                        serialTypeCodes[j] = randomAccessFile.readByte();
+                    }
+                    for(byte j = 0; j < numberOfRecords; j++) {
+                        switch (serialTypeCodes[j]) {
+                            //case DT_TinyInt.nullSerialCode is overridden with DT_Text
+
+                            case Constants.ONE_BYTE_NULL_SERIAL_TYPE_CODE:
+                                record.getColumnValueList().add(new DT_Text(null));
+                                break;
+
+                            case Constants.TWO_BYTE_NULL_SERIAL_TYPE_CODE:
+                                record.getColumnValueList().add(new DT_SmallInt(randomAccessFile.readShort(), true));
+                                break;
+
+                            case Constants.FOUR_BYTE_NULL_SERIAL_TYPE_CODE:
+                                record.getColumnValueList().add(new DT_Real(randomAccessFile.readFloat(), true));
+                                break;
+
+                            case Constants.EIGHT_BYTE_NULL_SERIAL_TYPE_CODE:
+                                record.getColumnValueList().add(new DT_Double(randomAccessFile.readDouble(), true));
+                                break;
+
+                            case Constants.TINY_INT_SERIAL_TYPE_CODE:
+                                record.getColumnValueList().add(new DT_TinyInt(randomAccessFile.readByte()));
+                                break;
+
+                            case Constants.SMALL_INT_SERIAL_TYPE_CODE:
+                                record.getColumnValueList().add(new DT_SmallInt(randomAccessFile.readShort()));
+                                break;
+
+                            case Constants.INT_SERIAL_TYPE_CODE:
+                                record.getColumnValueList().add(new DT_Int(randomAccessFile.readInt()));
+                                break;
+
+                            case Constants.BIG_INT_SERIAL_TYPE_CODE:
+                                record.getColumnValueList().add(new DT_BigInt(randomAccessFile.readLong()));
+                                break;
+
+                            case Constants.REAL_SERIAL_TYPE_CODE:
+                                record.getColumnValueList().add(new DT_Real(randomAccessFile.readFloat()));
+                                break;
+
+                            case Constants.DOUBLE_SERIAL_TYPE_CODE:
+                                record.getColumnValueList().add(new DT_Double(randomAccessFile.readDouble()));
+                                break;
+
+                            case Constants.DATE_SERIAL_TYPE_CODE:
+                                record.getColumnValueList().add(new DT_Date(randomAccessFile.readLong()));
+                                break;
+
+                            case Constants.DATE_TIME_SERIAL_TYPE_CODE:
+                                record.getColumnValueList().add(new DT_DateTime(randomAccessFile.readLong()));
+                                break;
+
+                            case Constants.TEXT_SERIAL_TYPE_CODE:
+                                record.getColumnValueList().add(new DT_Text(""));
+                                break;
+
+                            default:
+                                if (serialTypeCodes[j] > Constants.TEXT_SERIAL_TYPE_CODE) {
+                                    byte length = (byte) (serialTypeCodes[j] - Constants.TEXT_SERIAL_TYPE_CODE);
+                                    char[] text = new char[length];
+                                    for (byte k = 0; k < length; k++) {
+                                        text[k] = (char) randomAccessFile.readByte();
+                                    }
+                                    record.getColumnValueList().add(new DT_Text(new String(text)));
+                                }
+                                break;
+
+                        }
+                    }
+                    records.add((T) record);
+                }
+            }
+            return records;
         }
         catch (IOException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    private Page getPage(RandomAccessFile randomAccessFile, DataRecord record, int pageNumber) {
+        try {
+            Page page = readPageHeader(randomAccessFile, pageNumber);
+            if(page.getPageType() == Page.LEAF_TABLE_PAGE) {
+               return page;
+            }
+            pageNumber = binarySearch(randomAccessFile, record.getRowId(), page.getNumberOfCells(), (page.getBaseAddress() + Page.getHeaderFixedLength()), Page.INTERIOR_TABLE_PAGE);
+            if(pageNumber == -1) return null;
+            return getPage(randomAccessFile, record, pageNumber);
+        }
+        catch (Exception e) {
             e.printStackTrace();
             return null;
         }
@@ -130,7 +347,7 @@ public class StorageManager {
             RandomAccessFile randomAccessFile = new RandomAccessFile(file, "r");
             Page page = readPageHeader(randomAccessFile, pageNumber);
             if(page.getPageType() == Page.LEAF_TABLE_PAGE) {
-                return binarySearch(randomAccessFile, rowId, page.getNumberOfCells(), randomAccessFile.getFilePointer(), Page.INTERIOR_TABLE_PAGE);
+                return binarySearch(randomAccessFile, rowId, page.getNumberOfCells(), randomAccessFile.getFilePointer(), Page.LEAF_TABLE_PAGE);
             }
             return -1;
         }
@@ -142,22 +359,30 @@ public class StorageManager {
 
     private int binarySearch(RandomAccessFile randomAccessFile, int key, int numberOfRecords, long seekPosition, byte pageType) {
         try {
-            randomAccessFile.seek(seekPosition);
             int start = 0, end = numberOfRecords;
             int mid;
-            int pageNumber;
+            int pageNumber = -1;
             int rowId;
             short address;
             while(true) {
-                if(start > end || start == numberOfRecords) return -1;
+                if(start > end) {
+                    if(pageType == Page.LEAF_TABLE_PAGE)
+                        return start;
+                    if(pageType == Page.INTERIOR_TABLE_PAGE) {
+                        if(end < 0)
+                            return pageNumber;
+                        randomAccessFile.seek(seekPosition - Page.getHeaderFixedLength() + 4);
+                        return randomAccessFile.readInt();
+                    }
+                }
                 mid = (start + end) / 2;
-                randomAccessFile.seek(Short.BYTES * mid);
+                randomAccessFile.seek(seekPosition + (Short.BYTES * mid));
                 address = randomAccessFile.readShort();
                 randomAccessFile.seek(seekPosition - Page.getHeaderFixedLength() + address);
                 if(pageType == Page.LEAF_TABLE_PAGE) {
                     randomAccessFile.readShort();
                     rowId = randomAccessFile.readInt();
-                    if(rowId == key)    return address;
+                    if(rowId == key)    return mid;
                     if(rowId > key) {
                         end = mid - 1;
                     }
@@ -168,9 +393,6 @@ public class StorageManager {
                 else if(pageType == Page.INTERIOR_TABLE_PAGE) {
                     pageNumber = randomAccessFile.readInt();
                     rowId = randomAccessFile.readInt();
-                    if(rowId == key) {
-                        return pageNumber;
-                    }
                     if(rowId > key) {
                         end = mid - 1;
                     }
@@ -215,7 +437,7 @@ public class StorageManager {
 
     private boolean writePageHeader(RandomAccessFile randomAccessFile, Page page) {
         try {
-            randomAccessFile.seek(0);
+            randomAccessFile.seek(page.getPageNumber() * Page.PAGE_SIZE);
             randomAccessFile.writeByte(page.getPageType());
             randomAccessFile.writeByte(page.getNumberOfCells());
             randomAccessFile.writeShort(page.getStartingAddress());
@@ -231,9 +453,9 @@ public class StorageManager {
         }
     }
 
-    private boolean writeRecord(RandomAccessFile randomAccessFile, DataRecord record, short position) {
+    private boolean writeRecord(RandomAccessFile randomAccessFile, DataRecord record) {
         try {
-            randomAccessFile.seek(position);
+            randomAccessFile.seek((record.getPageLocated() * Page.PAGE_SIZE) + record.getOffset());
             randomAccessFile.writeShort(record.getSize());
             randomAccessFile.writeInt(record.getRowId());
             randomAccessFile.writeByte((byte) record.getColumnValueList().size());
@@ -288,7 +510,19 @@ public class StorageManager {
         return true;
     }
 
-    public List<DataRecord> findRecord(String databaseName, String tableName, List<Byte> columnIndexList, List<Object> valueList, boolean getOne) {
+    private boolean writeRecord(RandomAccessFile randomAccessFile, PointerRecord record) {
+        try {
+            randomAccessFile.seek((record.getPageNumber() * Page.PAGE_SIZE) + record.getOffset());
+            randomAccessFile.writeInt(record.getLeftPageNumber());
+            randomAccessFile.writeInt(record.getKey());
+        } catch (IOException e) {
+            e.printStackTrace();
+            return false;
+        }
+        return true;
+    }
+
+    public List<DataRecord> findRecord(String databaseName, String tableName, List<Byte> columnIndexList, List<Object> valueList, List<Short> conditionList, boolean getOne) {
         try {
             File file = new File(databaseName + "/" + tableName + Constants.DEFAULT_FILE_EXTENSION);
             if (file.exists()) {
@@ -299,6 +533,7 @@ public class StorageManager {
                     List<DataRecord> matchRecords = new ArrayList<>();
                     boolean isMatch = false;
                     byte columnIndex;
+                    short condition;
                     Object value;
                     while (page != null) {
                         for (Object offset : page.getRecordAddressList()) {
@@ -306,39 +541,40 @@ public class StorageManager {
                             for(int i = 0; i < columnIndexList.size(); i++) {
                                 columnIndex = columnIndexList.get(i);
                                 value = valueList.get(i);
+                                condition = conditionList.get(i);
                                 if (record != null && record.getColumnValueList().size() > columnIndex) {
                                     Object object = record.getColumnValueList().get(columnIndex);
                                     switch (Utils.resolveClass(value)) {
                                         case Constants.TINYINT:
-                                            isMatch = ((DT_TinyInt) value).getValue() == ((DT_TinyInt) object).getValue();
+                                            isMatch = ((DT_TinyInt) value).compare((DT_TinyInt) object, condition);
                                             break;
 
                                         case Constants.SMALLINT:
-                                            isMatch = ((DT_SmallInt) value).getValue() == ((DT_SmallInt) object).getValue();
+                                            isMatch = ((DT_SmallInt) value).compare((DT_SmallInt) object, condition);
                                             break;
 
                                         case Constants.INT:
-                                            isMatch = ((DT_Int) value).getValue() == ((DT_Int) object).getValue();
+                                            isMatch = ((DT_Int) value).compare((DT_Int) object, condition);
                                             break;
 
                                         case Constants.BIGINT:
-                                            isMatch = ((DT_BigInt) value).getValue() == ((DT_BigInt) object).getValue();
+                                            isMatch = ((DT_BigInt) value).compare((DT_BigInt) object, condition);
                                             break;
 
                                         case Constants.REAL:
-                                            isMatch = ((DT_Real) value).getValue() == ((DT_Real) object).getValue();
+                                            isMatch = ((DT_Real) value).compare((DT_Real) object, condition);
                                             break;
 
                                         case Constants.DOUBLE:
-                                            isMatch = ((DT_Double) value).getValue() == ((DT_Double) object).getValue();
+                                            isMatch = ((DT_Double) value).compare((DT_Double) object, condition);
                                             break;
 
                                         case Constants.DATE:
-                                            isMatch = ((DT_Date) value).getValue() == ((DT_Date) object).getValue();
+                                            isMatch = ((DT_Date) value).compare((DT_Date) object, condition);
                                             break;
 
                                         case Constants.DATETIME:
-                                            isMatch = ((DT_DateTime) value).getValue() == ((DT_DateTime) object).getValue();
+                                            isMatch = ((DT_DateTime) value).compare((DT_DateTime) object, condition);
                                             break;
 
                                         case Constants.TEXT:
@@ -364,7 +600,7 @@ public class StorageManager {
                 }
             }
             else {
-                ConsoleWriter.displayMessage("File " + tableName + " does not exist");
+                ConsoleWriter.displayMessage("Table " + tableName + " does not exist");
                 return null;
             }
         }
@@ -374,8 +610,55 @@ public class StorageManager {
         return null;
     }
 
-    public boolean updateRecord(String databaseName, String tableName, int searchColumnIndex, Object searchKey, List<Integer> updateColumnIndexList, List<Object> updateColumnValueList) {
-        return true;
+    public boolean updateRecord(String databaseName, String tableName, List<Byte> searchColumnsIndexList, List<Object> searchKeysValueList, List<Short> searchKeysConditionsList, List<Byte> updateColumnIndexList, List<Object> updateColumnValueList, boolean isIncrement) {
+        try {
+            if(searchColumnsIndexList == null || searchKeysValueList == null
+                    || searchKeysConditionsList == null || updateColumnIndexList == null
+                    || updateColumnValueList == null)
+                return false;
+            if(searchColumnsIndexList.size() != searchKeysValueList.size() && searchKeysValueList.size() != searchKeysConditionsList.size())
+                return false;
+            if(updateColumnIndexList.size() != updateColumnValueList.size())
+                return false;
+            File file = new File(databaseName + "/" + tableName + Constants.DEFAULT_FILE_EXTENSION);
+            if(file.exists()) {
+                List<DataRecord> records = findRecord(databaseName, tableName, searchColumnsIndexList, searchKeysValueList, searchKeysConditionsList, false);
+                if (records != null) {
+                    if (records.size() > 0) {
+                        byte index;
+                        Object object;
+                        RandomAccessFile randomAccessFile = new RandomAccessFile(file, "rw");
+                        for (DataRecord record : records) {
+                            for (int i = 0; i < updateColumnIndexList.size(); i++) {
+                                index = updateColumnIndexList.get(i);
+                                object = updateColumnValueList.get(i);
+                                if(isIncrement) {
+                                    record.getColumnValueList().set(index, increment((DT_Numeric) record.getColumnValueList().get(index), (DT_Numeric) object));
+                                }
+                                else {
+                                    record.getColumnValueList().set(index, object);
+                                }
+                            }
+                            this.writeRecord(randomAccessFile, record);
+                        }
+                        randomAccessFile.close();
+                        return true;
+                    }
+                }
+            }
+            else {
+                ConsoleWriter.displayMessage("Table " + tableName + " does not exist!");
+            }
+        }
+        catch (IOException e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+
+    private <T> DT_Numeric<T> increment(DT_Numeric<T> object1, DT_Numeric<T> object2) {
+        object1.increment(object2.getValue());
+        return object1;
     }
 
     public Page<DataRecord> getLastRecordAndPage(String databaseName, String tableName) {
@@ -428,6 +711,7 @@ public class StorageManager {
                 randomAccessFile.seek((Page.PAGE_SIZE * page.getPageNumber()) + ((short) page.getRecordAddressList().get(0)));
                 page = readPageHeader(randomAccessFile, randomAccessFile.readInt());
             }
+            randomAccessFile.close();
             return page;
         }
         catch (IOException e) {
@@ -438,8 +722,10 @@ public class StorageManager {
 
     public DataRecord getDataRecord(RandomAccessFile randomAccessFile, int pageNumber, short address) {
         try {
-            if (pageNumber >= 0 && address >= 0 && address <= Page.PAGE_SIZE) {
+            if (pageNumber >= 0 && address >= 0) {
                 DataRecord record = new DataRecord();
+                record.setPageLocated(pageNumber);
+                record.setOffset(address);
                 randomAccessFile.seek((Page.PAGE_SIZE * pageNumber) + address);
                 record.setSize(randomAccessFile.readShort());
                 record.setRowId(randomAccessFile.readInt());
@@ -452,71 +738,64 @@ public class StorageManager {
                     switch (serialTypeCodes[i]) {
                         //case DT_TinyInt.nullSerialCode is overridden with DT_Text
 
-                        case DT_TinyInt.valueSerialCode:
-                            record.getColumnValueList().add(new DT_TinyInt(randomAccessFile.readByte()));
+                        case Constants.ONE_BYTE_NULL_SERIAL_TYPE_CODE:
+                            record.getColumnValueList().add(new DT_Text(null));
                             break;
 
-                        case DT_SmallInt.nullSerialCode:
+                        case Constants.TWO_BYTE_NULL_SERIAL_TYPE_CODE:
                             record.getColumnValueList().add(new DT_SmallInt(randomAccessFile.readShort(), true));
                             break;
 
-                        case DT_SmallInt.valueSerialCode:
-                            record.getColumnValueList().add(new DT_SmallInt(randomAccessFile.readShort()));
-                            break;
-
-                        //case DT_Int.nullSerialCode is overridden with DT_Real
-
-                        case DT_Int.valueSerialCode:
-                            record.getColumnValueList().add(new DT_Int(randomAccessFile.readInt()));
-                            break;
-
-                        //case DT_BigInt.nullSerialCode is overridden with DT_Double
-
-                        case DT_BigInt.valueSerialCode:
-                            record.getColumnValueList().add(new DT_BigInt(randomAccessFile.readLong()));
-                            break;
-
-                        case DT_Real.nullSerialCode:
+                        case Constants.FOUR_BYTE_NULL_SERIAL_TYPE_CODE:
                             record.getColumnValueList().add(new DT_Real(randomAccessFile.readFloat(), true));
                             break;
 
-                        case DT_Real.valueSerialCode:
-                            record.getColumnValueList().add(new DT_Real(randomAccessFile.readFloat()));
-                            break;
-
-                        case DT_Double.nullSerialCode:
+                        case Constants.EIGHT_BYTE_NULL_SERIAL_TYPE_CODE:
                             record.getColumnValueList().add(new DT_Double(randomAccessFile.readDouble(), true));
                             break;
 
-                        case DT_Double.valueSerialCode:
+                        case Constants.TINY_INT_SERIAL_TYPE_CODE:
+                            record.getColumnValueList().add(new DT_TinyInt(randomAccessFile.readByte()));
+                            break;
+
+                        case Constants.SMALL_INT_SERIAL_TYPE_CODE:
+                            record.getColumnValueList().add(new DT_SmallInt(randomAccessFile.readShort()));
+                            break;
+
+                        case Constants.INT_SERIAL_TYPE_CODE:
+                            record.getColumnValueList().add(new DT_Int(randomAccessFile.readInt()));
+                            break;
+
+                        case Constants.BIG_INT_SERIAL_TYPE_CODE:
+                            record.getColumnValueList().add(new DT_BigInt(randomAccessFile.readLong()));
+                            break;
+
+                        case Constants.REAL_SERIAL_TYPE_CODE:
+                            record.getColumnValueList().add(new DT_Real(randomAccessFile.readFloat()));
+                            break;
+
+                        case Constants.DOUBLE_SERIAL_TYPE_CODE:
                             record.getColumnValueList().add(new DT_Double(randomAccessFile.readDouble()));
                             break;
 
-                        //case DT_Date.nullSerialCode is overridden with DT_Double
-
-                        case DT_Date.valueSerialCode:
+                        case Constants.DATE_SERIAL_TYPE_CODE:
                             record.getColumnValueList().add(new DT_Date(randomAccessFile.readLong()));
                             break;
 
-                        //case DT_DateTime.nullSerialCode is overridden with DT_Double
-
-                        case DT_DateTime.valueSerialCode:
+                        case Constants.DATE_TIME_SERIAL_TYPE_CODE:
                             record.getColumnValueList().add(new DT_DateTime(randomAccessFile.readLong()));
                             break;
 
-                        case DT_Text.nullSerialCode:
-                            record.getColumnValueList().add(new DT_Text(null));
-
-                        case DT_Text.valueSerialCode:
+                        case Constants.TEXT_SERIAL_TYPE_CODE:
                             record.getColumnValueList().add(new DT_Text(""));
                             break;
 
                         default:
-                            if (serialTypeCodes[i] > DT_Text.valueSerialCode) {
-                                byte length = (byte) (serialTypeCodes[i] - DT_Text.valueSerialCode);
+                            if (serialTypeCodes[i] > Constants.TEXT_SERIAL_TYPE_CODE) {
+                                byte length = (byte) (serialTypeCodes[i] - Constants.TEXT_SERIAL_TYPE_CODE);
                                 char[] text = new char[length];
-                                for (byte j = 0; j < length; j++) {
-                                    text[j] = (char) randomAccessFile.readByte();
+                                for (byte k = 0; k < length; k++) {
+                                    text[k] = (char) randomAccessFile.readByte();
                                 }
                                 record.getColumnValueList().add(new DT_Text(new String(text)));
                             }

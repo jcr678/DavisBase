@@ -1,23 +1,15 @@
 package datatypes;
 
+import common.Constants;
+import datatypes.base.DT_Numeric;
+
 /**
  * Created by dakle on 10/4/17.
  */
-public class DT_Real {
-
-    private float value;
-
-    public static final byte valueSerialCode = 0x08;
-
-    public static final byte nullSerialCode = 0x02;
-
-    private boolean isNull;
-
-    public static final byte BYTES = Float.BYTES;
+public class DT_Real extends DT_Numeric<Float> {
 
     public DT_Real() {
-        value = 0;
-        isNull = true;
+        this(0, true);
     }
 
     public DT_Real(Float value) {
@@ -25,30 +17,36 @@ public class DT_Real {
     }
 
     public DT_Real(float value, boolean isNull) {
+        super(Constants.REAL_SERIAL_TYPE_CODE, Constants.FOUR_BYTE_NULL_SERIAL_TYPE_CODE, Float.BYTES);
         this.value = value;
         this.isNull = isNull;
     }
 
-    public float getValue() {
-        return value;
+    @Override
+    public void increment(Float value) {
+        this.value += value;
     }
 
-    public void setValue(float value) {
-        this.value = value;
-    }
+    @Override
+    public boolean compare(DT_Numeric<Float> object2, short condition) {
+        switch (condition) {
+            case DT_Numeric.EQUALS:
+                return value == object2.getValue();
 
-    public byte getSerialCode() {
-        if(isNull)
-            return nullSerialCode;
-        else
-            return valueSerialCode;
-    }
+            case DT_Numeric.GREATER_THAN:
+                return value > object2.getValue();
 
-    public boolean isNull() {
-        return isNull;
-    }
+            case DT_Numeric.LESS_THAN:
+                return value < object2.getValue();
 
-    public void setNull(boolean aNull) {
-        isNull = aNull;
+            case DT_Numeric.GREATER_THAN_EQUALS:
+                return value >= object2.getValue();
+
+            case DT_Numeric.LESS_THAN_EQUALS:
+                return value <= object2.getValue();
+
+            default:
+                return false;
+        }
     }
 }

@@ -1,23 +1,15 @@
 package datatypes;
 
+import common.Constants;
+import datatypes.base.DT_Numeric;
+
 /**
  * Created by dakle on 10/4/17.
  */
-public class DT_SmallInt {
-
-    private short value;
-
-    public static final byte valueSerialCode = 0x05;
-
-    public static final byte nullSerialCode = 0x01;
-
-    private boolean isNull;
-
-    public static final byte BYTES = Short.BYTES;
+public class DT_SmallInt extends DT_Numeric<Short> {
 
     public DT_SmallInt() {
-        value = 0;
-        isNull = true;
+        this((short) 0, true);
     }
 
     public DT_SmallInt(Short value) {
@@ -25,30 +17,36 @@ public class DT_SmallInt {
     }
 
     public DT_SmallInt(short value, boolean isNull) {
+        super(Constants.SMALL_INT_SERIAL_TYPE_CODE, Constants.TWO_BYTE_NULL_SERIAL_TYPE_CODE, Short.BYTES);
         this.value = value;
         this.isNull = isNull;
     }
 
-    public short getValue() {
-        return value;
+    @Override
+    public void increment(Short value) {
+        this.value = (short)(this.value + value);
     }
 
-    public void setValue(short value) {
-        this.value = value;
-    }
+    @Override
+    public boolean compare(DT_Numeric<Short> object2, short condition) {
+        switch (condition) {
+            case DT_Numeric.EQUALS:
+                return value == object2.getValue();
 
-    public byte getSerialCode() {
-        if(isNull)
-            return nullSerialCode;
-        else
-            return valueSerialCode;
-    }
+            case DT_Numeric.GREATER_THAN:
+                return value > object2.getValue();
 
-    public boolean isNull() {
-        return isNull;
-    }
+            case DT_Numeric.LESS_THAN:
+                return value < object2.getValue();
 
-    public void setNull(boolean aNull) {
-        isNull = aNull;
+            case DT_Numeric.GREATER_THAN_EQUALS:
+                return value >= object2.getValue();
+
+            case DT_Numeric.LESS_THAN_EQUALS:
+                return value <= object2.getValue();
+
+            default:
+                return false;
+        }
     }
 }

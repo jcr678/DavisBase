@@ -523,6 +523,10 @@ public class StorageManager {
     }
 
     public List<DataRecord> findRecord(String databaseName, String tableName, List<Byte> columnIndexList, List<Object> valueList, List<Short> conditionList, boolean getOne) {
+        return findRecord(databaseName, tableName, columnIndexList, valueList, conditionList, null, getOne);
+    }
+
+    public List<DataRecord> findRecord(String databaseName, String tableName, List<Byte> columnIndexList, List<Object> valueList, List<Short> conditionList, List<Byte> selectionColumnIndexList, boolean getOne) {
         try {
             File file = new File(databaseName + "/" + tableName + Constants.DEFAULT_FILE_EXTENSION);
             if (file.exists()) {
@@ -537,7 +541,7 @@ public class StorageManager {
                     Object value;
                     while (page != null) {
                         for (Object offset : page.getRecordAddressList()) {
-                            record = getDataRecord(randomAccessFile, page.getPageNumber(), (short) offset);
+                            record = getDataRecord(randomAccessFile, page.getPageNumber(), (short) offset, selectionColumnIndexList);
                             for(int i = 0; i < columnIndexList.size(); i++) {
                                 columnIndex = columnIndexList.get(i);
                                 value = valueList.get(i);
@@ -721,6 +725,10 @@ public class StorageManager {
     }
 
     public DataRecord getDataRecord(RandomAccessFile randomAccessFile, int pageNumber, short address) {
+        return getDataRecord(randomAccessFile, pageNumber, address, null);
+    }
+
+    public DataRecord getDataRecord(RandomAccessFile randomAccessFile, int pageNumber, short address, List<Byte> columnList) {
         try {
             if (pageNumber >= 0 && address >= 0) {
                 DataRecord record = new DataRecord();
@@ -734,60 +742,61 @@ public class StorageManager {
                 for (byte i = 0; i < numberOfColumns; i++) {
                     serialTypeCodes[i] = randomAccessFile.readByte();
                 }
+                Object object;
                 for (byte i = 0; i < numberOfColumns; i++) {
                     switch (serialTypeCodes[i]) {
                         //case DT_TinyInt.nullSerialCode is overridden with DT_Text
 
                         case Constants.ONE_BYTE_NULL_SERIAL_TYPE_CODE:
-                            record.getColumnValueList().add(new DT_Text(null));
+                            object = new DT_Text(null);
                             break;
 
                         case Constants.TWO_BYTE_NULL_SERIAL_TYPE_CODE:
-                            record.getColumnValueList().add(new DT_SmallInt(randomAccessFile.readShort(), true));
+                            object = new DT_SmallInt(randomAccessFile.readShort(), true);
                             break;
 
                         case Constants.FOUR_BYTE_NULL_SERIAL_TYPE_CODE:
-                            record.getColumnValueList().add(new DT_Real(randomAccessFile.readFloat(), true));
+                            object = new DT_Real(randomAccessFile.readFloat(), true);
                             break;
 
                         case Constants.EIGHT_BYTE_NULL_SERIAL_TYPE_CODE:
-                            record.getColumnValueList().add(new DT_Double(randomAccessFile.readDouble(), true));
+                            object = new DT_Double(randomAccessFile.readDouble(), true);
                             break;
 
                         case Constants.TINY_INT_SERIAL_TYPE_CODE:
-                            record.getColumnValueList().add(new DT_TinyInt(randomAccessFile.readByte()));
+                            object = new DT_TinyInt(randomAccessFile.readByte());
                             break;
 
                         case Constants.SMALL_INT_SERIAL_TYPE_CODE:
-                            record.getColumnValueList().add(new DT_SmallInt(randomAccessFile.readShort()));
+                            object = new DT_SmallInt(randomAccessFile.readShort());
                             break;
 
                         case Constants.INT_SERIAL_TYPE_CODE:
-                            record.getColumnValueList().add(new DT_Int(randomAccessFile.readInt()));
+                            object = new DT_Int(randomAccessFile.readInt());
                             break;
 
                         case Constants.BIG_INT_SERIAL_TYPE_CODE:
-                            record.getColumnValueList().add(new DT_BigInt(randomAccessFile.readLong()));
+                            object = new DT_BigInt(randomAccessFile.readLong());
                             break;
 
                         case Constants.REAL_SERIAL_TYPE_CODE:
-                            record.getColumnValueList().add(new DT_Real(randomAccessFile.readFloat()));
+                            object = new DT_Real(randomAccessFile.readFloat());
                             break;
 
                         case Constants.DOUBLE_SERIAL_TYPE_CODE:
-                            record.getColumnValueList().add(new DT_Double(randomAccessFile.readDouble()));
+                            object = new DT_Double(randomAccessFile.readDouble());
                             break;
 
                         case Constants.DATE_SERIAL_TYPE_CODE:
-                            record.getColumnValueList().add(new DT_Date(randomAccessFile.readLong()));
+                            object = new DT_Date(randomAccessFile.readLong());
                             break;
 
                         case Constants.DATE_TIME_SERIAL_TYPE_CODE:
-                            record.getColumnValueList().add(new DT_DateTime(randomAccessFile.readLong()));
+                            object = new DT_DateTime(randomAccessFile.readLong());
                             break;
 
                         case Constants.TEXT_SERIAL_TYPE_CODE:
-                            record.getColumnValueList().add(new DT_Text(""));
+                            object = new DT_Text("");
                             break;
 
                         default:
@@ -797,11 +806,14 @@ public class StorageManager {
                                 for (byte k = 0; k < length; k++) {
                                     text[k] = (char) randomAccessFile.readByte();
                                 }
-                                record.getColumnValueList().add(new DT_Text(new String(text)));
+                                object = new DT_Text(new String(text));
                             }
+                            else
+                                object = null;
                             break;
-
                     }
+                    if(columnList != null && !columnList.contains(i))    continue;
+                    record.getColumnValueList().add(object);
                 }
                 return record;
             }

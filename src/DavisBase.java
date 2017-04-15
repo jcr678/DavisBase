@@ -1,7 +1,6 @@
 import common.CatalogDB;
 import common.Constants;
 import common.Utils;
-import parser.QueryParser;
 import test.Test;
 
 import java.io.File;
@@ -27,22 +26,22 @@ public class DavisBase {
         initializeDatabase();
         new Test().run(1);
 
-        QueryParser parser = new QueryParser();
-
-        /* Display the welcome screen */
-        splashScreen();
-
-		/* Variable to collect user input from the PROMPT */
-        String userCommand = "";
-
-        while(!isExit) {
-            System.out.print(Constants.PROMPT);
-			/* toLowerCase() renders command case insensitive */
-            userCommand = scanner.next().replace("\n", "").replace("\r", "").trim().toLowerCase();
-            // userCommand = userCommand.replace("\n", "").replace("\r", "");
-            parser.parse(userCommand);
-        }
-        System.out.println("Exiting...");
+//        QueryParser parser = new QueryParser();
+//
+//        /* Display the welcome screen */
+//        splashScreen();
+//
+//		/* Variable to collect user input from the PROMPT */
+//        String userCommand = "";
+//
+//        while(!isExit) {
+//            System.out.print(Constants.PROMPT);
+//			/* toLowerCase() renders command case insensitive */
+//            userCommand = scanner.next().replace("\n", "").replace("\r", "").trim().toLowerCase();
+//            // userCommand = userCommand.replace("\n", "").replace("\r", "");
+//            parser.parse(userCommand);
+//        }
+//        System.out.println("Exiting...");
     }
 
     /** ***********************************************************************

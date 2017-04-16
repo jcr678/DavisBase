@@ -1,12 +1,9 @@
 package storage;
 
-import Model.Column;
-import Model.Record;
 import common.Constants;
 import common.Utils;
 import console.ConsoleWriter;
 import datatypes.*;
-import datatypes.base.DT;
 import datatypes.base.DT_Numeric;
 import storage.model.DataRecord;
 import storage.model.Page;
@@ -232,41 +229,69 @@ public class StorageManager {
         try {
             if (page != null && record != null) {
                 int location = -1;
+                boolean isFirst = false;
                 PointerRecord pointerRecord = new PointerRecord();
                 if(page.getPageType() == Page.LEAF_TABLE_PAGE) {
                     return null;
                 }
-                location = binarySearch(randomAccessFile, record.getKey(), page.getNumberOfCells(), ((page.getPageNumber() * Page.PAGE_SIZE) + Page.getHeaderFixedLength()), page.getPageType());
-                if(location == page.getNumberOfCells()) {
-                    Page<PointerRecord> page1 = new Page<>(pageNumber1);
-                    page1.setPageType(page.getPageType());
-                    page1.setNumberOfCells(page.getNumberOfCells());
-                    page1.setRightNodeAddress(pageNumber2);
-//                    for(Object offset : page.getRecordAddressList()) {
-//                        page1.getRecordAddressList().add((short) offset);
-//                    }
-                    page1.setRecordAddressList(page.getRecordAddressList());
-                    page1.setPageNumber(pageNumber1);
-                    randomAccessFile.seek(Page.PAGE_SIZE * page1.getPageNumber());
-                    this.writePageHeader(randomAccessFile, page1);
-                    List<PointerRecord> records = copyRecords(randomAccessFile, (page.getPageNumber() * Page.PAGE_SIZE), page.getRecordAddressList(), (byte) 0, page.getNumberOfCells(), page1.getPageNumber(), record);
-                    for(PointerRecord object: records) {
-                        this.writeRecord(randomAccessFile, object);
-                    }
-                    Page<PointerRecord> page2 = new Page<>(pageNumber2);
-                    page2.setPageType(page.getPageType());
-                    page2.setNumberOfCells((byte) 1);
-                    page2.setRightNodeAddress(page.getRightNodeAddress());
-                    page2.setStartingAddress((short) (page2.getStartingAddress() - record.getSize()));
-                    page2.getRecordAddressList().add((short) (page2.getStartingAddress() - page2.getBaseAddress() + 1));
-                    page2.setPageNumber(pageNumber2);
-                    randomAccessFile.seek(page2.getBaseAddress());
-                    this.writePageHeader(randomAccessFile, page2);
-                    this.writeRecord(randomAccessFile, record);
+                location = binarySearch(randomAccessFile, record.getKey(), page.getNumberOfCells(), ((page.getPageNumber() * Page.PAGE_SIZE) + Page.getHeaderFixedLength()), page.getPageType(), true);
+                if(location < (page.getRecordAddressList().size() / 2)) {
+                    isFirst = true;
+                }
+
+                //Page 1
+                Page<PointerRecord> page1 = new Page<>(pageNumber1);
+                page1.setPageType(page.getPageType());
+                page1.setPageNumber(pageNumber1);
+                List<PointerRecord> leftRecords = copyRecords(randomAccessFile, (page.getPageNumber() * Page.PAGE_SIZE), page.getRecordAddressList(), (byte) 0, (byte) (page.getNumberOfCells() / 2), page1.getPageNumber(), record);
+                if(isFirst)
+                    leftRecords.add(location, record);
+                pointerRecord = leftRecords.get(leftRecords.size() - 1);
+                leftRecords.remove(leftRecords.size() - 1);
+                page1.setNumberOfCells((byte) leftRecords.size());
+                int index = 0;
+                short offset = (short) (Page.PAGE_SIZE - 1);
+                for(PointerRecord pointerRecord1 : leftRecords) {
+                    index++;
+                    offset = (short) (page1.getBaseAddress() + Page.PAGE_SIZE - 1 - (pointerRecord1.getSize() * index));
+                    pointerRecord1.setOffset(offset);
+                    page1.getRecordAddressList().add(offset);
+                }
+                page1.setStartingAddress((short) (offset + 1));
+                page1.setRightNodeAddress(pointerRecord.getLeftPageNumber());
+                pointerRecord.setLeftPageNumber(pageNumber1);
+
+
+                List<PointerRecord> rightRecords = copyRecords(randomAccessFile, (page.getPageNumber() * Page.PAGE_SIZE), page.getRecordAddressList(), (byte) ((page.getNumberOfCells() / 2) + 1), page.getNumberOfCells(), pageNumber2, record);
+
+
+                page1.setRightNodeAddress(pageNumber2);
+
+                //Page 2
+                Page<PointerRecord> page2 = new Page<>(pageNumber2);
+                page2.setPageType(page.getPageType());
+                page2.setNumberOfCells((byte) 1);
+                page2.setRightNodeAddress(page.getRightNodeAddress());
+                page2.setStartingAddress((short) (page2.getStartingAddress() - record.getSize()));
+                page2.getRecordAddressList().add((short) (page2.getStartingAddress() - page2.getBaseAddress() + 1));
+                page2.setPageNumber(pageNumber2);
+
+                page1.setRecordAddressList(page.getRecordAddressList());
+                randomAccessFile.seek(Page.PAGE_SIZE * page1.getPageNumber());
+                this.writePageHeader(randomAccessFile, page1);
+                if(isFirst) {
+                    leftRecords.add(location, record);
                 }
                 else {
-                    //Handle this when a record is being inserted in middle
+//                    rightRecords.add();
                 }
+//                for(PointerRecord object: records) {
+//                    this.writeRecord(randomAccessFile, object);
+//                }
+
+                randomAccessFile.seek(page2.getBaseAddress());
+                this.writePageHeader(randomAccessFile, page2);
+                this.writeRecord(randomAccessFile, record);
                 pointerRecord.setLeftPageNumber(pageNumber1);
                 pointerRecord.setKey(record.getKey());
                 return pointerRecord;
@@ -287,9 +312,11 @@ public class StorageManager {
                 randomAccessFile.seek(pageStartAddress + recordAddresses.get(i));
                 if(object.getClass().equals(PointerRecord.class)) {
                     PointerRecord record = new PointerRecord();
+                    record.setPageNumber(pageNumber);
+                    record.setOffset((short) (pageStartAddress + Page.PAGE_SIZE - 1 - (record.getSize() * (i - startIndex + 1))));
                     record.setLeftPageNumber(randomAccessFile.readInt());
                     record.setKey(randomAccessFile.readInt());
-                    records.add((T) record);
+                    records.add(i - startIndex, (T) record);
                 }
                 else if(object.getClass().equals(DataRecord.class)) {
                     DataRecord record = new DataRecord();
@@ -371,7 +398,7 @@ public class StorageManager {
 
                         }
                     }
-                    records.add((T) record);
+                    records.add(i - startIndex, (T) record);
                 }
             }
             return records;
@@ -414,6 +441,10 @@ public class StorageManager {
     }
 
     private int binarySearch(RandomAccessFile randomAccessFile, int key, int numberOfRecords, long seekPosition, byte pageType) {
+        return binarySearch(randomAccessFile, key, numberOfRecords, seekPosition, pageType, false);
+    }
+
+    private int binarySearch(RandomAccessFile randomAccessFile, int key, int numberOfRecords, long seekPosition, byte pageType, boolean literalSearch) {
         try {
             int start = 0, end = numberOfRecords;
             int mid;
@@ -422,10 +453,10 @@ public class StorageManager {
             short address;
             while(true) {
                 if(start > end) {
-                    if(pageType == Page.LEAF_TABLE_PAGE)
+                    if(pageType == Page.LEAF_TABLE_PAGE || literalSearch)
                         return start;
                     if(pageType == Page.INTERIOR_TABLE_PAGE) {
-                        if(end < 0)
+                        if (end < 0)
                             return pageNumber;
                         randomAccessFile.seek(seekPosition - Page.getHeaderFixedLength() + 4);
                         return randomAccessFile.readInt();
@@ -608,39 +639,39 @@ public class StorageManager {
                                     Object object = record.getColumnValueList().get(columnIndex);
                                     switch (Utils.resolveClass(value)) {
                                         case Constants.TINYINT:
-                                            isMatch = ((DT_TinyInt) value).compare((DT_TinyInt) object, condition);
+                                            isMatch = ((DT_TinyInt) value).compare((DT_TinyInt) object, condition) && isMatch;
                                             break;
 
                                         case Constants.SMALLINT:
-                                            isMatch = ((DT_SmallInt) value).compare((DT_SmallInt) object, condition);
+                                            isMatch = ((DT_SmallInt) value).compare((DT_SmallInt) object, condition) && isMatch;
                                             break;
 
                                         case Constants.INT:
-                                            isMatch = ((DT_Int) value).compare((DT_Int) object, condition);
+                                            isMatch = ((DT_Int) value).compare((DT_Int) object, condition) && isMatch;
                                             break;
 
                                         case Constants.BIGINT:
-                                            isMatch = ((DT_BigInt) value).compare((DT_BigInt) object, condition);
+                                            isMatch = ((DT_BigInt) value).compare((DT_BigInt) object, condition) && isMatch;
                                             break;
 
                                         case Constants.REAL:
-                                            isMatch = ((DT_Real) value).compare((DT_Real) object, condition);
+                                            isMatch = ((DT_Real) value).compare((DT_Real) object, condition) && isMatch;
                                             break;
 
                                         case Constants.DOUBLE:
-                                            isMatch = ((DT_Double) value).compare((DT_Double) object, condition);
+                                            isMatch = ((DT_Double) value).compare((DT_Double) object, condition) && isMatch;
                                             break;
 
                                         case Constants.DATE:
-                                            isMatch = ((DT_Date) value).compare((DT_Date) object, condition);
+                                            isMatch = ((DT_Date) value).compare((DT_Date) object, condition) && isMatch;
                                             break;
 
                                         case Constants.DATETIME:
-                                            isMatch = ((DT_DateTime) value).compare((DT_DateTime) object, condition);
+                                            isMatch = ((DT_DateTime) value).compare((DT_DateTime) object, condition) && isMatch;
                                             break;
 
                                         case Constants.TEXT:
-                                            isMatch = ((DT_Text) value).getValue().equalsIgnoreCase(((DT_Text) object).getValue());
+                                            isMatch = ((DT_Text) value).getValue().equalsIgnoreCase(((DT_Text) object).getValue()) && isMatch;
                                             break;
                                     }
                                 }

@@ -881,4 +881,84 @@ public class StorageManager {
         }
         return null;
     }
+
+    // ====================================================================================
+    // Query processing methods
+    // ====================================================================================
+    public List<String> fetchAllTableColumns(String tableName) {
+        List<String> columnNames = new ArrayList<>();
+        List<Byte> columnIndexList = new ArrayList<>();
+        columnIndexList.add((byte) 1);
+
+        List<Object> valueList = new ArrayList<>();
+        valueList.add(new DT_Text(tableName));
+
+        List<Short> conditionList = new ArrayList<>();
+        conditionList.add(DT_Numeric.EQUALS);
+
+        List<DataRecord> records = this.findRecord(Utils.getSystemDatabasePath(), Constants.SYSTEM_COLUMNS_TABLENAME, columnIndexList, valueList, conditionList, false);
+
+        for (int i = 0; i< records.size(); i++) {
+            DataRecord record = records.get(i);
+            Object object = record.getColumnValueList().get(2);
+            //System.out.print(((DT) object).getValue());
+            //System.out.print("    |    ");
+            columnNames.add(((DT) object).getStringValue());
+
+            //System.out.print("\n");
+        }
+
+        return columnNames;
+    }
+
+    public List<String> showTables(String tableName) {
+        List<String> tableNames = new ArrayList<>();
+        List<Byte> columnIndexList = new ArrayList<>();
+        List<Object> valueList = new ArrayList<>();
+        List<Short> conditionList = new ArrayList<>();
+
+        List<DataRecord> records = this.findRecord(Utils.getSystemDatabasePath(), Constants.SYSTEM_COLUMNS_TABLENAME, columnIndexList, valueList, conditionList, false);
+
+        for (int i = 0; i< records.size(); i++) {
+            DataRecord record = records.get(i);
+            Object object = record.getColumnValueList().get(1);
+            //System.out.print(((DT) object).getValue());
+            //System.out.print("    |    ");
+            String strValue = ((DT) object).getStringValue();
+            if (!tableNames.contains(strValue)) {
+                tableNames.add(strValue);
+            }
+
+            //System.out.print("\n");
+        }
+
+        return tableNames;
+    }
+
+    public void fetchTableColumns(String tableName, List<Byte> selectionIndexList) {
+        StorageManager manager = new StorageManager();
+        List<Byte> columnIndexList = new ArrayList<>();
+
+        List<Object> valueList = new ArrayList<>();
+        valueList.add(new DT_Text(tableName));
+
+        List<Short> conditionList = new ArrayList<>();
+        conditionList.add(DT_Numeric.EQUALS);
+
+        /*List<Byte> selectionIndexList = new ArrayList<>();
+        selectionIndexList.add((byte) 0);
+        selectionIndexList.add((byte) 1);
+        selectionIndexList.add((byte) 2);
+        selectionIndexList.add((byte) 5);*/
+
+        List<DataRecord> records = manager.findRecord(Utils.getSystemDatabasePath(), Constants.SYSTEM_COLUMNS_TABLENAME, columnIndexList, valueList, conditionList, selectionIndexList, false);
+        for (DataRecord record : records) {
+            for(Object object: record.getColumnValueList()) {
+                System.out.print(((DT) object).getValue());
+                System.out.print("    |    ");
+            }
+            System.out.print("\n");
+        }
+    }
+
 }

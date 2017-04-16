@@ -531,7 +531,7 @@ public class StorageManager {
             File file = new File(databaseName + "/" + tableName + Constants.DEFAULT_FILE_EXTENSION);
             if (file.exists()) {
                 RandomAccessFile randomAccessFile = new RandomAccessFile(file, "r");
-                if(columnIndexList.size() > 0) {
+                if(columnIndexList != null) {
                     Page page = getFirstPage(file);
                     DataRecord record;
                     List<DataRecord> matchRecords = new ArrayList<>();
@@ -541,8 +541,10 @@ public class StorageManager {
                     Object value;
                     while (page != null) {
                         for (Object offset : page.getRecordAddressList()) {
+                            isMatch = true;
                             record = getDataRecord(randomAccessFile, page.getPageNumber(), (short) offset, selectionColumnIndexList);
                             for(int i = 0; i < columnIndexList.size(); i++) {
+                                isMatch = false;
                                 columnIndex = columnIndexList.get(i);
                                 value = valueList.get(i);
                                 condition = conditionList.get(i);

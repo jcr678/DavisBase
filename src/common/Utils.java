@@ -1,5 +1,6 @@
 package common;
 
+import Model.DataType;
 import datatypes.*;
 
 /**
@@ -26,7 +27,27 @@ public class Utils {
     }
 
     public static String getUserDatabasePath(String database) {
-        return Constants.DEFAULT_DATA_DIRNAME + "/" + Constants.DEFAULT_USER_DATABASENAME;
+        return Constants.DEFAULT_DATA_DIRNAME + "/" + database;
+    }
+
+    public static void printError(String errorMessage) {
+        printMessage(errorMessage);
+    }
+
+    public static void printMissingDatabaseError(String databaseName) {
+        printError("The database " + databaseName + " does not exist");
+    }
+
+    public static void printMissingDefaultDatabaseError() {
+        printError("The database " + Constants.DEFAULT_USER_DATABASE + " does not exist");
+    }
+
+    public static void printMissingTableError(String tableName) {
+        printError("The table " + tableName + " does not exist");
+    }
+
+    public static void printMessage(String str) {
+        System.out.println(str);
     }
 
     public static byte resolveClass(Object object) {

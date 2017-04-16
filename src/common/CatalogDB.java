@@ -1,5 +1,6 @@
 package common;
 
+import Model.DataType;
 import parser.UpdateStatement;
 import storage.StorageManager;
 
@@ -28,11 +29,11 @@ public class CatalogDB {
             columnNameList.add("record_count");
             columnNameList.add("col_tbl_st_rowid");
             columnNameList.add("nxt_avl_col_tbl_rowid");
-            columnDataTypeList.add("INT");
-            columnDataTypeList.add("TEXT");
-            columnDataTypeList.add("INT");
-            columnDataTypeList.add("INT");
-            columnDataTypeList.add("INT");
+            columnDataTypeList.add(DataType.INT.toString());
+            columnDataTypeList.add(DataType.TEXT.toString());
+            columnDataTypeList.add(DataType.INT.toString());
+            columnDataTypeList.add(DataType.INT.toString());
+            columnDataTypeList.add(DataType.INT.toString());
             columnKeyConstraintList.add(null);
             columnKeyConstraintList.add(null);
             columnKeyConstraintList.add(null);

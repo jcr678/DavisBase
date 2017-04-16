@@ -1,0 +1,16 @@
+CREATE TABLE sample_table ( 
+ssn INT PRIMARY KEY, 
+fName TEXT NOT NULL, 
+nName TEXT,
+address TEXT,
+);
+
+CREATE TABLE sample_table1 ( 
+ssn INT PRIMARY KEY,
+);
+
+CREATE TABLE sample_table2 ( 
+fName TEXT NOT NULL, 
+nName TEXT,
+address TEXT,
+);

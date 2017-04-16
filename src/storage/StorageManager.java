@@ -1,9 +1,12 @@
 package storage;
 
+import Model.Column;
+import Model.Record;
 import common.Constants;
 import common.Utils;
 import console.ConsoleWriter;
 import datatypes.*;
+import datatypes.base.DT;
 import datatypes.base.DT_Numeric;
 import storage.model.DataRecord;
 import storage.model.Page;
@@ -29,12 +32,26 @@ public class StorageManager {
                 System.out.println("Database " + databaseName + " already exists!");
                 return false;
             }
-            return dirFile.mkdir();
+            return dirFile.mkdirs();
         }
         catch (Exception e) {
             e.printStackTrace();
             return false;
         }
+    }
+
+    /***
+     * Checks if the database with name 'databaseName' exists in the system.
+     * @param databaseName
+     * @return True if the database exists else false.
+     */
+    public static boolean checkDatabaseExists(String databaseName) {
+        File dirFile = new File(databaseName);
+        if(!dirFile.exists()) {
+            return false;
+        }
+
+        return true;
     }
 
     public boolean createTable(String databaseName, String tableName) {
@@ -58,6 +75,45 @@ public class StorageManager {
         }
         catch (IOException e) {
             e.printStackTrace();
+            return false;
+        }
+    }
+
+    /***
+     * Checks if the table exists in the database.
+     * @param databaseName
+     * @param tableName
+     * @return True if the table exists else False.
+     */
+    public static boolean checkTableExists(String databaseName, String tableName) {
+        File dirFile = new File(databaseName);
+        if(!dirFile.exists()) {
+            return false;
+        }
+
+        File file = new File( databaseName + "/" + tableName);
+        if(!file.exists()) {
+            return false;
+        }
+
+        return true;
+    }
+
+    public static boolean defaultDatabaseExists() {
+        if (StorageManager.checkDatabaseExists(Utils.getUserDatabasePath(Constants.DEFAULT_USER_DATABASE))) {
+            return true;
+        }
+        else {
+            return false;
+        }
+    }
+
+    public static boolean tableExistsInDefaultDatabase (String tableName) {
+        StorageManager storageManager = new StorageManager();
+        if (storageManager.checkTableExists(Constants.DEFAULT_USER_DATABASE, tableName)) {
+            return true;
+        }
+        else {
             return false;
         }
     }

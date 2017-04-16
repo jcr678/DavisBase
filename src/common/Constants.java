@@ -16,6 +16,10 @@ public interface Constants {
     String DEFAULT_USER_DATABASENAME = "user_data";
     String SYSTEM_TABLES_TABLENAME = "davisbase_tables";
     String SYSTEM_COLUMNS_TABLENAME = "davisbase_columns";
+    String DEFAULT_USER_DATABASE = "defaultDB";
+
+    String PRIMARY_KEY_PRESENT = "PRI";
+    String CONSTRAINT_ABSENT = "NO";
 
     //DataType Class Constants
     byte INVALID_CLASS = -1;

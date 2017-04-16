@@ -22,6 +22,13 @@ public abstract class DT<T> {
         return value;
     }
 
+    public String getStringValue() {
+        if(value == null) {
+            return "NULL";
+        }
+        return value.toString();
+    }
+
     public void setValue(T value) {
         this.value = value;
     }

@@ -23,6 +23,9 @@ public class Test {
 
             case 2:
                 fetchSelectiveTableColumns(Constants.SYSTEM_COLUMNS_TABLENAME);
+
+            case 3:
+                selectAll(Constants.SYSTEM_TABLES_TABLENAME);
         }
     }
 
@@ -58,6 +61,21 @@ public class Test {
         selectionIndexList.add((byte) 2);
         selectionIndexList.add((byte) 5);
         List<DataRecord> records = manager.findRecord(Utils.getSystemDatabasePath(), Constants.SYSTEM_COLUMNS_TABLENAME, columnIndexList, valueList, conditionList, selectionIndexList, false);
+        for (DataRecord record : records) {
+            for(Object object: record.getColumnValueList()) {
+                System.out.print(((DT) object).getValue());
+                System.out.print("    |    ");
+            }
+            System.out.print("\n");
+        }
+    }
+
+    private void selectAll(String tableName) {
+        StorageManager manager = new StorageManager();
+        List<Byte> columnIndexList = new ArrayList<>();
+        List<Object> valueList = new ArrayList<>();
+        List<Short> conditionList = new ArrayList<>();
+        List<DataRecord> records = manager.findRecord(Utils.getSystemDatabasePath(), Constants.SYSTEM_TABLES_TABLENAME, columnIndexList, valueList, conditionList,false);
         for (DataRecord record : records) {
             for(Object object: record.getColumnValueList()) {
                 System.out.print(((DT) object).getValue());

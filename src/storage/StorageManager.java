@@ -261,7 +261,6 @@ public class StorageManager {
                 page1.setRightNodeAddress(pointerRecord.getLeftPageNumber());
                 pointerRecord.setLeftPageNumber(pageNumber1);
 
-
                 List<PointerRecord> rightRecords = copyRecords(randomAccessFile, (page.getPageNumber() * Page.PAGE_SIZE), page.getRecordAddressList(), (byte) ((page.getNumberOfCells() / 2) + 1), page.getNumberOfCells(), pageNumber2, record);
 
 
@@ -639,41 +638,42 @@ public class StorageManager {
                                     Object object = record.getColumnValueList().get(columnIndex);
                                     switch (Utils.resolveClass(value)) {
                                         case Constants.TINYINT:
-                                            isMatch = ((DT_TinyInt) value).compare((DT_TinyInt) object, condition) && isMatch;
+                                            isMatch = ((DT_TinyInt) value).compare((DT_TinyInt) object, condition);
                                             break;
 
                                         case Constants.SMALLINT:
-                                            isMatch = ((DT_SmallInt) value).compare((DT_SmallInt) object, condition) && isMatch;
+                                            isMatch = ((DT_SmallInt) value).compare((DT_SmallInt) object, condition);
                                             break;
 
                                         case Constants.INT:
-                                            isMatch = ((DT_Int) value).compare((DT_Int) object, condition) && isMatch;
+                                            isMatch = ((DT_Int) value).compare((DT_Int) object, condition);
                                             break;
 
                                         case Constants.BIGINT:
-                                            isMatch = ((DT_BigInt) value).compare((DT_BigInt) object, condition) && isMatch;
+                                            isMatch = ((DT_BigInt) value).compare((DT_BigInt) object, condition);
                                             break;
 
                                         case Constants.REAL:
-                                            isMatch = ((DT_Real) value).compare((DT_Real) object, condition) && isMatch;
+                                            isMatch = ((DT_Real) value).compare((DT_Real) object, condition);
                                             break;
 
                                         case Constants.DOUBLE:
-                                            isMatch = ((DT_Double) value).compare((DT_Double) object, condition) && isMatch;
+                                            isMatch = ((DT_Double) value).compare((DT_Double) object, condition);
                                             break;
 
                                         case Constants.DATE:
-                                            isMatch = ((DT_Date) value).compare((DT_Date) object, condition) && isMatch;
+                                            isMatch = ((DT_Date) value).compare((DT_Date) object, condition);
                                             break;
 
                                         case Constants.DATETIME:
-                                            isMatch = ((DT_DateTime) value).compare((DT_DateTime) object, condition) && isMatch;
+                                            isMatch = ((DT_DateTime) value).compare((DT_DateTime) object, condition);
                                             break;
 
                                         case Constants.TEXT:
-                                            isMatch = ((DT_Text) value).getValue().equalsIgnoreCase(((DT_Text) object).getValue()) && isMatch;
+                                            isMatch = ((DT_Text) value).getValue().equalsIgnoreCase(((DT_Text) object).getValue());
                                             break;
                                     }
+                                    if(isMatch == false) break;
                                 }
                             }
                             if(isMatch) {

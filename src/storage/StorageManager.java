@@ -123,13 +123,7 @@ public class StorageManager {
                         default:
                             if(pageCount > 1) {
                                 PointerRecord pointerRecord1 = splitPage(randomAccessFile, readPageHeader(randomAccessFile, 0), record);
-                                if(pointerRecord1 == null) {
-                                    System.out.println("Well things still look pretty darn bad");
-                                }
-                                else if(pointerRecord1.getLeftPageNumber() == -1){
-                                    System.out.println("Successfully inserted!");
-                                }
-                                else {
+                                if(pointerRecord1 != null && pointerRecord1.getLeftPageNumber() != -1)  {
                                     Page<PointerRecord> rootPage = Page.createNewEmptyPage(pointerRecord1);
                                     rootPage.setPageNumber(0);
                                     rootPage.setPageType(Page.INTERIOR_TABLE_PAGE);
@@ -140,7 +134,6 @@ public class StorageManager {
                                     pointerRecord1.setOffset((short) (rootPage.getStartingAddress() + 1));
                                     this.writePageHeader(randomAccessFile, rootPage);
                                     this.writeRecord(randomAccessFile, pointerRecord1);
-                                    System.out.println("Well things still looked pretty darn bad");
                                 }
                             }
                             break;
@@ -149,9 +142,7 @@ public class StorageManager {
                     randomAccessFile.close();
                     return true;
                 }
-                System.out.println(page.getBaseAddress() + " " + page.getPageNumber() + " " + page.getPageType() + " " + page.getNumberOfCells() + " " + page.getStartingAddress());
                 short address = (short) getAddress(file, record.getRowId(), page.getPageNumber());
-                System.out.println(address);
                 page.setNumberOfCells((byte)(page.getNumberOfCells() + 1));
                 page.setStartingAddress((short) (page.getStartingAddress() - record.getSize() - record.getHeaderSize()));
                 if(address == page.getRecordAddressList().size())
@@ -194,7 +185,7 @@ public class StorageManager {
     private PointerRecord splitPage(RandomAccessFile randomAccessFile, Page page, DataRecord record, int pageNumber1, int pageNumber2) {
         try {
             if (page != null && record != null) {
-                int location = -1;
+                int location;
                 PointerRecord pointerRecord = new PointerRecord();
                 if (page.getPageType() == Page.INTERIOR_TABLE_PAGE) {
                     return null;
@@ -291,7 +282,7 @@ public class StorageManager {
     private PointerRecord splitPage(RandomAccessFile randomAccessFile, Page page, PointerRecord record, int pageNumber1, int pageNumber2) {
         try {
             if (page != null && record != null) {
-                int location = -1;
+                int location;
                 boolean isFirst = false;
 
                 PointerRecord pointerRecord;
@@ -529,7 +520,6 @@ public class StorageManager {
                     }
                 }
                 mid = (start + end) / 2;
-                System.out.println(seekPosition + " " + mid);
                 randomAccessFile.seek(seekPosition + (Short.BYTES * mid));
                 address = randomAccessFile.readShort();
                 randomAccessFile.seek(seekPosition - Page.getHeaderFixedLength() + address);

@@ -1,11 +1,9 @@
 package datatypes.base;
 
-import Model.DataType;
 import Model.Literal;
 import common.Constants;
 import common.Utils;
 import datatypes.*;
-import storage.StorageManager;
 
 /**
  * Created by dakle on 13/4/17.
@@ -61,11 +59,10 @@ public abstract class DT<T> {
                 return new DT_Real(Float.valueOf(value));
             case Constants.DOUBLE:
                 return new DT_Double(Double.valueOf(value));
-            case Constants.DATETIME: {
-                return new DT_DateTime(Long.valueOf(Utils.getDateEpoc(value, false)));
-            }
+            case Constants.DATETIME:
+                return new DT_DateTime(Utils.getDateEpoc(value, false));
             case Constants.DATE:
-                return new DT_DateTime(Long.valueOf(Utils.getDateEpoc(value, true)));
+                return new DT_DateTime(Utils.getDateEpoc(value, true));
             case Constants.TEXT:
                 return new DT_Text(value);
         }

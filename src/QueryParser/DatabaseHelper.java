@@ -1,13 +1,11 @@
 package QueryParser;
 
 import Model.*;
+import common.Constants;
 
 import java.io.File;
 import java.util.ArrayList;
 
-/**
- * Created by dhruv on 4/7/2017.
- */
 public class DatabaseHelper {
 
     public static final String SELECT_COMMAND = "SELECT";
@@ -25,20 +23,15 @@ public class DatabaseHelper {
     public static final String CREATE_TABLE_COMMAND = "CREATE TABLE";
     public static final String CREATE_DATABASE_COMMAND = "CREATE DATABASE";
     public static final String USE_DATABASE_COMMAND = "USE";
-    public static final String NO_DATABASE_SELECTED_MESSAGE = "No database selected";
+    private static final String NO_DATABASE_SELECTED_MESSAGE = "No database selected";
 
     public static String CurrentDatabaseName = "";
     public static String prompt = "davisql> ";
-    static String version = "v1.0b(example)";
-    static String copyright = "Â©2017 Dhruva Pendharkar";
+    private static String version = "v1.0b";
+    private static String copyright = "Â©2017 Dhruva Pendharkar";
 
     public static IQuery ShowTableListQueryHandler() {
-        if(DatabaseHelper.CurrentDatabaseName.equals("")){
-            System.out.println(DatabaseHelper.NO_DATABASE_SELECTED_MESSAGE);
-            return null;
-        }
-
-        return new ShowTableQuery(DatabaseHelper.CurrentDatabaseName);
+        return new ShowTableQuery(Constants.DEFAULT_CATALOG_DATABASENAME);
     }
 
     public static IQuery DropTableQueryHandler(String tableName) {
@@ -62,7 +55,7 @@ public class DatabaseHelper {
         }
 
         boolean isSelectAll = false;
-        SelectQuery query = null;
+        SelectQuery query;
         ArrayList<String> columns = new ArrayList<>();
         for(String attribute : attributes){
             columns.add(attribute.trim());
@@ -90,11 +83,11 @@ public class DatabaseHelper {
         System.out.println(getCopyright());
     }
 
-    public static String getVersion() {
+    private static String getVersion() {
         return version;
     }
 
-    public static String getCopyright() {
+    private static String getCopyright() {
         return copyright;
     }
 

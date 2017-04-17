@@ -27,9 +27,7 @@ public class UserPrompt {
     private static void splashScreen() {
         System.out.println(DatabaseHelper.line("-",80));
         System.out.println("Welcome to DavisBaseLite"); // Display the string.
-        System.out.println("DavisBaseLite Version ");
         DatabaseHelper.ShowVersionQueryHandler();
-        System.out.println(DatabaseHelper.getCopyright());
         System.out.println("\nType \"help;\" to display supported commands.");
         System.out.println(DatabaseHelper.line("-",80));
     }

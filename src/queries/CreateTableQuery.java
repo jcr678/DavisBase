@@ -26,7 +26,6 @@ public class CreateTableQuery implements IQuery {
 
     @Override
     public Result ExecuteQuery() {
-        /*TODO : replace with actual logic*/
         Result result = new Result(1);
         return result;
     }
@@ -38,7 +37,7 @@ public class CreateTableQuery implements IQuery {
         // Check if database exists
         if (storageManager.databaseExists(this.databaseName)) {
             // Database does not exist.
-            Utils.printMissingDefaultDatabaseError();
+            Utils.printMissingDatabaseError(databaseName);
             return false;
         }
         

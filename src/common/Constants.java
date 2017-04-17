@@ -13,10 +13,8 @@ public interface Constants {
     String DEFAULT_FILE_EXTENSION = ".tbl";
     String DEFAULT_DATA_DIRNAME = "data";
     String DEFAULT_CATALOG_DATABASENAME = "catalog";
-    String DEFAULT_USER_DATABASENAME = "user_data";
     String SYSTEM_TABLES_TABLENAME = "davisbase_tables";
     String SYSTEM_COLUMNS_TABLENAME = "davisbase_columns";
-    String DEFAULT_USER_DATABASE = "defaultDB";
 
     String PRIMARY_KEY_PRESENT = "PRI";
     String CONSTRAINT_ABSENT = "NO";

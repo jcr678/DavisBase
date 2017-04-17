@@ -72,11 +72,14 @@ public class CreateTableQuery extends BaseQuery implements IQuery {
                         }
 
                         // Set the NULL constraints.
-                        if (column.isNull) {
-                           columnNullConstraintList.add(null);
+                        if (hasPrimaryKey && i == 0) {
+                            columnNullConstraintList.add("NO");
+                        }
+                        else if (column.isNull) {
+                           columnNullConstraintList.add("YES");
                         }
                         else {
-                            columnNullConstraintList.add(Constants.CONSTRAINT_ABSENT);
+                            columnNullConstraintList.add("NO");
                         }
                     }
 

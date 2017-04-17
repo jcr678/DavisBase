@@ -8,7 +8,7 @@ public enum DataType {
     TINYINT,
     SMALLINT,
     INT,
-    BIG,
+    BIGINT,
     REAL,
     DOUBLE,
     DATETIME,

@@ -31,6 +31,9 @@ public abstract class DT<T> {
 
     public void setValue(T value) {
         this.value = value;
+         if (value != null) {
+             this.isNull = false;
+         }
     }
 
     public boolean isNull() {

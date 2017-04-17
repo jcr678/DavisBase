@@ -50,7 +50,7 @@ public class Column {
             case "tinyint": return DataType.TINYINT;
             case "smallint": return DataType.SMALLINT;
             case "int": return DataType.INT;
-            case "big": return DataType.BIG;
+            case "bigint": return DataType.BIGINT;
             case "real": return DataType.REAL;
             case "double": return DataType.DOUBLE;
             case "datetime": return DataType.DATETIME;

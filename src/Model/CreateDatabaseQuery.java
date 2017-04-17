@@ -1,9 +1,9 @@
 package Model;
 
 import QueryParser.DatabaseHelper;
+import common.Constants;
 
 import java.io.File;
-import java.util.ArrayList;
 
 public class CreateDatabaseQuery implements IQuery {
     public String databaseName;
@@ -14,9 +14,7 @@ public class CreateDatabaseQuery implements IQuery {
 
     @Override
     public Result ExecuteQuery() {
-        /*TODO : Replace using constants file*/
-        String DEFAULT_DATA_DIRNAME = "data";
-        File database = new File(DEFAULT_DATA_DIRNAME + "/" + this.databaseName);
+        File database = new File(Constants.DEFAULT_DATA_DIRNAME + "/" + this.databaseName);
         boolean isCreated = database.mkdir();
 
         if(!isCreated){

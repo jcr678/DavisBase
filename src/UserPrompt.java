@@ -1,7 +1,5 @@
-package QueryParser;
-
 import Model.IQuery;
-import Model.Result;
+import QueryParser.DatabaseHelper;
 import common.CatalogDB;
 import common.Constants;
 
@@ -10,59 +8,50 @@ import java.util.Scanner;
 
 public class UserPrompt {
 
-    public static final String USE_HELP_MESSAGE = "Please use 'HELP' to see a list of commands";
-    static boolean isExit = false;
-    static Scanner scanner = new Scanner(System.in).useDelimiter(";");
-
+  private static boolean isExit = false;
+  private static Scanner scanner = new Scanner(System.in).useDelimiter(";");
+  private static final String USE_HELP_MESSAGE = "Please use 'HELP' to see a list of commands";
+    
     public static void main(String[] args) {
 
-        initializeDatabase();
-		splashScreen();
-        String userCommand = "";
+        splashScreen();
+        InitializeDatabase();
 
         while(!isExit) {
             System.out.print(DatabaseHelper.prompt);
-			userCommand = scanner.next().replace("\n", "").replace("\r", " ").trim().toLowerCase();
+            String userCommand = scanner.next().replace("\n", "").replace("\r", " ").trim().toLowerCase();
             parseUserCommand(userCommand);
         }
     }
 
-    public static void splashScreen() {
+    private static void splashScreen() {
         System.out.println(DatabaseHelper.line("-",80));
         System.out.println("Welcome to DavisBaseLite"); // Display the string.
-        System.out.println("DavisBaseLite Version ");
         DatabaseHelper.ShowVersionQueryHandler();
-        System.out.println(DatabaseHelper.getCopyright());
         System.out.println("\nType \"help;\" to display supported commands.");
         System.out.println(DatabaseHelper.line("-",80));
     }
 
-    public static void parseUserCommand (String userCommand) {
-		
-		if(userCommand.toLowerCase().equals(DatabaseHelper.SHOW_TABLES_COMMAND.toLowerCase())){
-		    IQuery query = DatabaseHelper.ShowTableListQueryHandler();
+    private static void parseUserCommand (String userCommand) {
+        if(userCommand.toLowerCase().equals(DatabaseHelper.SHOW_TABLES_COMMAND.toLowerCase())){
+            IQuery query = DatabaseHelper.ShowTableListQueryHandler();
             DatabaseHelper.ExecuteQuery(query);
-		    return;
         }
         else if(userCommand.toLowerCase().equals(DatabaseHelper.SHOW_DATABASES_COMMAND.toLowerCase())){
             IQuery query = DatabaseHelper.ShowDatabaseListQueryHandler();
             DatabaseHelper.ExecuteQuery(query);
-            return;
         }
         else if(userCommand.toLowerCase().equals(DatabaseHelper.HELP_COMMAND.toLowerCase())){
             DatabaseHelper.HelpQueryHandler();
-            return;
         }
         else if(userCommand.toLowerCase().equals(DatabaseHelper.VERSION_COMMAND.toLowerCase())){
             DatabaseHelper.ShowVersionQueryHandler();
-            return;
         }
         else if(userCommand.toLowerCase().equals(DatabaseHelper.EXIT_COMMAND.toLowerCase()) ||
                 userCommand.toLowerCase().equals(DatabaseHelper.QUIT_COMMAND.toLowerCase())){
 
             System.out.println("Exiting Database...");
             isExit = true;
-            return;
         }
         else if(userCommand.toLowerCase().startsWith(DatabaseHelper.USE_DATABASE_COMMAND.toLowerCase())){
             if(!PartsEqual(userCommand, DatabaseHelper.USE_DATABASE_COMMAND)){
@@ -73,7 +62,6 @@ public class UserPrompt {
             String databaseName = userCommand.substring(DatabaseHelper.USE_DATABASE_COMMAND.length());
             IQuery query = DatabaseHelper.UseDatabaseQueryHandler(databaseName.trim());
             DatabaseHelper.ExecuteQuery(query);
-            return;
         }
         else if(userCommand.toLowerCase().startsWith(DatabaseHelper.DROP_TABLE_COMMAND.toLowerCase())){
             if(!PartsEqual(userCommand, DatabaseHelper.DROP_TABLE_COMMAND)){
@@ -84,7 +72,6 @@ public class UserPrompt {
             String tableName = userCommand.substring(DatabaseHelper.DROP_TABLE_COMMAND.length());
             IQuery query = DatabaseHelper.DropTableQueryHandler(tableName.trim());
             DatabaseHelper.ExecuteQuery(query);
-            return;
         }
         else if(userCommand.toLowerCase().startsWith(DatabaseHelper.DROP_DATABASE_COMMAND.toLowerCase())){
             if(!PartsEqual(userCommand, DatabaseHelper.DROP_DATABASE_COMMAND)){
@@ -95,7 +82,6 @@ public class UserPrompt {
             String databaseName = userCommand.substring(DatabaseHelper.DROP_DATABASE_COMMAND.length());
             IQuery query = DatabaseHelper.DropDatabaseQueryHandler(databaseName.trim());
             DatabaseHelper.ExecuteQuery(query);
-            return;
         }
         else if(userCommand.toLowerCase().startsWith(DatabaseHelper.SELECT_COMMAND.toLowerCase())){
             if(!PartsEqual(userCommand, DatabaseHelper.SELECT_COMMAND)){
@@ -203,7 +189,6 @@ public class UserPrompt {
                 return;
             }
 
-            String tableName = "";
             String conditions = "";
             int setIndex = userCommand.toLowerCase().indexOf("set");
             if(setIndex == -1) {
@@ -211,7 +196,7 @@ public class UserPrompt {
                 return;
             }
 
-            tableName = userCommand.substring(DatabaseHelper.UPDATE_COMMAND.length(), setIndex).trim();
+            String tableName = userCommand.substring(DatabaseHelper.UPDATE_COMMAND.length(), setIndex).trim();
             String clauses = userCommand.substring(setIndex + "set".length());
             int whereIndex = userCommand.toLowerCase().indexOf("where");
             if(whereIndex == -1){
@@ -234,17 +219,13 @@ public class UserPrompt {
             String databaseName = userCommand.substring(DatabaseHelper.CREATE_DATABASE_COMMAND.length());
             IQuery query = DatabaseHelper.CreateDatabaseQueryHandler(databaseName.trim());
             DatabaseHelper.ExecuteQuery(query);
-            return;
         }
         else if(userCommand.toLowerCase().startsWith(DatabaseHelper.CREATE_TABLE_COMMAND.toLowerCase())){
             if(!PartsEqual(userCommand, DatabaseHelper.CREATE_TABLE_COMMAND)){
                 DatabaseHelper.UnrecognisedCommand(userCommand, USE_HELP_MESSAGE);
                 return;
             }
-
-            String tableName = "";
-            IQuery query = null;
-
+          
             int openBracketIndex = userCommand.toLowerCase().indexOf("(");
             if(openBracketIndex == -1) {
                 QueryParser.DatabaseHelper.UnrecognisedCommand(userCommand, "Expected (");
@@ -256,12 +237,10 @@ public class UserPrompt {
                 return;
             }
 
-            tableName = userCommand.substring(DatabaseHelper.CREATE_TABLE_COMMAND.length(), openBracketIndex).trim();
+            String tableName = userCommand.substring(DatabaseHelper.CREATE_TABLE_COMMAND.length(), openBracketIndex).trim();
             String columnsPart = userCommand.substring(openBracketIndex + 1, userCommand.length()-1);
-
-            query = DatabaseHelper.CreateTableQueryHandler(tableName, columnsPart);
+            IQuery query = DatabaseHelper.CreateTableQueryHandler(tableName, columnsPart);
             DatabaseHelper.ExecuteQuery(query);
-            return;
         }
         else{
             DatabaseHelper.UnrecognisedCommand(userCommand, USE_HELP_MESSAGE);
@@ -281,16 +260,15 @@ public class UserPrompt {
         return true;
     }
 
-    public static void initializeDatabase() {
+    private static void InitializeDatabase() {
         File baseDir = new File(Constants.DEFAULT_DATA_DIRNAME);
-        if(baseDir.exists()) {
+        if(!baseDir.exists()) {
             File catalogDir = new File(Constants.DEFAULT_DATA_DIRNAME + "/" + Constants.DEFAULT_CATALOG_DATABASENAME);
             if(!catalogDir.exists()) {
-                if(catalogDir.mkdir()) {
+                if(catalogDir.mkdirs()) {
                     new CatalogDB().createCatalogDB();
                 }
             }
         }
-
     }
 }

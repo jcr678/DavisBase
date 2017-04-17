@@ -10,26 +10,22 @@ import java.util.Scanner;
 
 public class UserPrompt {
 
-    static boolean isExit = false;
-    static Scanner scanner = new Scanner(System.in).useDelimiter(";");
+    private static boolean isExit = false;
+    private static Scanner scanner = new Scanner(System.in).useDelimiter(";");
 
     public static void main(String[] args) {
 
 		splashScreen();
-        String userCommand = "";
-
-        // Initialize the database.
-        initializeDatabase();
-        //new Test().run(1);
+        InitializeDatabase();
 
         while(!isExit) {
             System.out.print(DatabaseHelper.prompt);
-			userCommand = scanner.next().replace("\n", "").replace("\r", " ").trim().toLowerCase();
+            String userCommand = scanner.next().replace("\n", "").replace("\r", " ").trim().toLowerCase();
             parseUserCommand(userCommand);
         }
     }
 
-    public static void splashScreen() {
+    private static void splashScreen() {
         System.out.println(DatabaseHelper.line("-",80));
         System.out.println("Welcome to DavisBaseLite"); // Display the string.
         System.out.println("DavisBaseLite Version ");
@@ -39,32 +35,27 @@ public class UserPrompt {
         System.out.println(DatabaseHelper.line("-",80));
     }
 
-    public static void parseUserCommand (String userCommand) {
+    private static void parseUserCommand (String userCommand) {
 		
 		if(userCommand.toLowerCase().equals(DatabaseHelper.SHOW_TABLES_COMMAND.toLowerCase())){
 		    IQuery query = DatabaseHelper.ShowTableListQueryHandler();
 		    ExecuteQuery(query);
-		    return;
         }
         else if(userCommand.toLowerCase().equals(DatabaseHelper.HELP_COMMAND.toLowerCase())){
             DatabaseHelper.HelpQueryHandler();
-            return;
         }
         else if(userCommand.toLowerCase().equals(DatabaseHelper.VERSION_COMMAND.toLowerCase())){
             DatabaseHelper.ShowVersionQueryHandler();
-            return;
         }
         else if(userCommand.toLowerCase().equals(DatabaseHelper.EXIT_COMMAND.toLowerCase()) ||
                 userCommand.toLowerCase().equals(DatabaseHelper.QUIT_COMMAND.toLowerCase())){
             System.out.println("Exiting Database...");
             isExit = true;
-            return;
         }
         else if(userCommand.toLowerCase().startsWith(DatabaseHelper.DROP_COMMAND.toLowerCase())){
             String tableName = userCommand.substring(DatabaseHelper.DROP_COMMAND.length());
             IQuery query = DatabaseHelper.DropTableQueryHandler(tableName.trim());
             ExecuteQuery(query);
-            return;
         }
         else if(userCommand.toLowerCase().startsWith(DatabaseHelper.SELECT_COMMAND.toLowerCase())){
             int index = userCommand.toLowerCase().indexOf("from");
@@ -152,7 +143,6 @@ public class UserPrompt {
             ExecuteQuery(query);
         }
         else if(userCommand.toLowerCase().startsWith(DatabaseHelper.UPDATE_COMMAND.toLowerCase())){
-            String tableName = "";
             String conditions = "";
             int setIndex = userCommand.toLowerCase().indexOf("set");
             if(setIndex == -1) {
@@ -160,7 +150,7 @@ public class UserPrompt {
                 return;
             }
 
-            tableName = userCommand.substring(DatabaseHelper.UPDATE_COMMAND.length(), setIndex).trim();
+            String tableName = userCommand.substring(DatabaseHelper.UPDATE_COMMAND.length(), setIndex).trim();
             String clauses = userCommand.substring(setIndex + "set".length());
             int whereIndex = userCommand.toLowerCase().indexOf("where");
             if(whereIndex == -1){
@@ -175,9 +165,6 @@ public class UserPrompt {
             ExecuteQuery(query);
         }
         else if(userCommand.toLowerCase().startsWith(DatabaseHelper.CREATE_TABLE_COMMAND.toLowerCase())){
-            String tableName = "";
-            IQuery query = null;
-
             int openBracketIndex = userCommand.toLowerCase().indexOf("(");
             if(openBracketIndex == -1) {
                 QueryParser.DatabaseHelper.UnrecognisedCommand(userCommand, "Expected (");
@@ -189,12 +176,11 @@ public class UserPrompt {
                 return;
             }
 
-            tableName = userCommand.substring(DatabaseHelper.CREATE_TABLE_COMMAND.length(), openBracketIndex).trim();
+            String tableName = userCommand.substring(DatabaseHelper.CREATE_TABLE_COMMAND.length(), openBracketIndex).trim();
             String columnsPart = userCommand.substring(openBracketIndex + 1, userCommand.length()-1);
 
-            query = DatabaseHelper.CreateTableQueryHandler(tableName, columnsPart);
+            IQuery query = DatabaseHelper.CreateTableQueryHandler(tableName, columnsPart);
             ExecuteQuery(query);
-            return;
         }
         else{
             DatabaseHelper.UnrecognisedCommand(userCommand, "Please use 'HELP' to see a list of commands");
@@ -208,8 +194,7 @@ public class UserPrompt {
         }
     }
 
-    // Initialize the database.
-    public static void initializeDatabase() {
+    private static void InitializeDatabase() {
         File baseDir = new File(Constants.DEFAULT_DATA_DIRNAME);
         if(baseDir.exists()) {
             File catalogDir = new File(Constants.DEFAULT_DATA_DIRNAME + "/" + Constants.DEFAULT_CATALOG_DATABASENAME);
@@ -220,20 +205,20 @@ public class UserPrompt {
             }
         }
 
-        // Check if the default database exists.
+        // TODO : Check if the default database exists.
         if (StorageManager.defaultDatabaseExists()) {
-            // Default database exist.
-            //System.out.println("Database already created.");
-
+            System.out.println("Database already created.");
         }
         else  {
             StorageManager manager = new StorageManager();
             boolean create = manager.createDatabase(Constants.DEFAULT_USER_DATABASE);
             if (create) {
-                //System.out.println("Created new database.");
+                // TODO : Check requirement
+                System.out.println("Created new database.");
             }
             else {
-                //System.out.println("Failed to create new database.");
+                // TODO : Check requirement
+                System.out.println("Failed to create new database.");
             }
         }
 

@@ -50,6 +50,11 @@ public class Condition {
 
         column = parts[0].trim();
         literal = Literal.CreateLiteral(parts[1].trim());
+
+        if (literal == null) {
+            return null;
+        }
+
         condition = new Condition(column, operator, literal);
         return condition;
     }

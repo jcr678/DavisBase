@@ -53,13 +53,12 @@ public class ShowTableQuery implements IQuery {
         dataList.add("SomeTableNameThatIsLonger");*/
 
 
-        StorageManager manager = new StorageManager();
-        dataList = manager.showTables(Constants.SYSTEM_TABLES_TABLENAME);
-        for ( String data : dataList) {
-            Record record = Record.CreateRecord();
-            record.put("Tables_in_database", Literal.CreateLiteral(String.format("\"%s\"", data)));
-            records.add(record);
-        }
+        ArrayList<String> columns = new ArrayList<>();
+        columns.add("table_name");
+        IQuery query = new SelectQuery(Constants.DEFAULT_CATALOG_DATABASENAME, Constants.SYSTEM_TABLES_TABLENAME,
+                columns,null, false);
+        ResultSet resultSet = (ResultSet) query.ExecuteQuery();
+        resultSet.Display();
 
         return records;
     }

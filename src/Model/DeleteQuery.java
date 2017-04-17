@@ -94,20 +94,15 @@ public class DeleteQuery implements IQuery {
                 return false;
             }
 
-
             // Validate column data type.
-            String columnName = checkConditionValueDataTypeValidity(columnDataTypeMapping, retrievedColumns);
-            boolean valid = (columnName.length() > 0) ? false : true;
-
-            if (!valid) {
-                Utils.printMessage("The value of the column " + columnName + " is invalid.");
+            if(!checkConditionValueDataTypeValidity(columnDataTypeMapping, retrievedColumns)) {
                 return false;
             }
         }
         return true;
     }
 
-    private String checkConditionValueDataTypeValidity(HashMap<String, Byte> columnDataTypeMapping, List<String> columnsList) {
+    private boolean checkConditionValueDataTypeValidity(HashMap<String, Byte> columnDataTypeMapping, List<String> columnsList) {
         String invalidColumn = "";
 
         if (columnsList.contains(condition.column)) {
@@ -131,7 +126,13 @@ public class DeleteQuery implements IQuery {
             }
         }
 
-        return invalidColumn;
+        boolean valid = (invalidColumn.length() > 0) ? false : true;
+        if (!valid) {
+            Utils.printMessage("The value of the column " + invalidColumn + " is invalid.");
+
+        }
+
+        return valid;
     }
 
     private boolean checkConditionColumnValidity(List<String> retrievedColumns) {

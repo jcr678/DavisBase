@@ -1164,7 +1164,7 @@ public class StorageManager {
         return true;
     }
 
-    public List<String> showTables(String tableName) {
+    public List<String> showTables() {
         List<String> tableNames = new ArrayList<>();
         List<Byte> columnIndexList = new ArrayList<>();
         List<Object> valueList = new ArrayList<>();

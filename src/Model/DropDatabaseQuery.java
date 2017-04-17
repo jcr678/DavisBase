@@ -19,7 +19,7 @@ public class DropDatabaseQuery implements IQuery {
         /*TODO : Replace using constants file*/
         String DEFAULT_DATA_DIRNAME = "data";
         File database = new File(DEFAULT_DATA_DIRNAME + "/" + this.databaseName);
-        boolean isDeleted = database.delete();
+        boolean isDeleted = RecursivelyDelete(database);
 
         if(!isDeleted){
             System.out.println(String.format("Unable to delete database '%s'", this.databaseName));
@@ -44,5 +44,23 @@ public class DropDatabaseQuery implements IQuery {
         }
 
         return true;
+    }
+
+    public boolean RecursivelyDelete(File file){
+        if(file == null) return true;
+        boolean isDeleted = false;
+
+        for (File childFile: file.listFiles()) {
+            if(childFile.isFile()){
+                isDeleted = childFile.delete();
+                if(!isDeleted) return false;
+            }
+            else {
+                isDeleted = RecursivelyDelete(childFile);
+                if(!isDeleted) return false;
+            }
+        }
+
+        return file.delete();
     }
 }

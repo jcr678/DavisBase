@@ -12,6 +12,21 @@ import java.util.List;
  */
 public class CatalogDB {
 
+    public static final byte TABLES_TABLE_SCHEMA_ROWID = 0;
+    public static final byte TABLES_TABLE_SCHEMA_TABLE_NAME = 1;
+    public static final byte TABLES_TABLE_SCHEMA_RECORD_COUNT = 2;
+    public static final byte TABLES_TABLE_SCHEMA_COL_TBL_ST_ROWID = 3;
+    public static final byte TABLES_TABLE_SCHEMA_NXT_AVL_COL_TBL_ROWID = 4;
+
+
+    public static final byte COLUMNS_TABLE_SCHEMA_ROWID = 0;
+    public static final byte COLUMNS_TABLE_SCHEMA_TABLE_NAME = 1;
+    public static final byte COLUMNS_TABLE_SCHEMA_COLUMN_NAME = 2;
+    public static final byte COLUMNS_TABLE_SCHEMA_DATA_TYPE = 3;
+    public static final byte COLUMNS_TABLE_SCHEMA_COLUMN_KEY = 4;
+    public static final byte COLUMNS_TABLE_SCHEMA_ORDINAL_POSITION = 5;
+    public static final byte COLUMNS_TABLE_SCHEMA_IS_NULLABLE = 6;
+
     public boolean createCatalogDB() {
         StorageManager manager = new StorageManager();
         UpdateStatement statement = new UpdateStatement();

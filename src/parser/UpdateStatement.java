@@ -1,11 +1,12 @@
 package parser;
 
+import common.CatalogDB;
 import common.Constants;
 import common.Utils;
 import datatypes.DT_Int;
 import datatypes.DT_Text;
-import datatypes.base.DT_Numeric;
 import storage.StorageManager;
+import storage.model.Condition;
 import storage.model.DataRecord;
 import storage.model.Page;
 
@@ -16,8 +17,6 @@ import java.util.List;
  * Created by dakle on 15/4/17.
  */
 public class UpdateStatement {
-
-
 
     public int updateSystemTablesTable(String tableName, int columnCount) {
         /*
@@ -30,13 +29,9 @@ public class UpdateStatement {
          *      5       nxt_avl_col_tbl_rowid                   INT
          */
         StorageManager manager = new StorageManager();
-        List<Byte> columnIndexList = new ArrayList<>();
-        columnIndexList.add((byte) 1);
-        List<Object> valueList = new ArrayList<>();
-        valueList.add(new DT_Text(tableName));
-        List<Short> conditionList = new ArrayList<>();
-        conditionList.add(DT_Numeric.EQUALS);
-        List<DataRecord> result = manager.findRecord(Utils.getSystemDatabasePath(), Constants.SYSTEM_TABLES_TABLENAME, columnIndexList, valueList, conditionList, true);
+        List<Condition> conditions = new ArrayList<>();
+        conditions.add(new Condition(CatalogDB.TABLES_TABLE_SCHEMA_TABLE_NAME, Condition.EQUALS, tableName));
+        List<DataRecord> result = manager.findRecord(Utils.getSystemDatabasePath(), Constants.SYSTEM_TABLES_TABLENAME, conditions, true);
         if(result != null && result.size() == 0) {
             int returnValue = 1;
             Page<DataRecord> page = manager.getLastRecordAndPage(Utils.getSystemDatabasePath(), Constants.SYSTEM_TABLES_TABLENAME);
@@ -67,17 +62,13 @@ public class UpdateStatement {
             }
             record.populateSize();
             if(manager.writeRecord(Utils.getSystemDatabasePath(), Constants.SYSTEM_TABLES_TABLENAME, record)) {
-                columnIndexList.clear();
-                valueList.clear();
-                conditionList.clear();
-                columnIndexList.add((byte) 1);
-                valueList.add(new DT_Text(Constants.SYSTEM_TABLES_TABLENAME));
-                conditionList.add(DT_Numeric.EQUALS);
+                conditions.clear();
+                conditions.add(new Condition(CatalogDB.TABLES_TABLE_SCHEMA_TABLE_NAME, Condition.EQUALS, Constants.SYSTEM_TABLES_TABLENAME));
                 List<Byte> updateColumnsIndexList = new ArrayList<>();
-                updateColumnsIndexList.add((byte) 2);
+                updateColumnsIndexList.add(CatalogDB.TABLES_TABLE_SCHEMA_RECORD_COUNT);
                 List<Object> updateValueList = new ArrayList<>();
                 updateValueList.add(new DT_Int(1));
-                manager.updateRecord(Utils.getSystemDatabasePath(), Constants.SYSTEM_TABLES_TABLENAME, columnIndexList, valueList, conditionList, updateColumnsIndexList, updateValueList, true);
+                manager.updateRecord(Utils.getSystemDatabasePath(), Constants.SYSTEM_TABLES_TABLENAME, conditions, updateColumnsIndexList, updateValueList, true);
             }
             return returnValue;
         }
@@ -118,17 +109,13 @@ public class UpdateStatement {
             }
         }
         if(i > 0) {
-            List<Byte> columnIndexList = new ArrayList<>();
-            columnIndexList.add((byte) 1);
-            List<Object> valueList = new ArrayList<>();
-            valueList.add(new DT_Text(Constants.SYSTEM_COLUMNS_TABLENAME));
-            List<Short> conditionList = new ArrayList<>();
-            conditionList.add(DT_Numeric.EQUALS);
+            List<Condition> conditions = new ArrayList<>();
+            conditions.add(new Condition(CatalogDB.TABLES_TABLE_SCHEMA_TABLE_NAME, Condition.EQUALS, Constants.SYSTEM_COLUMNS_TABLENAME));
             List<Byte> updateColumnsIndexList = new ArrayList<>();
-            updateColumnsIndexList.add((byte) 2);
+            updateColumnsIndexList.add(CatalogDB.TABLES_TABLE_SCHEMA_RECORD_COUNT);
             List<Object> updateValueList = new ArrayList<>();
             updateValueList.add(new DT_Int(i));
-            manager.updateRecord(Utils.getSystemDatabasePath(), Constants.SYSTEM_TABLES_TABLENAME, columnIndexList, valueList, conditionList, updateColumnsIndexList, updateValueList, true);
+            manager.updateRecord(Utils.getSystemDatabasePath(), Constants.SYSTEM_TABLES_TABLENAME, conditions, updateColumnsIndexList, updateValueList, true);
         }
         return true;
     }

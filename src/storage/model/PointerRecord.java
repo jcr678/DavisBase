@@ -17,6 +17,7 @@ public class PointerRecord {
         leftPageNumber = -1;
         key = -1;
         offset = -1;
+        pageNumber = -1;
     }
 
     public int getLeftPageNumber() {

@@ -1156,6 +1156,7 @@ public class StorageManager {
             }
 
             if (!columnMap.containsKey(((DT) object).getStringValue()) && isNullable) {
+                Utils.printMessage("Field '" + ((DT) object).getStringValue() + "' doesn't have a default value");
                 return false;
             }
 

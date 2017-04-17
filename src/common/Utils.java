@@ -50,7 +50,7 @@ public class Utils {
     }
 
     public static void printMissingTableError(String tableName) {
-        printError("The table " + tableName + " does not exist");
+        printError("Table " + tableName + " doesn't exist.");
     }
 
     public static void printMessage(String str) {

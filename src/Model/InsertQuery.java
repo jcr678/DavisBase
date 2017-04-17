@@ -6,13 +6,7 @@ import datatypes.*;
 import datatypes.base.DT;
 import storage.StorageManager;
 import storage.model.DataRecord;
-import test.Test;
 
-import java.text.DateFormat;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.time.ZoneId;
-import java.time.ZonedDateTime;
 import java.util.*;
 
 public class InsertQuery implements IQuery {
@@ -33,10 +27,10 @@ public class InsertQuery implements IQuery {
         // All checks are done. Now insert the values.
         StorageManager manager = new StorageManager();
         List<String> retrievedColumns = manager.fetchAllTableColumns(tableName);
-        HashMap<String, Byte> columnDataTypeMapping = manager.fetchAllTableColumndataTypes(tableName);
+        HashMap<String, Integer> columnDataTypeMapping = manager.fetchAllTableColumndataTypes(tableName);
 
         DataRecord record  = new DataRecord();
-        generateRecords(record.getColumnValueList(), columnDataTypeMapping, retrievedColumns);
+        generateRecords(record.getColumnValueList(), columnDataTypeMapping, retrievedColumns, manager);
 
         int rowID = findRowID(manager, retrievedColumns);
         record.setRowId(rowID);
@@ -65,7 +59,7 @@ public class InsertQuery implements IQuery {
 
         // Table columns.
         List<String> retrievedColumns = manager.fetchAllTableColumns(tableName);
-        HashMap<String, Byte> columnDataTypeMapping = manager.fetchAllTableColumndataTypes(tableName);
+        HashMap<String, Integer> columnDataTypeMapping = manager.fetchAllTableColumndataTypes(tableName);
 
         if (columns == null) {
             // No columns are provided.
@@ -76,7 +70,7 @@ public class InsertQuery implements IQuery {
             }
 
             // Check Columns datatype are valid.
-            if(!checkDataTypeValidity(columnDataTypeMapping, retrievedColumns, values)) {
+            if(!manager.checkDataTypeValidity(columnDataTypeMapping, retrievedColumns, values)) {
                 return false;
             }
         }
@@ -123,7 +117,7 @@ public class InsertQuery implements IQuery {
         return true;
     }
 
-    private boolean validateColumnDataTypes(HashMap<String, Byte> columnDataTypeMapping) {
+    private boolean validateColumnDataTypes(HashMap<String, Integer> columnDataTypeMapping) {
         if (!checkColumnDataTypeValidity(columnDataTypeMapping)) {
             return false;
         }
@@ -194,7 +188,7 @@ public class InsertQuery implements IQuery {
         return true;
     }
 
-    private boolean checkColumnDataTypeValidity(HashMap<String, Byte> columnDataTypeMapping) {
+    private boolean checkColumnDataTypeValidity(HashMap<String, Integer> columnDataTypeMapping) {
         String invalidColumn = "";
 
         for (String columnName : columns) {
@@ -237,93 +231,41 @@ public class InsertQuery implements IQuery {
         return true;
     }
 
-    private boolean checkDataTypeValidity(HashMap<String, Byte> columnDataTypeMapping, List<String> columnsList, List<Literal> values) {
-        String invalidColumn = "";
-        Literal invalidLiteral = null;
-
-        for (String columnName : columnsList) {
-
-            // Get the data type for the column with name 'columnName'.
-            // Retrieve literal for the corresponding column from the user input.
-            int dataTypeId = columnDataTypeMapping.get(columnName);
-
-            // Retrieve the user input.
-            int idx = columnsList.indexOf(columnName);
-            Literal literal = values.get(idx);
-            invalidLiteral = literal;
-
-            // Check if the data type is a integer type.
-            // If the data type any of the Integer's, Real's or Doubles, then these values, can be represented as a double.
-            // Check if the value can be parsed as a Double, if YES then the data type is valid else returns false.
-            if (dataTypeId != Constants.INVALID_CLASS && dataTypeId <= Constants.DOUBLE) {
-                boolean isValid = Utils.canConvertStringToDouble(literal.value);
-                if (!isValid) {
-                    invalidColumn = columnName;
-                    break;
-                }
-            }
-            else if (dataTypeId == Constants.DATE) {
-                // Checks if the date field has the format 'yyyy-MM-dd'.
-                if (!Utils.isvalidDateFormat(literal.value)) {
-                    invalidColumn = columnName;
-                    break;
-                }
-            } else if (dataTypeId == Constants.DATETIME) {
-                // Checks if the date time field has the format 'yyyy-MM-dd HH:mm:ss'.
-                if (!Utils.isvalidDateTimeFormat(literal.value)) {
-                    invalidColumn = columnName;
-                    break;
-                }
-            }
-
-            // NOTE: If the data type is of type text, any text is accepted, hence no check is explicitly added for the TEXT field.
-        }
-
-        // Check if any data type violation has occurred.
-        boolean valid = (invalidColumn.length() > 0) ? false : true;
-        if (!valid) {
-            Utils.printMessage("Unknown column '" + invalidLiteral.value + "' in 'field list'");
-            return false;
-        }
-
-        return true;
-    }
-
-    public void generateRecords(List<Object> columnList, HashMap<String, Byte> columnDataTypeMapping, List<String> retrievedColumns) {
+    public void generateRecords(List<Object> columnList, HashMap<String, Integer> columnDataTypeMapping, List<String> retrievedColumns, StorageManager manager) {
         for (String column : retrievedColumns) {
             if (columns != null) {
                 if (columns.contains(column)) {
-                    Byte dataType = columnDataTypeMapping.get(column);
+                    Byte dataType = (byte)columnDataTypeMapping.get(column).intValue();
 
                     int idx = columns.indexOf(column);
 
-                    DT obj = getDataTypeObject(dataType);
+                    DT obj = getDataTypeObject(dataType, manager);
                     String val = values.get(idx).toString();
 
-                    obj.setValue(getDataTypeValue(dataType, val));
+                    obj.setValue(getDataTypeValue(dataType, val, manager));
                     columnList.add(obj);
                 } else {
-                    Byte dataType = columnDataTypeMapping.get(column);
-                    DT obj = getDataTypeObject(dataType);
+                    Byte dataType = (byte)columnDataTypeMapping.get(column).intValue();
+                    DT obj = getDataTypeObject(dataType, manager);
 
                     //obj.setNull(true);
                     columnList.add(obj);
                 }
             }
             else {
-                Byte dataType = columnDataTypeMapping.get(column);
+                Byte dataType = (byte)columnDataTypeMapping.get(column).intValue();
 
                 int columnIndex = retrievedColumns.indexOf(column);
-                DT obj = getDataTypeObject(dataType);
+                DT obj = getDataTypeObject(dataType, manager);
                 String val = values.get(columnIndex).toString();
 
-                obj.setValue(getDataTypeValue(dataType, val));
+                obj.setValue(getDataTypeValue(dataType, val, manager));
                 columnList.add(obj);
             }
         }
     }
 
-    public DT getDataTypeObject(byte dataType) {
+    public DT getDataTypeObject(byte dataType, StorageManager manager) {
 
         switch (dataType) {
             case Constants.TINYINT: {
@@ -371,7 +313,7 @@ public class InsertQuery implements IQuery {
         }
     }
 
-    public Object getDataTypeValue(byte dataType, String value) {
+    public Object getDataTypeValue(byte dataType, String value, StorageManager manager) {
 
         switch (dataType) {
             case Constants.TINYINT: {
@@ -393,10 +335,10 @@ public class InsertQuery implements IQuery {
                 return Double.parseDouble(value);
             }
             case Constants.DATE: {
-                return getDateEpoc(value, true);
+                return manager.getDateEpoc(value, true);
             }
             case Constants.DATETIME: {
-                return getDateEpoc(value, false);
+                return manager.getDateEpoc(value, false);
             }
             case Constants.TEXT: {
                 return value;
@@ -407,42 +349,6 @@ public class InsertQuery implements IQuery {
         }
     }
 
-    private long getDateEpoc(String value, Boolean isDate) {
-        DateFormat formatter = null;
-        if (isDate) {
-          formatter = new SimpleDateFormat("yyyy-MM-dd");
-        }
-        else {
-            formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-        }
-        formatter.setLenient(false);
-        Date date = null;
-        try {
-            date = formatter.parse(value);
-
-            /* Define the time zone for Dallas CST */
-            ZoneId zoneId = ZoneId.of ( "America/Chicago" );
-
-            /* Convert date and time parameters for 1974-05-27 to a ZonedDateTime object */
-            ZonedDateTime zdt = ZonedDateTime.ofInstant(date.toInstant(),
-                    ZoneId.systemDefault());
-
-            /* ZonedDateTime toLocalDate() method will display in a simple format */
-            System.out.println(zdt.toLocalDate());
-            /* Convert a ZonedDateTime object to epochSeconds
-            *  This value can be store 8-byte integer to a binary
-            *  file using RandomAccessFile writeLong()
-            */
-
-            long epochSeconds = zdt.toInstant().toEpochMilli() / 1000;
-            return epochSeconds;
-        }
-        catch (ParseException ex) {
-            //
-            // System.out.println("Exception "+ex);
-            return 0;
-        }
-    }
 
     private int findRowID (StorageManager manager, List<String> retrievedList) {
         int rowCount = manager.getTableRecordCount(tableName);

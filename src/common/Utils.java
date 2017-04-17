@@ -57,6 +57,14 @@ public class Utils {
         System.out.println(str);
     }
 
+    public static void printUnknownColumnValueError(String value) {
+        printMessage("Unknown column value '" + value + "' in 'value list'");
+    }
+
+    public static void printUnknownConditionValueError(String value) {
+        printMessage("Unknown column value '" + value + "' in 'value list'");
+    }
+
     public static byte resolveClass(Object object) {
         if(object.getClass().equals(DT_TinyInt.class)) {
             return Constants.TINYINT;

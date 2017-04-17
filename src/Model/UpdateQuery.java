@@ -35,13 +35,13 @@ public class UpdateQuery implements IQuery{
         // boolean isIncrement)
 
         StorageManager manager = new StorageManager();
-        HashMap<String, Byte> columnDataTypeMapping = manager.fetchAllTableColumndataTypes(tableName);
+        HashMap<String, Integer> columnDataTypeMapping = manager.fetchAllTableColumndataTypes(tableName);
         List<String> retrievedColumns = manager.fetchAllTableColumns(tableName);
         List<Byte> searchColumnsIndexList = getSearchColumnsIndexList(retrievedColumns);
-        List<Object> searchKeysValueList = getSearchKeysValueList(retrievedColumns, columnDataTypeMapping);
+        List<Object> searchKeysValueList = getSearchKeysValueList(columnDataTypeMapping);
         List<Short> searchKeysConditionsList = getSearchKeysConditionsList(retrievedColumns);
         List<Byte> updateColumnIndexList = getUpdateColumnIndexList(retrievedColumns);
-        List<Object> updateColumnValueList = getUpdateColumnValueList(retrievedColumns, columnDataTypeMapping);
+        List<Object> updateColumnValueList = getUpdateColumnValueList(columnDataTypeMapping);
 
         boolean status = manager.updateRecord(Utils.getUserDatabasePath(databaseName), tableName, searchColumnsIndexList, searchKeysValueList, searchKeysConditionsList, updateColumnIndexList, updateColumnValueList, false);
 
@@ -67,7 +67,7 @@ public class UpdateQuery implements IQuery{
 
         StorageManager manager = new StorageManager();
         List<String> retrievedColumns = manager.fetchAllTableColumns(tableName);
-        HashMap<String, Byte> columnDataTypeMapping = manager.fetchAllTableColumndataTypes(tableName);
+        HashMap<String, Integer> columnDataTypeMapping = manager.fetchAllTableColumndataTypes(tableName);
 
         // Validate the columns.
         if (this.condition == null) {
@@ -110,7 +110,7 @@ public class UpdateQuery implements IQuery{
         return true;
     }
 
-    private boolean checkValueDataTypeValidity(HashMap<String, Byte> columnDataTypeMapping, List<String> columnsList, boolean isConditionCheck) {
+    private boolean checkValueDataTypeValidity(HashMap<String, Integer> columnDataTypeMapping, List<String> columnsList, boolean isConditionCheck) {
         String invalidColumn = "";
 
         String column = isConditionCheck ? condition.column : columnName;
@@ -184,10 +184,10 @@ public class UpdateQuery implements IQuery{
         return list;
     }
 
-    private List<Object> getSearchKeysValueList(List<String>retrievedList, HashMap<String, Byte> columnDataTypeMapping) {
+    private List<Object> getSearchKeysValueList(HashMap<String, Integer> columnDataTypeMapping) {
         List<Object> list = new ArrayList<>();
         if (condition != null) {
-            byte dataTypeIndex = columnDataTypeMapping.get(this.condition.column);
+            byte dataTypeIndex = (byte)columnDataTypeMapping.get(this.condition.column).intValue();
             DT dataType = DT.createSystemDT(this.condition.value.value, dataTypeIndex);
             list.add(dataType);
         }
@@ -212,9 +212,9 @@ public class UpdateQuery implements IQuery{
         return list;
     }
 
-    private List<Object> getUpdateColumnValueList(List<String>retrievedList, HashMap<String, Byte> columnDataTypeMapping) {
+    private List<Object> getUpdateColumnValueList(HashMap<String, Integer> columnDataTypeMapping) {
         List<Object> list = new ArrayList<>();
-        byte dataTypeIndex = columnDataTypeMapping.get(columnName);
+        byte dataTypeIndex = (byte) columnDataTypeMapping.get(columnName).intValue();
 
         DT dataType = DT.createSystemDT(value.value, dataTypeIndex);
         list.add(dataType);

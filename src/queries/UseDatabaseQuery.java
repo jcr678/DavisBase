@@ -1,6 +1,9 @@
-package Model;
+package queries;
 
+import Model.IQuery;
+import Model.Result;
 import QueryParser.DatabaseHelper;
+import common.Utils;
 
 import java.io.File;
 
@@ -25,7 +28,7 @@ public class UseDatabaseQuery implements IQuery {
     public boolean ValidateQuery() {
         boolean databaseExists = DatabaseHelper.IsDatabaseExists(this.databaseName);
         if(!databaseExists){
-            System.out.println(String.format("Unknown database '%s'", this.databaseName));
+            Utils.printError(String.format("Unknown database '%s'", this.databaseName));
         }
 
         return databaseExists;

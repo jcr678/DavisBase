@@ -1,6 +1,9 @@
-package Model;
+package queries;
 
+import Model.IQuery;
+import Model.Result;
 import QueryParser.DatabaseHelper;
+import common.Utils;
 
 import java.io.File;
 
@@ -22,7 +25,7 @@ public class DropDatabaseQuery implements IQuery {
         boolean isDeleted = RecursivelyDelete(database);
 
         if(!isDeleted){
-            System.out.println(String.format("Unable to delete database '%s'", this.databaseName));
+            Utils.printError(String.format("Unable to delete database '%s'", this.databaseName));
             return null;
         }
 
@@ -39,7 +42,7 @@ public class DropDatabaseQuery implements IQuery {
         boolean databaseExists = DatabaseHelper.IsDatabaseExists(this.databaseName);
 
         if(!databaseExists){
-            System.out.println(String.format("Database '%s' dosent exist", this.databaseName));
+            Utils.printError(String.format("Database '%s' dosent exist", this.databaseName));
             return false;
         }
 

@@ -1,6 +1,10 @@
-package Model;
+package queries;
 
+import Model.Condition;
+import Model.IQuery;
+import Model.Result;
 import QueryParser.DatabaseHelper;
+import common.Utils;
 
 import java.io.File;
 
@@ -32,7 +36,7 @@ public class DropTableQuery implements IQuery {
         boolean isDeleted = table.delete();
 
         if(!isDeleted){
-            System.out.println(String.format("Unable to delete table '%s.%s'", this.databaseName, this.tableName));
+            Utils.printError(String.format("Unable to delete table '%s.%s'", this.databaseName, this.tableName));
             return null;
         }
 
@@ -45,7 +49,7 @@ public class DropTableQuery implements IQuery {
         boolean tableExists = DatabaseHelper.isTableExists(this.databaseName, this.tableName);
 
         if(!tableExists){
-            System.out.println(String.format("Unknown table '%s.%s'", this.databaseName, this.tableName));
+            Utils.printError(String.format("Unknown table '%s.%s'", this.databaseName, this.tableName));
             return false;
         }
 

@@ -1,5 +1,8 @@
-package Model;
+package queries;
 
+import Model.IQuery;
+import Model.Literal;
+import Model.Result;
 import common.Constants;
 import common.Utils;
 import datatypes.*;
@@ -30,7 +33,7 @@ public class InsertQuery implements IQuery {
         HashMap<String, Integer> columnDataTypeMapping = manager.fetchAllTableColumndataTypes(tableName);
 
         DataRecord record  = new DataRecord();
-        generateRecords(record.getColumnValueList(), columnDataTypeMapping, retrievedColumns, manager);
+        generateRecords(record.getColumnValueList(), columnDataTypeMapping, retrievedColumns);
 
         int rowID = findRowID(manager, retrievedColumns);
         record.setRowId(rowID);
@@ -65,7 +68,7 @@ public class InsertQuery implements IQuery {
             // No columns are provided.
             // Check values size.
             if (values.size() < retrievedColumns.size() || values.size() > retrievedColumns.size()) {
-                Utils.printMessage("Column count doesn't match value count at row 1");
+                Utils.printError("Column count doesn't match value count at row 1");
                 return false;
             }
 
@@ -80,7 +83,7 @@ public class InsertQuery implements IQuery {
             // Validate columns.
             // If the column list is greater than the columns in the table then throw an error.
             if (columns.size() > retrievedColumns.size()) {
-                Utils.printMessage("Column count doesn't match value count at row 1");
+                Utils.printError("Column count doesn't match value count at row 1");
                 return false;
             }
 
@@ -140,7 +143,7 @@ public class InsertQuery implements IQuery {
         }
 
         if (!columnsValid) {
-            Utils.printMessage("Invalid column '" + invalidColumn + "'");
+            Utils.printError("Invalid column '" + invalidColumn + "'");
             return false;
         }
 
@@ -180,7 +183,7 @@ public class InsertQuery implements IQuery {
                     if (!manager.checkIfValueForPrimaryKeyExists(this.databaseName, tableName, Integer.parseInt(values.get(primaryKeyIndex).value))) {
                         // Primary key does not exist.
                     } else {
-                        Utils.printMessage("Duplicate entry '" + values.get(primaryKeyIndex).value + "' for key 'PRIMARY'");
+                        Utils.printError("Duplicate entry '" + values.get(primaryKeyIndex).value + "' for key 'PRIMARY'");
                         return false;
                     }
                 }
@@ -225,14 +228,14 @@ public class InsertQuery implements IQuery {
         boolean valid = (invalidColumn.length() > 0) ? false : true;
 
         if (!valid) {
-            Utils.printMessage("Incorrect value for column '" + invalidColumn  + "' at row 1");
+            Utils.printError("Incorrect value for column '" + invalidColumn  + "' at row 1");
             return false;
         }
 
         return true;
     }
 
-    public void generateRecords(List<Object> columnList, HashMap<String, Integer> columnDataTypeMapping, List<String> retrievedColumns, StorageManager manager) {
+    public void generateRecords(List<Object> columnList, HashMap<String, Integer> columnDataTypeMapping, List<String> retrievedColumns) {
         for (String column : retrievedColumns) {
             if (columns != null) {
                 if (columns.contains(column)) {
@@ -240,14 +243,14 @@ public class InsertQuery implements IQuery {
 
                     int idx = columns.indexOf(column);
 
-                    DT obj = getDataTypeObject(dataType, manager);
+                    DT obj = getDataTypeObject(dataType);
                     String val = values.get(idx).toString();
 
-                    obj.setValue(getDataTypeValue(dataType, val, manager));
+                    obj.setValue(getDataTypeValue(dataType, val));
                     columnList.add(obj);
                 } else {
                     Byte dataType = (byte)columnDataTypeMapping.get(column).intValue();
-                    DT obj = getDataTypeObject(dataType, manager);
+                    DT obj = getDataTypeObject(dataType);
 
                     //obj.setNull(true);
                     columnList.add(obj);
@@ -257,16 +260,16 @@ public class InsertQuery implements IQuery {
                 Byte dataType = (byte)columnDataTypeMapping.get(column).intValue();
 
                 int columnIndex = retrievedColumns.indexOf(column);
-                DT obj = getDataTypeObject(dataType, manager);
+                DT obj = getDataTypeObject(dataType);
                 String val = values.get(columnIndex).toString();
 
-                obj.setValue(getDataTypeValue(dataType, val, manager));
+                obj.setValue(getDataTypeValue(dataType, val));
                 columnList.add(obj);
             }
         }
     }
 
-    public DT getDataTypeObject(byte dataType, StorageManager manager) {
+    public DT getDataTypeObject(byte dataType) {
 
         switch (dataType) {
             case Constants.TINYINT: {
@@ -314,7 +317,7 @@ public class InsertQuery implements IQuery {
         }
     }
 
-    public Object getDataTypeValue(byte dataType, String value, StorageManager manager) {
+    public Object getDataTypeValue(byte dataType, String value) {
 
         switch (dataType) {
             case Constants.TINYINT: {

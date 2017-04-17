@@ -1,5 +1,6 @@
-package Model;
+package queries;
 
+import Model.*;
 import common.CatalogDB;
 import common.Constants;
 import common.Utils;
@@ -15,7 +16,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 
-public class SelectQuery implements IQuery{
+public class SelectQuery implements IQuery {
     public String databaseName;
     public String tableName;
     public ArrayList<String> columns;
@@ -67,7 +68,7 @@ public class SelectQuery implements IQuery{
         if(this.columns != null){
             for(String column : this.columns){
                 if(!columnToIdMap.containsKey(column)){
-                    Utils.printMessage(String.format("Unknown column '%s' in table '%s'", column, this.tableName));
+                    Utils.printError(String.format("Unknown column '%s' in table '%s'", column, this.tableName));
                     return false;
                 }
             }
@@ -75,7 +76,7 @@ public class SelectQuery implements IQuery{
 
         if(condition != null){
             if(!columnToIdMap.containsKey(condition.column)){
-                Utils.printMessage((String.format("Unknown column '%s' in table '%s'", condition.column, this.tableName)));
+                Utils.printError((String.format("Unknown column '%s' in table '%s'", condition.column, this.tableName)));
                 return false;
             }
         }
@@ -176,22 +177,5 @@ public class SelectQuery implements IQuery{
         }
 
         return new Pair<>(columnToIdMap, idToColumnMap);
-    }
-
-    public List<String> fetchAllTableColumns(String tableName) {
-        StorageManager manager = new StorageManager();
-        List<String> columnNames = new ArrayList<>();
-        List<InternalCondition> conditions = new ArrayList<>();
-        conditions.add(new InternalCondition(CatalogDB.COLUMNS_TABLE_SCHEMA_TABLE_NAME, InternalCondition.EQUALS, tableName));
-
-        List<DataRecord> records = manager.findRecord(Utils.getSystemDatabasePath(), Constants.SYSTEM_COLUMNS_TABLENAME, conditions, false);
-
-        for (int i = 0; i < records.size(); i++) {
-            DataRecord record = records.get(i);
-            Object object = record.getColumnValueList().get(2);
-            columnNames.add(((DT) object).getStringValue());
-        }
-
-        return columnNames;
     }
 }

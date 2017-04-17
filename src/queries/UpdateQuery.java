@@ -1,5 +1,9 @@
-package Model;
+package queries;
 
+import Model.Condition;
+import Model.IQuery;
+import Model.Literal;
+import Model.Result;
 import common.Constants;
 import common.Utils;
 import datatypes.base.DT;
@@ -7,7 +11,7 @@ import storage.StorageManager;
 
 import java.util.*;
 
-public class UpdateQuery implements IQuery{
+public class UpdateQuery implements IQuery {
     public String databaseName;
     public String tableName;
     public String columnName;
@@ -24,8 +28,6 @@ public class UpdateQuery implements IQuery{
 
     @Override
     public Result ExecuteQuery() {
-        Result result = null;
-
         // public boolean updateRecord(String databaseName, String tableName,
         // List<Byte> searchColumnsIndexList,
         // List<Object> searchKeysValueList,
@@ -35,6 +37,7 @@ public class UpdateQuery implements IQuery{
         // boolean isIncrement)
 
         StorageManager manager = new StorageManager();
+
         HashMap<String, Integer> columnDataTypeMapping = manager.fetchAllTableColumndataTypes(tableName);
         List<String> retrievedColumns = manager.fetchAllTableColumns(tableName);
         List<Byte> searchColumnsIndexList = getSearchColumnsIndexList(retrievedColumns);
@@ -44,6 +47,8 @@ public class UpdateQuery implements IQuery{
         List<Object> updateColumnValueList = getUpdateColumnValueList(columnDataTypeMapping);
 
         int rowsAffected = manager.updateRecord(Utils.getUserDatabasePath(databaseName), tableName, searchColumnsIndexList, searchKeysValueList, searchKeysConditionsList, updateColumnIndexList, updateColumnValueList, false);
+
+        Result result;
         result = new Result(rowsAffected);
         return result;
     }
@@ -55,7 +60,7 @@ public class UpdateQuery implements IQuery{
         HashMap<String, Integer> columnDataTypeMapping = manager.fetchAllTableColumndataTypes(tableName);
 
         if (!manager.checkTableExists(Utils.getUserDatabasePath(this.databaseName), tableName)) {
-            Utils.printMessage("Table " + tableName + " does not exist.");
+            Utils.printMissingTableError(tableName);
             return false;
         }
 
@@ -131,7 +136,7 @@ public class UpdateQuery implements IQuery{
 
         boolean valid = (invalidColumn.length() > 0) ? false : true;
         if (!valid) {
-            Utils.printMessage("The value of the column " + invalidColumn + " is invalid.");
+            Utils.printError("The value of the column " + invalidColumn + " is invalid.");
 
         }
 
@@ -149,7 +154,7 @@ public class UpdateQuery implements IQuery{
         }
 
         if (!columnsValid) {
-            Utils.printMessage("Column " + invalidColumn + " is not present in the table " + tableName + ".");
+            Utils.printError("Column " + invalidColumn + " is not present in the table " + tableName + ".");
             return false;
         }
 

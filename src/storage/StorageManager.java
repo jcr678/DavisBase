@@ -215,11 +215,66 @@ public class StorageManager {
                     record.setPageLocated(page2.getPageNumber());
                     record.setOffset((short) (page2.getStartingAddress() + 1));
                     this.writeRecord(randomAccessFile, record);
+                    pointerRecord.setKey(record.getRowId());
                 } else {
-                    //Handle this when a record is being inserted in middle
+                    boolean isFirst = false;
+                    if (location < (page.getRecordAddressList().size() / 2)) {
+                        isFirst = true;
+                    }
+                    randomAccessFile.setLength(Page.PAGE_SIZE * (pageNumber2 + 1));
+
+                    //Page 1
+                    Page<DataRecord> page1 = new Page<>(pageNumber1);
+                    page1.setPageType(page.getPageType());
+                    page1.setPageNumber(pageNumber1);
+                    List<DataRecord> leftRecords = copyRecords(randomAccessFile, (page.getPageNumber() * Page.PAGE_SIZE), page.getRecordAddressList(), (byte) 0, (byte) (page.getNumberOfCells() / 2), page1.getPageNumber(), record);
+                    if (isFirst)
+                        leftRecords.add(location, record);
+                    page1.setNumberOfCells((byte) leftRecords.size());
+                    int index = 0;
+                    short offset = (short) (Page.PAGE_SIZE - 1);
+                    for (DataRecord dataRecord : leftRecords) {
+                        index++;
+                        offset = (short) (Page.PAGE_SIZE - ((dataRecord.getSize() + dataRecord.getHeaderSize()) * index));
+                        dataRecord.setOffset(offset);
+                        page1.getRecordAddressList().add(offset);
+                    }
+                    page1.setStartingAddress((short) (offset + 1));
+                    page1.setRightNodeAddress(pageNumber2);
+                    this.writePageHeader(randomAccessFile, page1);
+                    for(DataRecord dataRecord : leftRecords) {
+                        this.writeRecord(randomAccessFile, dataRecord);
+                    }
+
+                    //Page 2
+                    Page<DataRecord> page2 = new Page<>(pageNumber2);
+                    page2.setPageType(page.getPageType());
+                    List<DataRecord> rightRecords = copyRecords(randomAccessFile, (page.getPageNumber() * Page.PAGE_SIZE), page.getRecordAddressList(), (byte) ((page.getNumberOfCells() / 2) + 1), page.getNumberOfCells(), pageNumber2, record);
+                    if(!isFirst) {
+                        int position = (location - (page.getRecordAddressList().size() / 2) + 1);
+                        if(position >= rightRecords.size())
+                            rightRecords.add(record);
+                        else
+                            rightRecords.add(position, record);
+                    }
+                    page2.setNumberOfCells((byte) rightRecords.size());
+                    page2.setRightNodeAddress(page.getRightNodeAddress());
+                    pointerRecord.setKey(rightRecords.get(0).getRowId());
+                    index = 0;
+                    offset = (short) (Page.PAGE_SIZE - 1);
+                    for(DataRecord dataRecord : rightRecords) {
+                        index++;
+                        offset = (short) (Page.PAGE_SIZE - ((dataRecord.getSize() + dataRecord.getHeaderSize()) * index));
+                        dataRecord.setOffset(offset);
+                        page2.getRecordAddressList().add(offset);
+                    }
+                    page2.setStartingAddress((short) (offset + 1));
+                    this.writePageHeader(randomAccessFile, page2);
+                    for(DataRecord dataRecord : rightRecords) {
+                        this.writeRecord(randomAccessFile, dataRecord);
+                    }
                 }
                 pointerRecord.setLeftPageNumber(pageNumber1);
-                pointerRecord.setKey(record.getRowId());
                 return pointerRecord;
             }
         } catch (Exception e) {
@@ -354,7 +409,7 @@ public class StorageManager {
                 for(PointerRecord pointerRecord1 : rightRecords) {
                     this.writeRecord(randomAccessFile, pointerRecord1);
                 }
-
+                pointerRecord.setPageNumber(pageNumber2);
                 pointerRecord.setLeftPageNumber(pageNumber1);
                 return pointerRecord;
             }

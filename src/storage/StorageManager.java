@@ -1,5 +1,7 @@
 package storage;
 
+import Model.Condition;
+import Model.Literal;
 import common.Constants;
 import common.Utils;
 import console.ConsoleWriter;
@@ -14,7 +16,13 @@ import storage.model.PointerRecord;
 import java.io.File;
 import java.io.IOException;
 import java.io.RandomAccessFile;
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 
@@ -1148,6 +1156,7 @@ public class StorageManager {
             }
 
             if (!columnMap.containsKey(((DT) object).getStringValue()) && isNullable) {
+                Utils.printMessage("Field '" + ((DT) object).getStringValue() + "' doesn't have a default value");
                 return false;
             }
 
@@ -1227,7 +1236,7 @@ public class StorageManager {
         return manager.updateRecord(Utils.getSystemDatabasePath(), Constants.SYSTEM_TABLES_TABLENAME, conditions, updateColumnsIndexList, updateValueList, true);
     }
 
-    public HashMap<String, Byte> fetchAllTableColumndataTypes(String tableName) {
+    public HashMap<String, Integer> fetchAllTableColumndataTypes(String tableName) {
         List<Byte> columnIndexList = new ArrayList<>();
         columnIndexList.add((byte) 1);
 
@@ -1238,7 +1247,7 @@ public class StorageManager {
         conditionList.add(DT_Numeric.EQUALS);
 
         List<DataRecord> records = this.findRecord(Utils.getSystemDatabasePath(), Constants.SYSTEM_COLUMNS_TABLENAME, columnIndexList, valueList, conditionList, false);
-        HashMap<String, Byte> columDataTypeMapping = new HashMap<>();
+        HashMap<String, Integer> columDataTypeMapping = new HashMap<>();
 
         for (int i = 0; i < records.size(); i++) {
             DataRecord record = records.get(i);
@@ -1246,7 +1255,7 @@ public class StorageManager {
             Object dataTypeObject = record.getColumnValueList().get(3);
 
             String columnName = ((DT) object).getStringValue();
-            Byte columnDataType = Utils.stringToDataType(((DT) dataTypeObject).getStringValue());
+            int columnDataType = Utils.stringToDataType(((DT) dataTypeObject).getStringValue());
 
             //System.out.print(((DT) object).getValue());
             //System.out.print("    |    ");
@@ -1348,6 +1357,128 @@ public class StorageManager {
         }
         else {
             return false;
+        }
+    }
+
+    public boolean checkDataTypeValidity(HashMap<String, Integer> columnDataTypeMapping, List<String> columnsList, List<Literal> values) {
+        String invalidColumn = "";
+        Literal invalidLiteral = null;
+
+        for (String columnName : columnsList) {
+
+            // Get the data type for the column with name 'columnName'.
+            // Retrieve literal for the corresponding column from the user input.
+            int dataTypeId = columnDataTypeMapping.get(columnName);
+
+            // Retrieve the user input.
+            int idx = columnsList.indexOf(columnName);
+            Literal literal = values.get(idx);
+            invalidLiteral = literal;
+
+            // Check if the data type is a integer type.
+            // If the data type any of the Integer's, Real's or Doubles, then these values, can be represented as a double.
+            // Check if the value can be parsed as a Double, if YES then the data type is valid else returns false.
+            if (dataTypeId != Constants.INVALID_CLASS && dataTypeId <= Constants.DOUBLE) {
+                boolean isValid = Utils.canConvertStringToDouble(literal.value);
+                if (!isValid) {
+                    invalidColumn = columnName;
+                    break;
+                }
+            }
+            else if (dataTypeId == Constants.DATE) {
+                // Checks if the date field has the format 'yyyy-MM-dd'.
+                if (!Utils.isvalidDateFormat(literal.value)) {
+                    invalidColumn = columnName;
+                    break;
+                }
+            } else if (dataTypeId == Constants.DATETIME) {
+                // Checks if the date time field has the format 'yyyy-MM-dd HH:mm:ss'.
+                if (!Utils.isvalidDateTimeFormat(literal.value)) {
+                    invalidColumn = columnName;
+                    break;
+                }
+            }
+
+            // NOTE: If the data type is of type text, any text is accepted, hence no check is explicitly added for the TEXT field.
+        }
+
+        // Check if any data type violation has occurred.
+        boolean valid = (invalidColumn.length() > 0) ? false : true;
+        if (!valid) {
+            Utils.printUnknownColumnValueError(invalidLiteral.value);
+            return false;
+        }
+
+        return true;
+    }
+
+    public boolean checkConditionValueDataTypeValidity(HashMap<String, Integer> columnDataTypeMapping, List<String> columnsList, Condition condition) {
+        String invalidColumn = "";
+        Literal literal = null;
+
+        if (columnsList.contains(condition.column)) {
+            int dataTypeIndex = columnDataTypeMapping.get(condition.column);
+            literal = condition.value;
+
+            // Check if the data type is a integer type.
+            if (dataTypeIndex != Constants.INVALID_CLASS && dataTypeIndex <= Constants.DOUBLE) {
+                // The data is type of integer, real or double.
+                if (!Utils.canConvertStringToDouble(literal.value)) {
+                    invalidColumn = condition.column;
+                }
+            } else if (dataTypeIndex == Constants.DATE) {
+                if (!Utils.isvalidDateFormat(literal.value)) {
+                    invalidColumn = condition.column;
+                }
+            } else if (dataTypeIndex == Constants.DATETIME) {
+                if (!Utils.isvalidDateTimeFormat(literal.value)) {
+                    invalidColumn = condition.column;
+                }
+            }
+        }
+
+        boolean valid = (invalidColumn.length() > 0) ? false : true;
+        if (!valid) {
+            Utils.printUnknownConditionValueError(literal.value);
+        }
+
+        return valid;
+    }
+
+    public long getDateEpoc(String value, Boolean isDate) {
+        DateFormat formatter = null;
+        if (isDate) {
+            formatter = new SimpleDateFormat("yyyy-MM-dd");
+        }
+        else {
+            formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        }
+        formatter.setLenient(false);
+        Date date = null;
+        try {
+            date = formatter.parse(value);
+
+            /* Define the time zone for Dallas CST */
+            ZoneId zoneId = ZoneId.of ( "America/Chicago" );
+
+            /* Convert date and time parameters for 1974-05-27 to a ZonedDateTime object */
+            ZonedDateTime zdt = ZonedDateTime.ofInstant(date.toInstant(),
+                    ZoneId.systemDefault());
+
+            /* ZonedDateTime toLocalDate() method will display in a simple format */
+            //System.out.println(zdt.toLocalDate());
+            /* Convert a ZonedDateTime object to epochSeconds
+            *  This value can be store 8-byte integer to a binary
+            *  file using RandomAccessFile writeLong()
+            */
+
+            long epochSeconds = zdt.toInstant().toEpochMilli() / 1000;
+            return epochSeconds;
+        }
+        catch (ParseException ex) {
+            //
+            // System.out.println("Exception "+ex);
+            return 0;
         }
     }
 }

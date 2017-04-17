@@ -87,7 +87,7 @@ public class DeleteQuery implements IQuery {
             // Validate the column in the condition.
             StorageManager manager = new StorageManager();
             List<String> retrievedColumns = manager.fetchAllTableColumns(tableName);
-            HashMap<String, Byte> columnDataTypeMapping = manager.fetchAllTableColumndataTypes(tableName);
+            HashMap<String, Integer> columnDataTypeMapping = manager.fetchAllTableColumndataTypes(tableName);
 
             // Validate the existence of the column.
             if(!checkConditionColumnValidity(retrievedColumns)) {
@@ -95,45 +95,13 @@ public class DeleteQuery implements IQuery {
             }
 
             // Validate column data type.
-            if(!checkConditionValueDataTypeValidity(columnDataTypeMapping, retrievedColumns)) {
+            if(!manager.checkConditionValueDataTypeValidity(columnDataTypeMapping, retrievedColumns, condition)) {
                 return false;
             }
         }
         return true;
     }
 
-    private boolean checkConditionValueDataTypeValidity(HashMap<String, Byte> columnDataTypeMapping, List<String> columnsList) {
-        String invalidColumn = "";
-
-        if (columnsList.contains(condition.column)) {
-            int dataTypeIndex = columnDataTypeMapping.get(condition.column);
-            Literal literal = condition.value;
-
-            // Check if the data type is a integer type.
-            if (dataTypeIndex != Constants.INVALID_CLASS && dataTypeIndex <= Constants.DOUBLE) {
-                // The data is type of integer, real or double.
-                if (!Utils.canConvertStringToDouble(literal.value)) {
-                    invalidColumn = condition.column;
-                }
-            } else if (dataTypeIndex == Constants.DATE) {
-                if (!Utils.isvalidDateFormat(literal.value)) {
-                    invalidColumn = condition.column;
-                }
-            } else if (dataTypeIndex == Constants.DATETIME) {
-                if (!Utils.isvalidDateTimeFormat(literal.value)) {
-                    invalidColumn = condition.column;
-                }
-            }
-        }
-
-        boolean valid = (invalidColumn.length() > 0) ? false : true;
-        if (!valid) {
-            Utils.printMessage("The value of the column " + invalidColumn + " is invalid.");
-
-        }
-
-        return valid;
-    }
 
     private boolean checkConditionColumnValidity(List<String> retrievedColumns) {
         boolean columnsValid = true;

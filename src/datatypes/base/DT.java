@@ -4,6 +4,7 @@ import Model.DataType;
 import Model.Literal;
 import common.Constants;
 import datatypes.*;
+import storage.StorageManager;
 
 /**
  * Created by dakle on 13/4/17.
@@ -59,12 +60,15 @@ public abstract class DT<T> {
                 return new DT_Real(Float.valueOf(value));
             case Constants.DOUBLE:
                 return new DT_Double(Double.valueOf(value));
-            case Constants.DATETIME:
+            case Constants.DATETIME: {
                 // TODO : Create DateTime
-                return new DT_DateTime();
+                StorageManager manager = new StorageManager();
+                return new DT_DateTime(Long.valueOf(manager.getDateEpoc(value, false)));
+            }
             case Constants.DATE:
                 // TODO : Create Date
-                return new DT_Date();
+                StorageManager manager = new StorageManager();
+                return new DT_DateTime(Long.valueOf(manager.getDateEpoc(value, true)));
             case Constants.TEXT:
                 return new DT_Text(value);
         }

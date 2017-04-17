@@ -6,13 +6,7 @@ import datatypes.*;
 import datatypes.base.DT;
 import storage.StorageManager;
 import storage.model.DataRecord;
-import test.Test;
 
-import java.text.DateFormat;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.time.ZoneId;
-import java.time.ZonedDateTime;
 import java.util.*;
 
 public class InsertQuery implements IQuery {
@@ -30,110 +24,104 @@ public class InsertQuery implements IQuery {
 
     @Override
     public Result ExecuteQuery() {
-        /*TODO : replace with actual logic*/
-        Random random = new Random();
-        Result result = new Result(random.nextInt(50));
+        // All checks are done. Now insert the values.
+        StorageManager manager = new StorageManager();
+        List<String> retrievedColumns = manager.fetchAllTableColumns(tableName);
+        HashMap<String, Integer> columnDataTypeMapping = manager.fetchAllTableColumndataTypes(tableName);
+
+        DataRecord record  = new DataRecord();
+        generateRecords(record.getColumnValueList(), columnDataTypeMapping, retrievedColumns, manager);
+
+        int rowID = findRowID(manager, retrievedColumns);
+        record.setRowId(rowID);
+        record.populateSize();
+
+        Result result = null;
+        boolean status = manager.writeRecord(Utils.getUserDatabasePath(this.databaseName), tableName, record);
+        if (status) {
+            result = new Result(1);
+        }
+        else {
+            result = new Result(0);
+        }
+
         return result;
     }
 
     @Override
     public boolean ValidateQuery() {
-        /*TODO : replace with actual logic*/
         // validate if the table and the columns of the table.
         StorageManager manager = new StorageManager();
         if (!StorageManager.checkTableExists(Utils.getUserDatabasePath(this.databaseName), tableName)) {
-            Utils.printMessage("Table " + tableName + " does not exist.");
+            Utils.printMissingTableError(tableName);
             return false;
-        } else {
-            // Table columns.
-            List<String> retrievedColumns = manager.fetchAllTableColumns(tableName);
-            HashMap<String, Byte> columnDataTypeMapping = manager.fetchAllTableColumndataTypes(tableName);
+        }
 
-            if (columns == null) {
-                // No columns are provided.
-                // Check values size.
-                if (values.size() < retrievedColumns.size() || values.size() > retrievedColumns.size()) {
-                    Utils.printMessage("Values overflow /underflow.");
-                    return false;
-                }
+        // Table columns.
+        List<String> retrievedColumns = manager.fetchAllTableColumns(tableName);
+        HashMap<String, Integer> columnDataTypeMapping = manager.fetchAllTableColumndataTypes(tableName);
 
-                // Check Columns datatype are valid.
-                String invalidColumn = checkDataTypeValidity(columnDataTypeMapping, retrievedColumns);
-                boolean valid = (invalidColumn.length() > 0) ? false : true;
-
-                if (!valid) {
-                    Utils.printMessage("The value of the column " + invalidColumn + " is invalid.");
-                    return false;
-                }
-            }
-            else  {
-                // Columns are provided.
-                // Validate columns.
-                // If the column list is greater than the columns in the table then throw an error.
-                if (columns.size() > retrievedColumns.size()) {
-                    Utils.printMessage("Columns overflow.");
-                    return false;
-                }
-
-                // Check columns validity.
-                boolean areColumnsValid = checkColumnValidity(retrievedColumns);
-                if (!areColumnsValid) {
-                    return false;
-                }
-
-                // Check Columns datatype are valid.
-                boolean areColumnsDataTypeValid = validateColumnDataTypes(columnDataTypeMapping);
-                if (!areColumnsDataTypeValid) {
-                    return false;
-                }
-            }
-
-            // Common methods.
-            // Validate null columns.
-            boolean isNullConstraintValid = checkNullConstraint(manager, retrievedColumns);
-            if (!isNullConstraintValid) {
+        if (columns == null) {
+            // No columns are provided.
+            // Check values size.
+            if (values.size() < retrievedColumns.size() || values.size() > retrievedColumns.size()) {
+                Utils.printMessage("Column count doesn't match value count at row 1");
                 return false;
             }
 
-            // Valid columns.
-            Test test = new Test();
-            test.fetchTableColumns(tableName);
-
-
-            // PRIMARY KEY CONSTRAINT
-            boolean isPrimaryKeyConstraintValid = checkPrimaryKeyConstraint(manager, retrievedColumns);
-            if (!isPrimaryKeyConstraintValid) {
-                return false;
-            }
-
-            // All checks are done. Now insert the values.
-            DataRecord record  = new DataRecord();
-            generateRecords(record.getColumnValueList(), columnDataTypeMapping, retrievedColumns);
-
-            int rowID = findRowID(manager, retrievedColumns);
-            record.setRowId(rowID);
-            record.populateSize();
-
-            boolean status = manager.writeRecord(Utils.getUserDatabasePath(this.databaseName), tableName, record);
-            if (status) {
-                System.out.println("Record added successfully");
-                return true;
-            }
-            else {
-                System.out.println("Failed to add record added successfully");
+            // Check Columns datatype are valid.
+            if(!manager.checkDataTypeValidity(columnDataTypeMapping, retrievedColumns, values)) {
                 return false;
             }
         }
+        else  {
+            // Columns are provided.
+            // Validate columns.
+            // If the column list is greater than the columns in the table then throw an error.
+            if (columns.size() > retrievedColumns.size()) {
+                Utils.printMessage("Column count doesn't match value count at row 1");
+                return false;
+            }
+
+            // Check columns validity.
+            boolean areColumnsValid = checkColumnValidity(retrievedColumns);
+            if (!areColumnsValid) {
+                return false;
+            }
+
+            // Check Columns datatype are valid.
+            boolean areColumnsDataTypeValid = validateColumnDataTypes(columnDataTypeMapping);
+            if (!areColumnsDataTypeValid) {
+                return false;
+            }
+        }
+
+        // Common methods.
+        // Validate null columns.
+        boolean isNullConstraintValid = checkNullConstraint(manager, retrievedColumns);
+        if (!isNullConstraintValid) {
+            return false;
+        }
+
+        // Valid columns.
+        /*Test test = new Test();
+        test.fetchTableColumns(tableName);*/
+
+
+        // PRIMARY KEY CONSTRAINT
+        boolean isPrimaryKeyConstraintValid = checkPrimaryKeyConstraint(manager, retrievedColumns);
+        if (!isPrimaryKeyConstraintValid) {
+            return false;
+        }
+
+        return true;
     }
 
-    private boolean validateColumnDataTypes(HashMap<String, Byte> columnDataTypeMapping) {
-        String invalidColumn = checkColumnDataTypeValidity(columnDataTypeMapping);
-        boolean valid = (invalidColumn.length() > 0) ? false : true;
-
-        if (!valid) {
-            Utils.printMessage("The value of the column " + invalidColumn + " is invalid.");
+    private boolean validateColumnDataTypes(HashMap<String, Integer> columnDataTypeMapping) {
+        if (!checkColumnDataTypeValidity(columnDataTypeMapping)) {
             return false;
         }
+
 
         return true;
     }
@@ -151,7 +139,7 @@ public class InsertQuery implements IQuery {
         }
 
         if (!columnsValid) {
-            Utils.printMessage("The column " + invalidColumn + " is not present in the table " + tableName + ".");
+            Utils.printMessage("Invalid column '" + invalidColumn + "'");
             return false;
         }
 
@@ -173,7 +161,6 @@ public class InsertQuery implements IQuery {
         }
 
         if (!manager.checkNullConstraint(tableName, columnsList)) {
-            Utils.printMessage("Null constraint violated.");
             return false;
         }
 
@@ -192,7 +179,7 @@ public class InsertQuery implements IQuery {
                     if (!manager.checkIfValueForPrimaryKeyExists(this.databaseName, tableName, Integer.parseInt(values.get(primaryKeyIndex).value))) {
                         // Primary key does not exist.
                     } else {
-                        Utils.printMessage("Primary key constraint violated. The value for column " + primaryKeyColumnName + " already exists.");
+                        Utils.printMessage("Duplicate entry '" + values.get(primaryKeyIndex).value + "' for key 'PRIMARY'");
                         return false;
                     }
                 }
@@ -201,7 +188,7 @@ public class InsertQuery implements IQuery {
         return true;
     }
 
-    private String checkColumnDataTypeValidity(HashMap<String, Byte> columnDataTypeMapping) {
+    private boolean checkColumnDataTypeValidity(HashMap<String, Integer> columnDataTypeMapping) {
         String invalidColumn = "";
 
         for (String columnName : columns) {
@@ -233,78 +220,52 @@ public class InsertQuery implements IQuery {
             }
         }
 
-        return invalidColumn;
-    }
+        // Check the validity.
+        boolean valid = (invalidColumn.length() > 0) ? false : true;
 
-    private String checkDataTypeValidity(HashMap<String, Byte> columnDataTypeMapping, List<String> columnsList) {
-        String invalidColumn = "";
-
-        for (String columnName : columnsList) {
-            int dataTypeIndex = columnDataTypeMapping.get(columnName);
-            int idx = columnsList.indexOf(columnName);
-
-            Literal literal = values.get(idx);
-
-            // Check if the data type is a integer type.
-            if (dataTypeIndex != Constants.INVALID_CLASS && dataTypeIndex <= Constants.DOUBLE) {
-                // The data is type of integer, real or double.
-
-                boolean isValid = Utils.canConvertStringToDouble(literal.value);
-                if (!isValid) {
-                    invalidColumn = columnName;
-                    break;
-                }
-            } else if (dataTypeIndex == Constants.DATE) {
-                if (!Utils.isvalidDateFormat(literal.value)) {
-                    invalidColumn = columnName;
-                    break;
-                }
-            } else if (dataTypeIndex == Constants.DATETIME) {
-                if (!Utils.isvalidDateTimeFormat(literal.value)) {
-                    invalidColumn = columnName;
-                    break;
-                }
-            }
+        if (!valid) {
+            Utils.printMessage("Incorrect value for column '" + invalidColumn  + "' at row 1");
+            return false;
         }
 
-        return invalidColumn;
+        return true;
     }
 
-    public void generateRecords(List<Object> columnList, HashMap<String, Byte> columnDataTypeMapping, List<String> retrievedColumns) {
+    public void generateRecords(List<Object> columnList, HashMap<String, Integer> columnDataTypeMapping, List<String> retrievedColumns, StorageManager manager) {
         for (String column : retrievedColumns) {
             if (columns != null) {
                 if (columns.contains(column)) {
-                    Byte dataType = columnDataTypeMapping.get(column);
+                    Byte dataType = (byte)columnDataTypeMapping.get(column).intValue();
 
                     int idx = columns.indexOf(column);
 
-                    DT obj = getDataTypeObject(dataType);
+                    DT obj = getDataTypeObject(dataType, manager);
                     String val = values.get(idx).toString();
 
-                    obj.setValue(getDataTypeValue(dataType, val));
+                    obj.setValue(getDataTypeValue(dataType, val, manager));
                     columnList.add(obj);
                 } else {
-                    Byte dataType = columnDataTypeMapping.get(column);
-                    DT obj = getDataTypeObject(dataType);
+                    Byte dataType = (byte)columnDataTypeMapping.get(column).intValue();
+                    DT obj = getDataTypeObject(dataType, manager);
 
                     //obj.setNull(true);
                     columnList.add(obj);
                 }
             }
             else {
-                Byte dataType = columnDataTypeMapping.get(column);
+                Byte dataType = (byte)columnDataTypeMapping.get(column).intValue();
 
                 int columnIndex = retrievedColumns.indexOf(column);
-                DT obj = getDataTypeObject(dataType);
+                DT obj = getDataTypeObject(dataType, manager);
                 String val = values.get(columnIndex).toString();
 
-                obj.setValue(getDataTypeValue(dataType, val));
+                obj.setValue(getDataTypeValue(dataType, val, manager));
                 columnList.add(obj);
             }
         }
     }
 
-    public DT getDataTypeObject(byte dataType) {
+    public DT getDataTypeObject(byte dataType, StorageManager manager) {
 
         switch (dataType) {
             case Constants.TINYINT: {
@@ -352,7 +313,7 @@ public class InsertQuery implements IQuery {
         }
     }
 
-    public Object getDataTypeValue(byte dataType, String value) {
+    public Object getDataTypeValue(byte dataType, String value, StorageManager manager) {
 
         switch (dataType) {
             case Constants.TINYINT: {
@@ -374,10 +335,10 @@ public class InsertQuery implements IQuery {
                 return Double.parseDouble(value);
             }
             case Constants.DATE: {
-                return getDateEpoc(value, true);
+                return manager.getDateEpoc(value, true);
             }
             case Constants.DATETIME: {
-                return getDateEpoc(value, false);
+                return manager.getDateEpoc(value, false);
             }
             case Constants.TEXT: {
                 return value;
@@ -388,41 +349,6 @@ public class InsertQuery implements IQuery {
         }
     }
 
-    private long getDateEpoc(String value, Boolean isDate) {
-        DateFormat formatter = null;
-        if (isDate) {
-          formatter = new SimpleDateFormat("yyyy-MM-dd");
-        }
-        else {
-            formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-        }
-        formatter.setLenient(false);
-        Date date = null;
-        try {
-            date = formatter.parse(value);
-
-            /* Define the time zone for Dallas CST */
-            ZoneId zoneId = ZoneId.of ( "America/Chicago" );
-
-            /* Convert date and time parameters for 1974-05-27 to a ZonedDateTime object */
-            ZonedDateTime zdt = ZonedDateTime.ofInstant(date.toInstant(),
-                    ZoneId.systemDefault());
-
-            /* ZonedDateTime toLocalDate() method will display in a simple format */
-            System.out.println(zdt.toLocalDate());
-            /* Convert a ZonedDateTime object to epochSeconds
-            *  This value can be store 8-byte integer to a binary
-            *  file using RandomAccessFile writeLong()
-            */
-
-            long epochSeconds = zdt.toInstant().toEpochMilli() / 1000;
-            return epochSeconds;
-        }
-        catch (ParseException ex) {
-            System.out.println("Exception "+ex);
-            return 0;
-        }
-    }
 
     private int findRowID (StorageManager manager, List<String> retrievedList) {
         int rowCount = manager.getTableRecordCount(tableName);

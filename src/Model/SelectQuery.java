@@ -49,15 +49,24 @@ public class SelectQuery implements IQuery{
 
         // Check if the table exists.
         if (!StorageManager.checkTableExists(Utils.getUserDatabasePath(this.databaseName), tableName)) {
-            Utils.printMessage("Table " + tableName + " does not exist.");
+            Utils.printMissingTableError(tableName);
             return false;
         }
 
         // TODO : Check if data types match
+        // Validate column data type.
+        if (condition != null) {
+            StorageManager manager = new StorageManager();
+            List<String> retrievedColumns = manager.fetchAllTableColumns(tableName);
+            if (!manager.checkConditionValueDataTypeValidity(columnToIdMap, retrievedColumns, condition)) {
+                return false;
+            }
+        }
+
         if(this.columns != null){
             for(String column : this.columns){
                 if(!columnToIdMap.containsKey(column)){
-                    System.out.println(String.format("Unknown column '%s' in table '%s'", column, this.tableName));
+                    Utils.printMessage(String.format("Unknown column '%s' in table '%s'", column, this.tableName));
                     return false;
                 }
             }
@@ -65,7 +74,7 @@ public class SelectQuery implements IQuery{
 
         if(condition != null){
             if(!columnToIdMap.containsKey(condition.column)){
-                System.out.println(String.format("Unknown column '%s' in table '%s'", condition.column, this.tableName));
+                Utils.printMessage((String.format("Unknown column '%s' in table '%s'", condition.column, this.tableName)));
                 return false;
             }
         }

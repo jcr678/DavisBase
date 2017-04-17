@@ -50,11 +50,19 @@ public class Utils {
     }
 
     public static void printMissingTableError(String tableName) {
-        printError("The table " + tableName + " does not exist");
+        printError("Table " + tableName + " doesn't exist.");
     }
 
     public static void printMessage(String str) {
         System.out.println(str);
+    }
+
+    public static void printUnknownColumnValueError(String value) {
+        printMessage("Unknown column value '" + value + "' in 'value list'");
+    }
+
+    public static void printUnknownConditionValueError(String value) {
+        printMessage("Unknown column value '" + value + "' in 'value list'");
     }
 
     public static byte resolveClass(Object object) {

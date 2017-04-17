@@ -2,9 +2,6 @@ package Model;
 
 import QueryParser.DatabaseHelper;
 
-import javax.xml.crypto.Data;
-import java.awt.*;
-
 public class Column {
     public String name;
     public DataType type;

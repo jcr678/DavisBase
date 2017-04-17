@@ -8,7 +8,7 @@ import storage.StorageManager;
 import java.util.ArrayList;
 import java.util.List;
 
-public class CreateTableQuery extends BaseQuery implements IQuery {
+public class CreateTableQuery implements IQuery {
     public String tableName;
     public ArrayList<Column> columns;
     public boolean hasPrimaryKey;

@@ -42,7 +42,7 @@ public class InsertQuery implements IQuery {
         // validate if the table and the columns of the table.
         StorageManager manager = new StorageManager();
         if (!StorageManager.checkTableExists(Utils.getUserDatabasePath(this.databaseName), tableName)) {
-            Utils.printMessage("The table " + tableName + " does not exist.");
+            Utils.printMessage("Table " + tableName + " does not exist.");
             return false;
         } else {
             // Table columns.

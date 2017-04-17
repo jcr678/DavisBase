@@ -47,7 +47,12 @@ public class SelectQuery implements IQuery{
         Pair<HashMap<String, Integer>, HashMap<Integer, String>> maps = mapOrdinalIdToColumnName(this.tableName);
         HashMap<String, Integer> columnToIdMap = maps.getKey();
 
-        // TODO : Check if table exists
+        // Check if the table exists.
+        if (!StorageManager.checkTableExists(Utils.getUserDatabasePath(this.databaseName), tableName)) {
+            Utils.printMessage("Table " + tableName + " does not exist.");
+            return false;
+        }
+
         // TODO : Check if data types match
         if(this.columns != null){
             for(String column : this.columns){

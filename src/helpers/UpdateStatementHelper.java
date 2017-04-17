@@ -120,4 +120,22 @@ public class UpdateStatementHelper {
         return true;
     }
 
+    public static int incrementRowCount(String tableName) {
+        return updateRowCount(tableName, 1);
+    }
+
+    public static int decrementRowCount(String tableName) {
+        return updateRowCount(tableName, -1);
+    }
+
+    private static int updateRowCount(String tableName, int rowCount) {
+        StorageManager manager = new StorageManager();
+        List<InternalCondition> conditions = new ArrayList<>();
+        conditions.add(new InternalCondition(1, InternalCondition.EQUALS, tableName));
+        List<Byte> updateColumnsIndexList = new ArrayList<>();
+        updateColumnsIndexList.add((byte) 2);
+        List<Object> updateValueList = new ArrayList<>();
+        updateValueList.add(new DT_Int(rowCount));
+        return manager.updateRecord(Utils.getSystemDatabasePath(), Constants.SYSTEM_TABLES_TABLENAME, conditions, updateColumnsIndexList, updateValueList, true);
+    }
 }

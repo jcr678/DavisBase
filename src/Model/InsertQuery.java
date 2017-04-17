@@ -52,7 +52,7 @@ public class InsertQuery implements IQuery {
     public boolean ValidateQuery() {
         // validate if the table and the columns of the table.
         StorageManager manager = new StorageManager();
-        if (!StorageManager.checkTableExists(Utils.getUserDatabasePath(this.databaseName), tableName)) {
+        if (!manager.checkTableExists(Utils.getUserDatabasePath(this.databaseName), tableName)) {
             Utils.printMissingTableError(tableName);
             return false;
         }
@@ -70,7 +70,8 @@ public class InsertQuery implements IQuery {
             }
 
             // Check Columns datatype are valid.
-            if(!manager.checkDataTypeValidity(columnDataTypeMapping, retrievedColumns, values)) {
+            Utils utils = new Utils();
+            if(!utils.checkDataTypeValidity(columnDataTypeMapping, retrievedColumns, values)) {
                 return false;
             }
         }
@@ -335,10 +336,10 @@ public class InsertQuery implements IQuery {
                 return Double.parseDouble(value);
             }
             case Constants.DATE: {
-                return manager.getDateEpoc(value, true);
+                return new Utils().getDateEpoc(value, true);
             }
             case Constants.DATETIME: {
-                return manager.getDateEpoc(value, false);
+                return new Utils().getDateEpoc(value, false);
             }
             case Constants.TEXT: {
                 return value;

@@ -3,6 +3,7 @@ package datatypes.base;
 import Model.DataType;
 import Model.Literal;
 import common.Constants;
+import common.Utils;
 import datatypes.*;
 import storage.StorageManager;
 
@@ -61,14 +62,10 @@ public abstract class DT<T> {
             case Constants.DOUBLE:
                 return new DT_Double(Double.valueOf(value));
             case Constants.DATETIME: {
-                // TODO : Create DateTime
-                StorageManager manager = new StorageManager();
-                return new DT_DateTime(Long.valueOf(manager.getDateEpoc(value, false)));
+                return new DT_DateTime(Long.valueOf(Utils.getDateEpoc(value, false)));
             }
             case Constants.DATE:
-                // TODO : Create Date
-                StorageManager manager = new StorageManager();
-                return new DT_DateTime(Long.valueOf(manager.getDateEpoc(value, true)));
+                return new DT_DateTime(Long.valueOf(Utils.getDateEpoc(value, true)));
             case Constants.TEXT:
                 return new DT_Text(value);
         }

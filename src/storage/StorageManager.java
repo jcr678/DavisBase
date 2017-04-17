@@ -54,7 +54,8 @@ public class StorageManager {
     }
 
     public boolean databaseExists(String databaseName) {
-        return new File(DEFAULT_DATA_PATH + "/" + databaseName).exists();
+        File databaseDir = new File(databaseName);
+        return  databaseDir.exists();
     }
 
     public boolean createTable(String databaseName, String tableName) {
@@ -88,8 +89,10 @@ public class StorageManager {
      * @return True if the table exists else False.
      */
     public boolean checkTableExists(String databaseName, String tableName) {
-        return this.databaseExists(databaseName) &&
-            new File(databaseName + "/" + tableName + Constants.DEFAULT_FILE_EXTENSION).exists();
+        boolean databaseExists = this.databaseExists(databaseName);
+        boolean fileExists = new File(databaseName + "/" + tableName + Constants.DEFAULT_FILE_EXTENSION).exists();
+
+        return (databaseExists && fileExists);
     }
 
     public boolean writeRecord(String databaseName, String tableName, DataRecord record) {

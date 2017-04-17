@@ -3,6 +3,7 @@ package Model;
 import common.CatalogDB;
 import common.Constants;
 import common.Utils;
+import datatypes.DT_Text;
 import datatypes.base.DT;
 import javafx.util.Pair;
 import storage.StorageManager;
@@ -46,9 +47,10 @@ public class SelectQuery implements IQuery{
     public boolean ValidateQuery() {
         Pair<HashMap<String, Integer>, HashMap<Integer, String>> maps = mapOrdinalIdToColumnName(this.tableName);
         HashMap<String, Integer> columnToIdMap = maps.getKey();
+        StorageManager manager = new StorageManager();
 
         // Check if the table exists.
-        if (!StorageManager.checkTableExists(Utils.getUserDatabasePath(this.databaseName), tableName)) {
+        if (!manager.checkTableExists(Utils.getUserDatabasePath(this.databaseName), tableName)) {
             Utils.printMissingTableError(tableName);
             return false;
         }
@@ -56,9 +58,8 @@ public class SelectQuery implements IQuery{
         // TODO : Check if data types match
         // Validate column data type.
         if (condition != null) {
-            StorageManager manager = new StorageManager();
             List<String> retrievedColumns = manager.fetchAllTableColumns(tableName);
-            if (!manager.checkConditionValueDataTypeValidity(columnToIdMap, retrievedColumns, condition)) {
+            if (!Utils.checkConditionValueDataTypeValidity(columnToIdMap, retrievedColumns, condition)) {
                 return false;
             }
         }
@@ -162,7 +163,7 @@ public class SelectQuery implements IQuery{
         HashMap<Integer, String> idToColumnMap = new HashMap<>();
         HashMap<String, Integer> columnToIdMap = new HashMap<>();
         List<InternalCondition> conditions = new ArrayList<>();
-        conditions.add(new InternalCondition(CatalogDB.COLUMNS_TABLE_SCHEMA_TABLE_NAME, InternalCondition.EQUALS, tableName));
+        conditions.add(new InternalCondition(CatalogDB.COLUMNS_TABLE_SCHEMA_TABLE_NAME, InternalCondition.EQUALS, new DT_Text(tableName)));
 
         StorageManager manager = new StorageManager();
         List<DataRecord> records = manager.findRecord(Utils.getSystemDatabasePath(), Constants.SYSTEM_COLUMNS_TABLENAME, conditions, false);

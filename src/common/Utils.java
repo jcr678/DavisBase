@@ -201,7 +201,7 @@ public class Utils {
         return a;
     }
 
-    public boolean checkConditionValueDataTypeValidity(HashMap<String, Integer> columnDataTypeMapping, List<String> columnsList, Condition condition) {
+    public static boolean checkConditionValueDataTypeValidity(HashMap<String, Integer> columnDataTypeMapping, List<String> columnsList, Condition condition) {
         String invalidColumn = "";
         Literal literal = null;
 
@@ -234,7 +234,7 @@ public class Utils {
         return valid;
     }
 
-    public long getDateEpoc(String value, Boolean isDate) {
+    public static long getDateEpoc(String value, Boolean isDate) {
         DateFormat formatter = null;
         if (isDate) {
             formatter = new SimpleDateFormat("yyyy-MM-dd");

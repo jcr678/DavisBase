@@ -26,6 +26,13 @@ public class Test {
 
             case 3:
                 selectAll(Constants.SYSTEM_TABLES_TABLENAME);
+                break;
+
+            case 4:
+                deleteTableName(Constants.SYSTEM_COLUMNS_TABLENAME);
+
+            case 5:
+                deleteTableColumns(Constants.SYSTEM_COLUMNS_TABLENAME);
         }
     }
 
@@ -33,9 +40,12 @@ public class Test {
         StorageManager manager = new StorageManager();
         List<Byte> columnIndexList = new ArrayList<>();
         columnIndexList.add((byte) 1);
+        columnIndexList.add((byte) 3);
         List<Object> valueList = new ArrayList<>();
         valueList.add(new DT_Text(tableName));
+        valueList.add(new DT_Text("TEXT"));
         List<Short> conditionList = new ArrayList<>();
+        conditionList.add(DT_Numeric.EQUALS);
         conditionList.add(DT_Numeric.EQUALS);
         List<DataRecord> records = manager.findRecord(Utils.getSystemDatabasePath(), Constants.SYSTEM_COLUMNS_TABLENAME, columnIndexList, valueList, conditionList, false);
         for (DataRecord record : records) {
@@ -83,5 +93,24 @@ public class Test {
             }
             System.out.print("\n");
         }
+    }
+
+    private void deleteTableName(String tableName) {
+        StorageManager manager = new StorageManager();
+        List<Byte> columnIndexList = new ArrayList<>();
+        columnIndexList.add((byte) 1);
+        List<Object> valueList = new ArrayList<>();
+        valueList.add(new DT_Text(tableName));
+        List<Short> conditionList = new ArrayList<>();
+        conditionList.add(DT_Numeric.EQUALS);
+        System.out.println(manager.deleteRecord(Utils.getSystemDatabasePath(), Constants.SYSTEM_TABLES_TABLENAME, columnIndexList, valueList, conditionList,true));
+    }
+
+    private void deleteTableColumns(String tableName) {
+        StorageManager manager = new StorageManager();
+        List<Byte> columnIndexList = new ArrayList<>();
+        List<Object> valueList = new ArrayList<>();
+        List<Short> conditionList = new ArrayList<>();
+        System.out.println(manager.deleteRecord(Utils.getSystemDatabasePath(), Constants.SYSTEM_COLUMNS_TABLENAME, columnIndexList, valueList, conditionList,false));
     }
 }

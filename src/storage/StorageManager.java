@@ -4,6 +4,7 @@ import common.Constants;
 import common.Utils;
 import console.ConsoleWriter;
 import datatypes.*;
+import datatypes.base.DT;
 import datatypes.base.DT_Numeric;
 import storage.model.DataRecord;
 import storage.model.Page;
@@ -47,7 +48,6 @@ public class StorageManager {
         if(!dirFile.exists()) {
             return false;
         }
-
         return true;
     }
 
@@ -142,17 +142,30 @@ public class StorageManager {
                         default:
                             if(pageCount > 1) {
                                 System.out.println("Well things look pretty darn bad");
+                                PointerRecord pointerRecord1 = splitPage(randomAccessFile, getFirstPage(file), record);
+                                if(pointerRecord1 == null) {
+                                    System.out.println("Well things still look pretty darn bad");
+                                }
+                                else if(pointerRecord1.getPageNumber() == -1){
+                                    System.out.println("Successfully inserted!");
+                                }
+                                else {
+                                    System.out.println(pointerRecord1.getKey());
+                                }
                             }
                             break;
                     }
+                    this.incrementRowCount(tableName);
                     randomAccessFile.close();
                     return true;
                 }
                 short address = (short) getAddress(file, record.getRowId(), page.getPageNumber());
-//                System.out.println(address);
                 page.setNumberOfCells((byte)(page.getNumberOfCells() + 1));
                 page.setStartingAddress((short) (page.getStartingAddress() - record.getSize() - record.getHeaderSize()));
-                page.getRecordAddressList().add((short)(page.getStartingAddress() + 1));
+                if(address == page.getRecordAddressList().size())
+                    page.getRecordAddressList().add((short)(page.getStartingAddress() + 1));
+                else
+                    page.getRecordAddressList().add(address, (short)(page.getStartingAddress() + 1));
                 record.setPageLocated(page.getPageNumber());
                 record.setOffset((short)(page.getStartingAddress() + 1));
                 this.writePageHeader(randomAccessFile, page);
@@ -174,6 +187,15 @@ public class StorageManager {
             short endingAddress = page.getStartingAddress();
             short startingAddress = (short) (Page.getHeaderFixedLength() + (page.getRecordAddressList().size() * Short.BYTES));
             return (record.getSize() + record.getHeaderSize() + Short.BYTES) <= (endingAddress - startingAddress);
+        }
+        return false;
+    }
+
+    private boolean checkSpaceRequirements(Page page, PointerRecord record) {
+        if(page != null && record != null) {
+            short endingAddress = page.getStartingAddress();
+            short startingAddress = (short) (Page.getHeaderFixedLength() + (page.getRecordAddressList().size() * Short.BYTES));
+            return (record.getSize() + Short.BYTES) <= (endingAddress - startingAddress);
         }
         return false;
     }
@@ -225,12 +247,63 @@ public class StorageManager {
         return null;
     }
 
+    private PointerRecord splitPage(RandomAccessFile randomAccessFile, Page page, DataRecord record) {
+        if(page.getPageType() == Page.INTERIOR_TABLE_PAGE) {
+            int pageNumber = binarySearch(randomAccessFile, record.getRowId(), page.getNumberOfCells(), (page.getBaseAddress() + Page.getHeaderFixedLength()), Page.INTERIOR_TABLE_PAGE);
+            Page newPage = this.readPageHeader(randomAccessFile, pageNumber);
+            PointerRecord pointerRecord = splitPage(randomAccessFile, newPage, record);
+            if(checkSpaceRequirements(page, pointerRecord)) {
+                int location = binarySearch(randomAccessFile, record.getRowId(), page.getNumberOfCells(), (page.getBaseAddress() + Page.getHeaderFixedLength()), Page.INTERIOR_TABLE_PAGE, true);
+                page.setNumberOfCells((byte) (page.getNumberOfCells() + 1));
+                page.setStartingAddress((short) (page.getStartingAddress() - pointerRecord.getSize()));
+                page.getRecordAddressList().add(location, (short)(page.getStartingAddress() + 1));
+                pointerRecord.setPageNumber(page.getPageNumber());
+                pointerRecord.setOffset((short) (page.getStartingAddress() + 1));
+                this.writePageHeader(randomAccessFile, page);
+                this.writeRecord(randomAccessFile, pointerRecord);
+                return new PointerRecord();
+            }
+            else {
+                int newPageNumber;
+                try {
+                    newPageNumber = (int) (randomAccessFile.length() / Page.PAGE_SIZE);
+                }
+                catch (IOException e) {
+                    e.printStackTrace();
+                    return null;
+                }
+                page.setRightNodeAddress(pointerRecord.getPageNumber());
+                this.writePageHeader(randomAccessFile, page);
+                PointerRecord pointerRecord1 = splitPage(randomAccessFile, page, pointerRecord, page.getPageNumber(), newPageNumber);
+                if(pointerRecord1 != null) {
+                    pointerRecord1.setPageNumber(newPageNumber);
+                }
+                return pointerRecord1;
+            }
+        }
+        else if(page.getPageType() == Page.LEAF_TABLE_PAGE) {
+            int newPageNumber;
+            try {
+                newPageNumber = (int) (randomAccessFile.length() / Page.PAGE_SIZE);
+            }
+            catch (IOException e) {
+                e.printStackTrace();
+                return null;
+            }
+            PointerRecord pointerRecord = splitPage(randomAccessFile, page, record, page.getPageNumber(), newPageNumber);
+            if(pointerRecord != null)
+                pointerRecord.setPageNumber(newPageNumber);
+            return pointerRecord;
+        }
+        return null;
+    }
+
     private PointerRecord splitPage(RandomAccessFile randomAccessFile, Page page, PointerRecord record, int pageNumber1, int pageNumber2) {
         try {
             if (page != null && record != null) {
                 int location = -1;
                 boolean isFirst = false;
-                PointerRecord pointerRecord = new PointerRecord();
+                PointerRecord pointerRecord;
                 if(page.getPageType() == Page.LEAF_TABLE_PAGE) {
                     return null;
                 }
@@ -260,39 +333,34 @@ public class StorageManager {
                 page1.setStartingAddress((short) (offset + 1));
                 page1.setRightNodeAddress(pointerRecord.getLeftPageNumber());
                 pointerRecord.setLeftPageNumber(pageNumber1);
-
-                List<PointerRecord> rightRecords = copyRecords(randomAccessFile, (page.getPageNumber() * Page.PAGE_SIZE), page.getRecordAddressList(), (byte) ((page.getNumberOfCells() / 2) + 1), page.getNumberOfCells(), pageNumber2, record);
-
-
-                page1.setRightNodeAddress(pageNumber2);
+                this.writePageHeader(randomAccessFile, page1);
+                for(PointerRecord pointerRecord1 : leftRecords) {
+                    this.writeRecord(randomAccessFile, pointerRecord1);
+                }
 
                 //Page 2
                 Page<PointerRecord> page2 = new Page<>(pageNumber2);
                 page2.setPageType(page.getPageType());
-                page2.setNumberOfCells((byte) 1);
+                List<PointerRecord> rightRecords = copyRecords(randomAccessFile, (page.getPageNumber() * Page.PAGE_SIZE), page.getRecordAddressList(), (byte) ((page.getNumberOfCells() / 2) + 1), page.getNumberOfCells(), pageNumber2, record);
+                if(!isFirst)
+                    rightRecords.add((location - (page.getRecordAddressList().size() / 2) + 1), record);
+                page2.setNumberOfCells((byte) rightRecords.size());
                 page2.setRightNodeAddress(page.getRightNodeAddress());
-                page2.setStartingAddress((short) (page2.getStartingAddress() - record.getSize()));
-                page2.getRecordAddressList().add((short) (page2.getStartingAddress() - page2.getBaseAddress() + 1));
-                page2.setPageNumber(pageNumber2);
-
-                page1.setRecordAddressList(page.getRecordAddressList());
-                randomAccessFile.seek(Page.PAGE_SIZE * page1.getPageNumber());
-                this.writePageHeader(randomAccessFile, page1);
-                if(isFirst) {
-                    leftRecords.add(location, record);
+                rightRecords.get(0).setLeftPageNumber(page.getRightNodeAddress());
+                index = 0;
+                offset = (short) (Page.PAGE_SIZE - 1);
+                for(PointerRecord pointerRecord1 : rightRecords) {
+                    index++;
+                    offset = (short) (page2.getBaseAddress() + Page.PAGE_SIZE - 1 - (pointerRecord1.getSize() * index));
+                    pointerRecord1.setOffset(offset);
+                    page2.getRecordAddressList().add(offset);
                 }
-                else {
-//                    rightRecords.add();
-                }
-//                for(PointerRecord object: records) {
-//                    this.writeRecord(randomAccessFile, object);
-//                }
-
-                randomAccessFile.seek(page2.getBaseAddress());
+                page2.setStartingAddress((short) (offset + 1));
                 this.writePageHeader(randomAccessFile, page2);
-                this.writeRecord(randomAccessFile, record);
-                pointerRecord.setLeftPageNumber(pageNumber1);
-                pointerRecord.setKey(record.getKey());
+                for(PointerRecord pointerRecord1 : rightRecords) {
+                    this.writeRecord(randomAccessFile, pointerRecord1);
+                }
+
                 return pointerRecord;
             }
         }
@@ -453,7 +521,7 @@ public class StorageManager {
             while(true) {
                 if(start > end) {
                     if(pageType == Page.LEAF_TABLE_PAGE || literalSearch)
-                        return start;
+                        return start > numberOfRecords ? numberOfRecords : start;
                     if(pageType == Page.INTERIOR_TABLE_PAGE) {
                         if (end < 0)
                             return pageNumber;
@@ -813,6 +881,107 @@ public class StorageManager {
         }
     }
 
+    public boolean deleteRecord(String databaseName, String tableName, List<Byte> columnIndexList, List<Object> valueList, List<Short> conditionList) {
+        return deleteRecord(databaseName, tableName, columnIndexList, valueList, conditionList, true);
+    }
+
+    public boolean deleteRecord(String databaseName, String tableName, List<Byte> columnIndexList, List<Object> valueList, List<Short> conditionList, boolean deleteOne) {
+        try {
+            File file = new File(databaseName + "/" + tableName + Constants.DEFAULT_FILE_EXTENSION);
+            if (file.exists()) {
+                RandomAccessFile randomAccessFile = new RandomAccessFile(file, "rw");
+                if(columnIndexList != null) {
+                    Page page = getFirstPage(file);
+                    DataRecord record;
+                    List<DataRecord> matchRecords = new ArrayList<>();
+                    boolean isMatch = false;
+                    byte columnIndex;
+                    short condition;
+                    Object value;
+                    while (page != null) {
+                        for (Short offset : new ArrayList<Short>(page.getRecordAddressList())) {
+                            isMatch = true;
+                            record = getDataRecord(randomAccessFile, page.getPageNumber(), offset);
+                            for(int i = 0; i < columnIndexList.size(); i++) {
+                                isMatch = false;
+                                columnIndex = columnIndexList.get(i);
+                                value = valueList.get(i);
+                                condition = conditionList.get(i);
+                                if (record != null && record.getColumnValueList().size() > columnIndex) {
+                                    Object object = record.getColumnValueList().get(columnIndex);
+                                    switch (Utils.resolveClass(value)) {
+                                        case Constants.TINYINT:
+                                            isMatch = ((DT_TinyInt) value).compare((DT_TinyInt) object, condition);
+                                            break;
+
+                                        case Constants.SMALLINT:
+                                            isMatch = ((DT_SmallInt) value).compare((DT_SmallInt) object, condition);
+                                            break;
+
+                                        case Constants.INT:
+                                            isMatch = ((DT_Int) value).compare((DT_Int) object, condition);
+                                            break;
+
+                                        case Constants.BIGINT:
+                                            isMatch = ((DT_BigInt) value).compare((DT_BigInt) object, condition);
+                                            break;
+
+                                        case Constants.REAL:
+                                            isMatch = ((DT_Real) value).compare((DT_Real) object, condition);
+                                            break;
+
+                                        case Constants.DOUBLE:
+                                            isMatch = ((DT_Double) value).compare((DT_Double) object, condition);
+                                            break;
+
+                                        case Constants.DATE:
+                                            isMatch = ((DT_Date) value).compare((DT_Date) object, condition);
+                                            break;
+
+                                        case Constants.DATETIME:
+                                            isMatch = ((DT_DateTime) value).compare((DT_DateTime) object, condition);
+                                            break;
+
+                                        case Constants.TEXT:
+                                            isMatch = ((DT_Text) value).getValue().equalsIgnoreCase(((DT_Text) object).getValue());
+                                            break;
+                                    }
+                                    if(isMatch == false) break;
+                                }
+                            }
+                            if(isMatch) {
+                                page.setNumberOfCells((byte) (page.getNumberOfCells() - 1));
+                                page.getRecordAddressList().remove(offset);
+                                if(page.getNumberOfCells() == 0) {
+                                    page.setStartingAddress((short) (page.getBaseAddress() + Page.PAGE_SIZE - 1));
+                                }
+                                this.writePageHeader(randomAccessFile, page);
+                                this.decrementRowCount(tableName);
+                                if(deleteOne) {
+                                    randomAccessFile.close();
+                                    return true;
+                                }
+                            }
+                        }
+                        if(page.getRightNodeAddress() == Page.RIGHTMOST_PAGE)
+                            break;
+                        page = readPageHeader(randomAccessFile, page.getRightNodeAddress());
+                    }
+                    randomAccessFile.close();
+                    return true;
+                }
+            }
+            else {
+                ConsoleWriter.displayMessage("Table " + tableName + " does not exist");
+                return false;
+            }
+        }
+        catch (IOException e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+
     public DataRecord getDataRecord(RandomAccessFile randomAccessFile, int pageNumber, short address) {
         return getDataRecord(randomAccessFile, pageNumber, address, null);
     }
@@ -913,6 +1082,7 @@ public class StorageManager {
         return null;
     }
 
+
     // ====================================================================================
     // Query processing methods
     // ====================================================================================
@@ -992,4 +1162,27 @@ public class StorageManager {
         }
     }
 
+
+    public boolean incrementRowCount(String tableName) {
+        return updateRowCount(tableName, 1);
+    }
+
+    public boolean decrementRowCount(String tableName) {
+        return updateRowCount(tableName, -1);
+    }
+
+    public boolean updateRowCount(String tableName, int rowCount) {
+        StorageManager manager = new StorageManager();
+        List<Byte> columnIndexList = new ArrayList<>();
+        columnIndexList.add((byte) 1);
+        List<Object> valueList = new ArrayList<>();
+        valueList.add(new DT_Text(tableName));
+        List<Short> conditionList = new ArrayList<>();
+        conditionList.add(DT_Numeric.EQUALS);
+        List<Byte> updateColumnsIndexList = new ArrayList<>();
+        updateColumnsIndexList.add((byte) 2);
+        List<Object> updateValueList = new ArrayList<>();
+        updateValueList.add(new DT_Int(rowCount));
+        return manager.updateRecord(Utils.getSystemDatabasePath(), Constants.SYSTEM_TABLES_TABLENAME, columnIndexList, valueList, conditionList, updateColumnsIndexList, updateValueList, true);
+    }
 }

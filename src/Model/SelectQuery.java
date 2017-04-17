@@ -3,12 +3,14 @@ package Model;
 import java.util.ArrayList;
 
 public class SelectQuery implements IQuery{
+    public String databaseName;
     public String tableName;
     public ArrayList<String> columns;
     public boolean isSelectAll;
     public Condition condition;
 
-    public SelectQuery(String tableName, ArrayList<String> columns, Condition condition, boolean isSelectAll){
+    public SelectQuery(String databaseName, String tableName, ArrayList<String> columns, Condition condition, boolean isSelectAll){
+        this.databaseName = databaseName;
         this.tableName = tableName;
         this.columns = columns;
         this.condition = condition;

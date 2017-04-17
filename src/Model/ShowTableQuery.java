@@ -13,6 +13,13 @@ import java.util.List;
  * Created by dhruv on 4/12/2017.
  */
 public class ShowTableQuery implements IQuery {
+
+    public String databaseName;
+
+    public ShowTableQuery(String databaseName) {
+        this.databaseName = databaseName;
+    }
+
     @Override
     public Result ExecuteQuery() {
         ArrayList<String> columns = new ArrayList<>();

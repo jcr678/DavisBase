@@ -3,12 +3,14 @@ package Model;
 import java.util.Random;
 
 public class UpdateQuery implements IQuery{
+    public String databaseName;
     public String tableName;
     public String columnName;
     public Literal value;
     public Condition condition;
 
-    public UpdateQuery(String tableName, String columnName, Literal value, Condition condition){
+    public UpdateQuery(String databaseName, String tableName, String columnName, Literal value, Condition condition){
+        this.databaseName = databaseName;
         this.tableName = tableName;
         this.columnName = columnName;
         this.value = value;

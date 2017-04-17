@@ -103,6 +103,14 @@ public class StorageManager {
         }
     }
 
+    public static boolean databaseExists(String database) {
+        if (StorageManager.checkDatabaseExists(Utils.getUserDatabasePath(database))) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
     public static boolean tableExistsInDefaultDatabase(String tableName) {
         StorageManager storageManager = new StorageManager();
         if (storageManager.checkTableExists(Constants.DEFAULT_USER_DATABASE, tableName)) {

@@ -19,11 +19,13 @@ public class InsertQuery implements IQuery {
     public String tableName;
     public ArrayList<String> columns;
     public ArrayList<Literal> values;
+    public String databaseName;
 
-    public InsertQuery(String tableName, ArrayList<String> columns, ArrayList<Literal> values) {
+    public InsertQuery(String databaseName, String tableName, ArrayList<String> columns, ArrayList<Literal> values) {
         this.tableName = tableName;
         this.columns = columns;
         this.values = values;
+        this.databaseName = databaseName;
     }
 
     @Override
@@ -39,7 +41,7 @@ public class InsertQuery implements IQuery {
         /*TODO : replace with actual logic*/
         // validate if the table and the columns of the table.
         StorageManager manager = new StorageManager();
-        if (!StorageManager.checkTableExists(Utils.getUserDatabasePath(Constants.DEFAULT_USER_DATABASE), tableName)) {
+        if (!StorageManager.checkTableExists(Utils.getUserDatabasePath(this.databaseName), tableName)) {
             Utils.printMessage("The table " + tableName + " does not exist.");
             return false;
         } else {
@@ -112,7 +114,7 @@ public class InsertQuery implements IQuery {
             record.setRowId(rowID);
             record.populateSize();
 
-            boolean status = manager.writeRecord(Utils.getUserDatabasePath(Constants.DEFAULT_USER_DATABASE), tableName, record);
+            boolean status = manager.writeRecord(Utils.getUserDatabasePath(this.databaseName), tableName, record);
             if (status) {
                 System.out.println("Record added successfully");
                 return true;
@@ -187,7 +189,7 @@ public class InsertQuery implements IQuery {
                     // The primary key is present.
                     // Check if the same primary key with same value is present.
                     int primaryKeyIndex = columnList.indexOf(primaryKeyColumnName);
-                    if (!manager.checkIfValueForPrimaryKeyExists(Constants.DEFAULT_USER_DATABASE, tableName, Integer.parseInt(values.get(primaryKeyIndex).value))) {
+                    if (!manager.checkIfValueForPrimaryKeyExists(this.databaseName, tableName, Integer.parseInt(values.get(primaryKeyIndex).value))) {
                         // Primary key does not exist.
                     } else {
                         Utils.printMessage("Primary key constraint violated. The value for column " + primaryKeyColumnName + " already exists.");

@@ -31,7 +31,6 @@ public class ShowDatabaseQuery implements IQuery {
     private ArrayList<Record> DummyData(){
         ArrayList<Record> records = new ArrayList<>();
 
-        /*TODO : Replace using constants file*/
         String DEFAULT_DATA_DIRNAME = "data";
         File baseData = new File(DEFAULT_DATA_DIRNAME);
 

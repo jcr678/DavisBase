@@ -55,7 +55,7 @@ public class UpdateQuery implements IQuery{
         HashMap<String, Integer> columnDataTypeMapping = manager.fetchAllTableColumndataTypes(tableName);
 
         if (!manager.checkTableExists(Utils.getUserDatabasePath(this.databaseName), tableName)) {
-            Utils.printMessage("Table " + tableName + " does not exist.");
+            Utils.printMissingTableError(tableName);
             return false;
         }
 
@@ -131,7 +131,7 @@ public class UpdateQuery implements IQuery{
 
         boolean valid = (invalidColumn.length() > 0) ? false : true;
         if (!valid) {
-            Utils.printMessage("The value of the column " + invalidColumn + " is invalid.");
+            Utils.printError("The value of the column " + invalidColumn + " is invalid.");
 
         }
 
@@ -149,7 +149,7 @@ public class UpdateQuery implements IQuery{
         }
 
         if (!columnsValid) {
-            Utils.printMessage("Column " + invalidColumn + " is not present in the table " + tableName + ".");
+            Utils.printError("Column " + invalidColumn + " is not present in the table " + tableName + ".");
             return false;
         }
 

@@ -1116,11 +1116,7 @@ public class StorageManager {
         for (int i = 0; i < records.size(); i++) {
             DataRecord record = records.get(i);
             Object object = record.getColumnValueList().get(2);
-            //System.out.print(((DT) object).getValue());
-            //System.out.print("    |    ");
             columnNames.add(((DT) object).getStringValue());
-
-            //System.out.print("\n");
         }
 
         return columnNames;

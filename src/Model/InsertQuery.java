@@ -424,7 +424,7 @@ public class InsertQuery implements IQuery {
         }
     }
 
-    public int findRowID (StorageManager manager, List<String> retrievedList) {
+    private int findRowID (StorageManager manager, List<String> retrievedList) {
         int rowCount = manager.getTableRecordCount(tableName);
         String primaryKeyColumnName = manager.getTablePrimaryKey(tableName);
         if (primaryKeyColumnName.length() > 0) {

@@ -1,7 +1,9 @@
 package common;
 
 import Model.DataType;
+import Model.Operator;
 import datatypes.*;
+import datatypes.base.DT_Numeric;
 
 import java.text.DateFormat;
 import java.text.ParseException;
@@ -155,6 +157,18 @@ public class Utils {
         }
 
         return true;
+    }
+
+    public static Short ConvertFromOperator(Operator operator) {
+        switch (operator){
+            case EQUALS: return DT_Numeric.EQUALS;
+            case GREATER_THAN_EQUAL: return DT_Numeric.GREATER_THAN_EQUALS;
+            case GREATER_THAN: return DT_Numeric.GREATER_THAN;
+            case LESS_THAN_EQUAL: return DT_Numeric.LESS_THAN_EQUALS;
+            case LESS_THAN: return DT_Numeric.LESS_THAN;
+        }
+
+        return null;
     }
 
     /**

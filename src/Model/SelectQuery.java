@@ -93,7 +93,7 @@ public class SelectQuery implements IQuery{
             DT dataType = DT.CreateDT(this.condition.value);
             values.add(dataType);
 
-            Short operatorShort = ConvertFromOperator(condition.operator);
+            Short operatorShort = Utils.ConvertFromOperator(condition.operator);
             operators.add(operatorShort);
         }
 
@@ -148,17 +148,6 @@ public class SelectQuery implements IQuery{
         return records;
     }
 
-    private Short ConvertFromOperator(Operator operator) {
-        switch (operator){
-            case EQUALS: return DT_Numeric.EQUALS;
-            case GREATER_THAN_EQUAL: return DT_Numeric.GREATER_THAN_EQUALS;
-            case GREATER_THAN: return DT_Numeric.GREATER_THAN;
-            case LESS_THAN_EQUAL: return DT_Numeric.LESS_THAN_EQUALS;
-            case LESS_THAN: return DT_Numeric.LESS_THAN;
-        }
-
-        return null;
-    }
 
     public Pair<HashMap<String, Integer>, HashMap<Integer, String>> mapOrdinalIdToColumnName(String tableName) {
         HashMap<Integer, String> idToColumnMap = new HashMap<>();

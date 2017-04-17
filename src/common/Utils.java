@@ -1,7 +1,14 @@
 package common;
 
 import Model.DataType;
+import Model.Operator;
 import datatypes.*;
+import datatypes.base.DT_Numeric;
+
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 /**
  * Created by dakle on 8/4/17.
@@ -81,6 +88,87 @@ public class Utils {
         else {
             return Constants.INVALID_CLASS;
         }
+    }
+
+    public static byte stringToDataType(String string) {
+        if(string.compareToIgnoreCase("TINYINT") == 0) {
+            return Constants.TINYINT;
+        }
+        else if(string.compareToIgnoreCase("SMALLINT") == 0) {
+            return Constants.SMALLINT;
+        }
+        else if(string.compareToIgnoreCase("INT") == 0) {
+            return Constants.INT;
+        }
+        else if(string.compareToIgnoreCase("BIGINT") == 0) {
+            return Constants.BIGINT;
+        }
+        else if(string.compareToIgnoreCase("REAL") == 0) {
+            return Constants.REAL;
+        }
+        else if(string.compareToIgnoreCase("DOUBLE") == 0) {
+            return Constants.DOUBLE;
+        }
+        else if(string.compareToIgnoreCase("DATE") == 0) {
+            return Constants.DATE;
+        }
+        else if(string.compareToIgnoreCase("DATETIME") == 0) {
+            return Constants.DATETIME;
+        }
+        else if(string.compareToIgnoreCase("TEXT") == 0) {
+            return Constants.TEXT;
+        }
+        else {
+            return Constants.INVALID_CLASS;
+        }
+    }
+
+    public static boolean canConvertStringToDouble(String value) {
+        try {
+            Double dVal = Double.parseDouble(value);
+            return true;
+        }
+        catch (Exception e) {
+            return false;
+        }
+    }
+
+    public static boolean isvalidDateFormat(String date) {
+        DateFormat formatter = new SimpleDateFormat("yyyy-MM-dd");
+        formatter.setLenient(false);
+        try {
+            Date dateObj = formatter.parse(date);
+        } catch (ParseException e) {
+            //If input date is in different format or invalid.
+            return false;
+        }
+
+        return true;
+    }
+
+    public static boolean isvalidDateTimeFormat(String date) {
+        DateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        formatter.setLenient(false);
+        try {
+            Date dateObj = formatter.parse(date);
+        } catch (ParseException e) {
+            //If input date is in different format or invalid.
+            return false;
+        }
+
+        return true;
+    }
+
+    public static Short ConvertFromOperator(Operator operator) {
+        switch (operator){
+            case EQUALS: return DT_Numeric.EQUALS;
+            case GREATER_THAN_EQUAL: return DT_Numeric.GREATER_THAN_EQUALS;
+            case GREATER_THAN: return DT_Numeric.GREATER_THAN;
+            case LESS_THAN_EQUAL: return DT_Numeric.LESS_THAN_EQUALS;
+            case LESS_THAN: return DT_Numeric.LESS_THAN;
+        }
+
+        return null;
     }
 
     /**

@@ -12,11 +12,13 @@ public class CreateTableQuery extends BaseQuery implements IQuery {
     public String tableName;
     public ArrayList<Column> columns;
     public boolean hasPrimaryKey;
+    public String databaseName;
 
-    public CreateTableQuery(String tableName, ArrayList<Column> columns, boolean hasPrimaryKey){
+    public CreateTableQuery(String databaseName, String tableName, ArrayList<Column> columns, boolean hasPrimaryKey){
         this.tableName = tableName;
         this.columns = columns;
         this.hasPrimaryKey = hasPrimaryKey;
+        this.databaseName = databaseName;
     }
 
     @Override
@@ -29,9 +31,9 @@ public class CreateTableQuery extends BaseQuery implements IQuery {
     @Override
     public boolean ValidateQuery() {
         /*TODO : replace with actual logic*/
-        if (StorageManager.defaultDatabaseExists()) {
-            // Database exists.
-            if (StorageManager.checkTableExists(Utils.getUserDatabasePath(Constants.DEFAULT_USER_DATABASE), tableName)) {
+        if (StorageManager.databaseExists(this.databaseName)) {
+            // Database exists
+            if (StorageManager.checkTableExists(Utils.getUserDatabasePath(this.databaseName), tableName)) {
                 // Table already exists.
                 Utils.printError("\nTable " + tableName + " already exists.");
                 return false;
@@ -39,7 +41,7 @@ public class CreateTableQuery extends BaseQuery implements IQuery {
             else {
                 // Create new table.
                 StorageManager storageManager = new StorageManager();
-                boolean status = storageManager.createTable(Utils.getUserDatabasePath(Constants.DEFAULT_USER_DATABASE), tableName + Constants.DEFAULT_FILE_EXTENSION);
+                boolean status = storageManager.createTable(Utils.getUserDatabasePath(this.databaseName), tableName + Constants.DEFAULT_FILE_EXTENSION);
                 if (!status) {
                     Utils.printError("Failed to create table " + tableName);
                     return false;
@@ -72,11 +74,14 @@ public class CreateTableQuery extends BaseQuery implements IQuery {
                         }
 
                         // Set the NULL constraints.
-                        if (column.isNull) {
-                           columnNullConstraintList.add(null);
+                        if (hasPrimaryKey && i == 0) {
+                            columnNullConstraintList.add("NO");
+                        }
+                        else if (column.isNull) {
+                           columnNullConstraintList.add("YES");
                         }
                         else {
-                            columnNullConstraintList.add(Constants.CONSTRAINT_ABSENT);
+                            columnNullConstraintList.add("NO");
                         }
                     }
 

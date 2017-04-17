@@ -2,7 +2,7 @@ package QueryParser;
 
 import Model.*;
 
-import javax.xml.crypto.Data;
+import java.io.File;
 import java.util.ArrayList;
 
 /**
@@ -11,27 +11,43 @@ import java.util.ArrayList;
 public class DatabaseHelper {
 
     public static final String SELECT_COMMAND = "SELECT";
-    public static final String DROP_COMMAND = "DROP TABLE";
+    public static final String DROP_TABLE_COMMAND = "DROP TABLE";
+    public static final String DROP_DATABASE_COMMAND = "DROP DATABASE";
     public static final String HELP_COMMAND = "HELP";
     public static final String VERSION_COMMAND = "VERSION";
     public static final String EXIT_COMMAND = "EXIT";
     public static final String QUIT_COMMAND = "QUIT";
     public static final String SHOW_TABLES_COMMAND = "SHOW TABLES";
+    public static final String SHOW_DATABASES_COMMAND = "SHOW DATABASES";
     public static final String INSERT_COMMAND = "INSERT INTO";
     public static final String DELETE_COMMAND = "DELETE FROM";
     public static final String UPDATE_COMMAND = "UPDATE";
     public static final String CREATE_TABLE_COMMAND = "CREATE TABLE";
+    public static final String CREATE_DATABASE_COMMAND = "CREATE DATABASE";
+    public static final String USE_DATABASE_COMMAND = "USE";
+    public static final String NO_DATABASE_SELECTED_MESSAGE = "No database selected";
 
+    public static String CurrentDatabaseName = "";
     public static String prompt = "davisql> ";
     static String version = "v1.0b(example)";
     static String copyright = "Â©2017 Dhruva Pendharkar";
 
     public static IQuery ShowTableListQueryHandler() {
-        return new ShowTableQuery();
+        if(DatabaseHelper.CurrentDatabaseName.equals("")){
+            System.out.println(DatabaseHelper.NO_DATABASE_SELECTED_MESSAGE);
+            return null;
+        }
+
+        return new ShowTableQuery(DatabaseHelper.CurrentDatabaseName);
     }
 
     public static IQuery DropTableQueryHandler(String tableName) {
-        return new DropTableQuery(tableName);
+        if(DatabaseHelper.CurrentDatabaseName.equals("")){
+            System.out.println(DatabaseHelper.NO_DATABASE_SELECTED_MESSAGE);
+            return null;
+        }
+
+        return new DropTableQuery(DatabaseHelper.CurrentDatabaseName, tableName);
     }
 
     public static void UnrecognisedCommand(String userCommand, String message) {
@@ -40,6 +56,11 @@ public class DatabaseHelper {
     }
 
     public static IQuery SelectQueryHandler(String[] attributes, String tableName, String conditionString) {
+        if(DatabaseHelper.CurrentDatabaseName.equals("")){
+            System.out.println(DatabaseHelper.NO_DATABASE_SELECTED_MESSAGE);
+            return null;
+        }
+
         boolean isSelectAll = false;
         SelectQuery query = null;
         ArrayList<String> columns = new ArrayList<>();
@@ -53,14 +74,14 @@ public class DatabaseHelper {
         }
 
         if(conditionString.equals("")){
-            query = new SelectQuery(tableName, columns, null, isSelectAll);
+            query = new SelectQuery(DatabaseHelper.CurrentDatabaseName, tableName, columns, null, isSelectAll);
             return query;
         }
 
         Condition condition = Condition.CreateCondition(conditionString);
         if(condition == null) return null;
 
-        query = new SelectQuery(tableName, columns, condition, isSelectAll);
+        query = new SelectQuery(DatabaseHelper.CurrentDatabaseName, tableName, columns, condition, isSelectAll);
         return query;
     }
 
@@ -82,12 +103,25 @@ public class DatabaseHelper {
         System.out.println("SUPPORTED COMMANDS");
         System.out.println("All commands below are case insensitive");
         System.out.println();
-        System.out.println("\tSELECT * FROM table_name;                        Display all records in the table.");
-        System.out.println("\tSELECT * FROM table_name WHERE rowid = <value>;  Display records whose rowid is <id>.");
+        System.out.println("\tUSE DATABASE database_name;                      Changes current database.");
+        System.out.println("\tCREATE DATABASE database_name;                   Creates an empty database.");
+        System.out.println("\tSHOW DATABASES;                                  Displays all databases.");
+        System.out.println("\tDROP DATABASE database_name;                     Remove database.");
+        System.out.println("\tSHOW TABLES;                                     Displays all tables in current database.");
+        System.out.println("\tCREATE TABLE table_name (                        Creates a table in current database.");
+        System.out.println("\t\t<column_name> <datatype> [PRIMARY KEY / NOT NULL]");
+        System.out.println("\t\t...);");
         System.out.println("\tDROP TABLE table_name;                           Remove table data and its schema.");
+        System.out.println("\tSELECT <column_list> FROM table_name             Display records whose rowid is <id>.");
+        System.out.println("\t\t[WHERE rowid = <value>];");
+        System.out.println("\tINSERT INTO table_name                           Inserts a record into the table.");
+        System.out.println("\t\t[(<column1>, ...)] VALUES (<value1>, <value2>, ...);");
+        System.out.println("\tDELETE FROM table_name [WHERE condition];        Deletes a record from a table.");
+        System.out.println("\tUPDATE table_name SET <conditions>               Updates a record from a table.");
+        System.out.println("\t\t[WHERE condition];");
         System.out.println("\tVERSION;                                         Show the program version.");
         System.out.println("\tHELP;                                            Show this help information");
-        System.out.println("\tEXIT;                                            Exit the program");
+        System.out.println("\tEXIT or QUIT;                                    Exit the program");
         System.out.println();
         System.out.println();
         System.out.println(line("*",80));
@@ -102,6 +136,11 @@ public class DatabaseHelper {
     }
 
     public static IQuery InsertQueryHandler(String tableName, String columnsString, String valuesList) {
+        if(DatabaseHelper.CurrentDatabaseName.equals("")){
+            System.out.println(DatabaseHelper.NO_DATABASE_SELECTED_MESSAGE);
+            return null;
+        }
+
         IQuery query = null;
         ArrayList<String> columns = null;
         ArrayList<Literal> values = new ArrayList<>();
@@ -125,26 +164,36 @@ public class DatabaseHelper {
             return null;
         }
 
-        query = new InsertQuery(tableName, columns, values);
+        query = new InsertQuery(DatabaseHelper.CurrentDatabaseName, tableName, columns, values);
         return query;
     }
 
     public static IQuery DeleteQueryHandler(String tableName, String conditionString) {
+        if(DatabaseHelper.CurrentDatabaseName.equals("")){
+            System.out.println(DatabaseHelper.NO_DATABASE_SELECTED_MESSAGE);
+            return null;
+        }
+
         IQuery query = null;
 
         if(conditionString.equals("")){
-            query = new DeleteQuery(tableName, null);
+            query = new DeleteQuery(DatabaseHelper.CurrentDatabaseName, tableName, null);
             return query;
         }
 
         Condition condition = Condition.CreateCondition(conditionString);
         if(condition == null) return null;
 
-        query = new DeleteQuery(tableName, condition);
+        query = new DeleteQuery(DatabaseHelper.CurrentDatabaseName, tableName, condition);
         return query;
     }
 
     public static IQuery UpdateQuery(String tableName, String clauseString, String conditionString) {
+        if(DatabaseHelper.CurrentDatabaseName.equals("")){
+            System.out.println(DatabaseHelper.NO_DATABASE_SELECTED_MESSAGE);
+            return null;
+        }
+
         IQuery query = null;
 
         Condition clause = Condition.CreateCondition(clauseString);
@@ -156,18 +205,23 @@ public class DatabaseHelper {
         }
 
         if(conditionString.equals("")){
-            query = new UpdateQuery(tableName, clause.column, clause.value, null);
+            query = new UpdateQuery(DatabaseHelper.CurrentDatabaseName, tableName, clause.column, clause.value, null);
             return query;
         }
 
         Condition condition = Condition.CreateCondition(conditionString);
         if(condition == null) return null;
 
-        query = new UpdateQuery(tableName, clause.column, clause.value, condition);
+        query = new UpdateQuery(DatabaseHelper.CurrentDatabaseName, tableName, clause.column, clause.value, condition);
         return query;
     }
 
     public static IQuery CreateTableQueryHandler(String tableName, String columnsPart) {
+        if(DatabaseHelper.CurrentDatabaseName.equals("")){
+            System.out.println(DatabaseHelper.NO_DATABASE_SELECTED_MESSAGE);
+            return null;
+        }
+
         IQuery query = null;
         boolean hasPrimaryKey = false;
         ArrayList<Column> columns = new ArrayList<>();
@@ -190,7 +244,48 @@ public class DatabaseHelper {
 
         }
 
-        query = new CreateTableQuery(tableName, columns, hasPrimaryKey);
+        query = new CreateTableQuery(DatabaseHelper.CurrentDatabaseName, tableName, columns, hasPrimaryKey);
         return query;
+    }
+
+    public static IQuery DropDatabaseQueryHandler(String databaseName) {
+        return new DropDatabaseQuery(databaseName);
+    }
+
+    public static IQuery ShowDatabaseListQueryHandler() {
+        return new ShowDatabaseQuery();
+    }
+
+    public static IQuery UseDatabaseQueryHandler(String databaseName) {
+        return new UseDatabaseQuery(databaseName);
+    }
+
+    public static IQuery CreateDatabaseQueryHandler(String databaseName) {
+        return new CreateDatabaseQuery(databaseName);
+    }
+
+    public static boolean IsDatabaseExists(String databaseName) {
+        /*TODO : Replace using constants file*/
+        String DEFAULT_DATA_DIRNAME = "data";
+        File dirFile = new File(DEFAULT_DATA_DIRNAME+ "/" + databaseName);
+        return dirFile.exists();
+    }
+
+    public static boolean isTableExists(String databaseName, String tableName) {
+        /*TODO : Replace using constants file*/
+        String DEFAULT_DATA_DIRNAME = "data";
+        String DEFAULT_TABLE_EXTENSION = "tbl";
+
+        File tableFile = new File(String.format("%s/%s/%s.%s", DEFAULT_DATA_DIRNAME, databaseName, tableName, DEFAULT_TABLE_EXTENSION));
+        return tableFile.exists();
+    }
+
+    public static void ExecuteQuery(IQuery query) {
+        if(query!= null && query.ValidateQuery()){
+            Result result = query.ExecuteQuery();
+            if(result != null){
+                result.Display();
+            }
+        }
     }
 }

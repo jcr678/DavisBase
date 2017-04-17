@@ -2,7 +2,7 @@ package Model;
 
 import common.Constants;
 import common.Utils;
-import parser.UpdateStatement;
+import helpers.UpdateStatementHelper;
 import storage.StorageManager;
 
 import java.util.ArrayList;
@@ -30,8 +30,9 @@ public class CreateTableQuery implements IQuery {
 
     @Override
     public boolean ValidateQuery() {
+        StorageManager storageManager = new StorageManager();
         /*TODO : replace with actual logic*/
-        if (StorageManager.databaseExists(this.databaseName)) {
+        if (storageManager.databaseExists(this.databaseName)) {
             // Database exists
             if (StorageManager.checkTableExists(Utils.getUserDatabasePath(this.databaseName), tableName)) {
                 // Table already exists.
@@ -40,7 +41,7 @@ public class CreateTableQuery implements IQuery {
             }
             else {
                 // Create new table.
-                StorageManager storageManager = new StorageManager();
+
                 boolean status = storageManager.createTable(Utils.getUserDatabasePath(this.databaseName), tableName + Constants.DEFAULT_FILE_EXTENSION);
                 if (!status) {
                     Utils.printError("Failed to create table " + tableName);
@@ -85,7 +86,7 @@ public class CreateTableQuery implements IQuery {
                         }
                     }
 
-                    UpdateStatement statement = new UpdateStatement();
+                    UpdateStatementHelper statement = new UpdateStatementHelper();
                     int startingRowId = statement.updateSystemTablesTable(tableName, 5);
                     boolean systemTableUpdateStatus = statement.updateSystemColumnsTable(tableName, startingRowId, columnNameList, columnDataTypeList, columnKeyConstraintList, columnNullConstraintList);
                     if (systemTableUpdateStatus) {

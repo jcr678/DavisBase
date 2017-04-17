@@ -1,7 +1,7 @@
 package common;
 
 import Model.DataType;
-import parser.UpdateStatement;
+import helpers.UpdateStatementHelper;
 import storage.StorageManager;
 
 import java.util.ArrayList;
@@ -29,7 +29,7 @@ public class CatalogDB {
 
     public boolean createCatalogDB() {
         StorageManager manager = new StorageManager();
-        UpdateStatement statement = new UpdateStatement();
+        UpdateStatementHelper statement = new UpdateStatementHelper();
         manager.createTable(Utils.getSystemDatabasePath(), Constants.SYSTEM_TABLES_TABLENAME + Constants.DEFAULT_FILE_EXTENSION);
         manager.createTable(Utils.getSystemDatabasePath(), Constants.SYSTEM_COLUMNS_TABLENAME + Constants.DEFAULT_FILE_EXTENSION);
         List<String> columnNameList = new ArrayList<>();

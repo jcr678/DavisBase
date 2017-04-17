@@ -11,11 +11,12 @@ public class UserPrompt {
   private static boolean isExit = false;
   private static Scanner scanner = new Scanner(System.in).useDelimiter(";");
   private static final String USE_HELP_MESSAGE = "Please use 'HELP' to see a list of commands";
-    
+
     public static void main(String[] args) {
 
-        splashScreen();
         InitializeDatabase();
+		splashScreen();
+        String userCommand;
 
         while(!isExit) {
             System.out.print(DatabaseHelper.prompt);
@@ -225,7 +226,7 @@ public class UserPrompt {
                 DatabaseHelper.UnrecognisedCommand(userCommand, USE_HELP_MESSAGE);
                 return;
             }
-          
+
             int openBracketIndex = userCommand.toLowerCase().indexOf("(");
             if(openBracketIndex == -1) {
                 QueryParser.DatabaseHelper.UnrecognisedCommand(userCommand, "Expected (");
@@ -270,5 +271,6 @@ public class UserPrompt {
                 }
             }
         }
+
     }
 }

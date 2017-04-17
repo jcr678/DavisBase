@@ -1,13 +1,13 @@
 package Model;
 
+import common.CatalogDB;
 import common.Constants;
 import common.Utils;
-import datatypes.DT_Text;
 import datatypes.base.DT;
-import datatypes.base.DT_Numeric;
 import javafx.util.Pair;
 import storage.StorageManager;
 import storage.model.DataRecord;
+import storage.model.InternalCondition;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -161,17 +161,11 @@ public class SelectQuery implements IQuery{
     public Pair<HashMap<String, Integer>, HashMap<Integer, String>> mapOrdinalIdToColumnName(String tableName) {
         HashMap<Integer, String> idToColumnMap = new HashMap<>();
         HashMap<String, Integer> columnToIdMap = new HashMap<>();
-        List<Byte> columnIndexList = new ArrayList<>();
-        columnIndexList.add((byte) 1);
-
-        List<Object> valueList = new ArrayList<>();
-        valueList.add(new DT_Text(tableName));
-
-        List<Short> conditionList = new ArrayList<>();
-        conditionList.add(DT_Numeric.EQUALS);
+        List<InternalCondition> conditions = new ArrayList<>();
+        conditions.add(new InternalCondition(CatalogDB.COLUMNS_TABLE_SCHEMA_TABLE_NAME, InternalCondition.EQUALS, tableName));
 
         StorageManager manager = new StorageManager();
-        List<DataRecord> records = manager.findRecord(Utils.getSystemDatabasePath(), Constants.SYSTEM_COLUMNS_TABLENAME, columnIndexList, valueList, conditionList, false);
+        List<DataRecord> records = manager.findRecord(Utils.getSystemDatabasePath(), Constants.SYSTEM_COLUMNS_TABLENAME, conditions, false);
 
         for (int i = 0; i < records.size(); i++) {
             DataRecord record = records.get(i);
@@ -181,5 +175,22 @@ public class SelectQuery implements IQuery{
         }
 
         return new Pair<>(columnToIdMap, idToColumnMap);
+    }
+
+    public List<String> fetchAllTableColumns(String tableName) {
+        StorageManager manager = new StorageManager();
+        List<String> columnNames = new ArrayList<>();
+        List<InternalCondition> conditions = new ArrayList<>();
+        conditions.add(new InternalCondition(CatalogDB.COLUMNS_TABLE_SCHEMA_TABLE_NAME, InternalCondition.EQUALS, tableName));
+
+        List<DataRecord> records = manager.findRecord(Utils.getSystemDatabasePath(), Constants.SYSTEM_COLUMNS_TABLENAME, conditions, false);
+
+        for (int i = 0; i < records.size(); i++) {
+            DataRecord record = records.get(i);
+            Object object = record.getColumnValueList().get(2);
+            columnNames.add(((DT) object).getStringValue());
+        }
+
+        return columnNames;
     }
 }

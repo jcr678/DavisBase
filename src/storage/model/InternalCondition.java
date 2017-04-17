@@ -3,7 +3,7 @@ package storage.model;
 /**
  * Created by dakle on 16/4/17.
  */
-public class Condition {
+public class InternalCondition {
 
     public static final short EQUALS = 0;
     public static final short LESS_THAN = 1;
@@ -17,13 +17,13 @@ public class Condition {
 
     private Object value;
 
-    public Condition(byte index, short condition, Object value) {
+    public InternalCondition(byte index, short condition, Object value) {
         this.index = index;
         this.condition = condition;
         this.value = value;
     }
 
-    public Condition(int index, short condition, Object value) {
+    public InternalCondition(int index, short condition, Object value) {
         this.index = (byte) index;
         this.condition = condition;
         this.value = value;

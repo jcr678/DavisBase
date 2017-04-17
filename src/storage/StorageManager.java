@@ -8,8 +8,8 @@ import console.ConsoleWriter;
 import datatypes.*;
 import datatypes.base.DT;
 import datatypes.base.DT_Numeric;
-import storage.model.Condition;
 import storage.model.DataRecord;
+import storage.model.InternalCondition;
 import storage.model.Page;
 import storage.model.PointerRecord;
 
@@ -687,18 +687,18 @@ public class StorageManager {
     }
 
     public List<DataRecord> findRecord(String databaseName, String tableName, List<Byte> columnIndexList, List<Object> valueList, List<Short> conditionList, List<Byte> selectionColumnIndexList, boolean getOne) {
-        List<Condition> conditions = new ArrayList<>();
+        List<InternalCondition> conditions = new ArrayList<>();
         for (byte i = 0; i < columnIndexList.size(); i++) {
-            conditions.add(new Condition(columnIndexList.get(i), conditionList.get(i), valueList.get(i)));
+            conditions.add(new InternalCondition(columnIndexList.get(i), conditionList.get(i), valueList.get(i)));
         }
         return findRecord(databaseName, tableName, conditions, selectionColumnIndexList, getOne);
     }
 
-    public List<DataRecord> findRecord(String databaseName, String tableName, List<Condition> conditionList, boolean getOne) {
+    public List<DataRecord> findRecord(String databaseName, String tableName, List<InternalCondition> conditionList, boolean getOne) {
         return findRecord(databaseName, tableName, conditionList, null, getOne);
     }
 
-    public List<DataRecord> findRecord(String databaseName, String tableName, List<Condition> conditionList, List<Byte> selectionColumnIndexList, boolean getOne) {
+    public List<DataRecord> findRecord(String databaseName, String tableName, List<InternalCondition> conditionList, List<Byte> selectionColumnIndexList, boolean getOne) {
         try {
             File file = new File(databaseName + "/" + tableName + Constants.DEFAULT_FILE_EXTENSION);
             if (file.exists()) {
@@ -798,7 +798,7 @@ public class StorageManager {
         return null;
     }
 
-    public int updateRecord(String databaseName, String tableName, List<Condition> conditions, List<Byte> updateColumnIndexList, List<Object> updateColumnValueList, boolean isIncrement) {
+    public int updateRecord(String databaseName, String tableName, List<InternalCondition> conditions, List<Byte> updateColumnIndexList, List<Object> updateColumnValueList, boolean isIncrement) {
         int updateRecordCount = 0;
         try {
             if (conditions == null || updateColumnIndexList == null
@@ -1227,8 +1227,8 @@ public class StorageManager {
 
     public int updateRowCount(String tableName, int rowCount) {
         StorageManager manager = new StorageManager();
-        List<Condition> conditions = new ArrayList<>();
-        conditions.add(new Condition(1, Condition.EQUALS, tableName));
+        List<InternalCondition> conditions = new ArrayList<>();
+        conditions.add(new InternalCondition(1, InternalCondition.EQUALS, tableName));
         List<Byte> updateColumnsIndexList = new ArrayList<>();
         updateColumnsIndexList.add((byte) 2);
         List<Object> updateValueList = new ArrayList<>();

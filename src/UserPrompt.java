@@ -1,7 +1,5 @@
-package QueryParser;
-
 import Model.IQuery;
-import Model.Result;
+import QueryParser.DatabaseHelper;
 import common.CatalogDB;
 import common.Constants;
 
@@ -12,7 +10,7 @@ public class UserPrompt {
 
   private static boolean isExit = false;
   private static Scanner scanner = new Scanner(System.in).useDelimiter(";");
-  public static final String USE_HELP_MESSAGE = "Please use 'HELP' to see a list of commands";
+  private static final String USE_HELP_MESSAGE = "Please use 'HELP' to see a list of commands";
     
     public static void main(String[] args) {
 
@@ -44,7 +42,6 @@ public class UserPrompt {
         else if(userCommand.toLowerCase().equals(DatabaseHelper.SHOW_DATABASES_COMMAND.toLowerCase())){
             IQuery query = DatabaseHelper.ShowDatabaseListQueryHandler();
             DatabaseHelper.ExecuteQuery(query);
-            return;
         }
         else if(userCommand.toLowerCase().equals(DatabaseHelper.HELP_COMMAND.toLowerCase())){
             DatabaseHelper.HelpQueryHandler();
@@ -67,7 +64,6 @@ public class UserPrompt {
             String databaseName = userCommand.substring(DatabaseHelper.USE_DATABASE_COMMAND.length());
             IQuery query = DatabaseHelper.UseDatabaseQueryHandler(databaseName.trim());
             DatabaseHelper.ExecuteQuery(query);
-            return;
         }
         else if(userCommand.toLowerCase().startsWith(DatabaseHelper.DROP_TABLE_COMMAND.toLowerCase())){
             if(!PartsEqual(userCommand, DatabaseHelper.DROP_TABLE_COMMAND)){
@@ -225,7 +221,6 @@ public class UserPrompt {
             String databaseName = userCommand.substring(DatabaseHelper.CREATE_DATABASE_COMMAND.length());
             IQuery query = DatabaseHelper.CreateDatabaseQueryHandler(databaseName.trim());
             DatabaseHelper.ExecuteQuery(query);
-            return;
         }
         else if(userCommand.toLowerCase().startsWith(DatabaseHelper.CREATE_TABLE_COMMAND.toLowerCase())){
             if(!PartsEqual(userCommand, DatabaseHelper.CREATE_TABLE_COMMAND)){
@@ -246,7 +241,7 @@ public class UserPrompt {
 
             String tableName = userCommand.substring(DatabaseHelper.CREATE_TABLE_COMMAND.length(), openBracketIndex).trim();
             String columnsPart = userCommand.substring(openBracketIndex + 1, userCommand.length()-1);
-            query = DatabaseHelper.CreateTableQueryHandler(tableName, columnsPart);
+            IQuery query = DatabaseHelper.CreateTableQueryHandler(tableName, columnsPart);
             DatabaseHelper.ExecuteQuery(query);
         }
         else{
@@ -269,10 +264,10 @@ public class UserPrompt {
 
     private static void InitializeDatabase() {
         File baseDir = new File(Constants.DEFAULT_DATA_DIRNAME);
-        if(baseDir.exists()) {
+        if(!baseDir.exists()) {
             File catalogDir = new File(Constants.DEFAULT_DATA_DIRNAME + "/" + Constants.DEFAULT_CATALOG_DATABASENAME);
             if(!catalogDir.exists()) {
-                if(catalogDir.mkdir()) {
+                if(catalogDir.mkdirs()) {
                     new CatalogDB().createCatalogDB();
                 }
             }

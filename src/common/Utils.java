@@ -42,15 +42,19 @@ public class Utils {
     }
 
     public static void printMissingDatabaseError(String databaseName) {
-        printError("The database " + databaseName + " does not exist");
+        printError("The database '" + databaseName + "' does not exist");
     }
 
     public static void printMissingDefaultDatabaseError() {
-        printError("The database " + Constants.DEFAULT_USER_DATABASE + " does not exist");
+        printError("The database '" + Constants.DEFAULT_USER_DATABASE + "' does not exist");
     }
 
     public static void printMissingTableError(String tableName) {
-        printError("Table " + tableName + " doesn't exist.");
+        printError("Table '" + tableName + "' doesn't exist.");
+    }
+
+    public static void printDuplicateTableError(String tableName) {
+        printError("Table '" + tableName + "' already exist.");
     }
 
     public static void printMessage(String str) {

@@ -50,10 +50,6 @@ public class Utils {
         printError("The database '" + databaseName + "' does not exist");
     }
 
-    public static void printMissingDefaultDatabaseError() {
-        printError("The database '" + Constants.DEFAULT_USER_DATABASE + "' does not exist");
-    }
-
     public static void printMissingTableError(String tableName) {
         printError("Table '" + tableName + "' doesn't exist.");
     }

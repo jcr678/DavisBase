@@ -142,7 +142,7 @@ public class StorageManager {
                         default:
                             if(pageCount > 1) {
                                 System.out.println("Well things look pretty darn bad");
-                                PointerRecord pointerRecord1 = splitPage(randomAccessFile, getFirstPage(file), record);
+                                PointerRecord pointerRecord1 = splitPage(randomAccessFile, readPageHeader(randomAccessFile, 0), record);
                                 if(pointerRecord1 == null) {
                                     System.out.println("Well things still look pretty darn bad");
                                 }
@@ -497,7 +497,7 @@ public class StorageManager {
             RandomAccessFile randomAccessFile = new RandomAccessFile(file, "r");
             Page page = readPageHeader(randomAccessFile, pageNumber);
             if(page.getPageType() == Page.LEAF_TABLE_PAGE) {
-                return binarySearch(randomAccessFile, rowId, page.getNumberOfCells(), randomAccessFile.getFilePointer(), Page.LEAF_TABLE_PAGE);
+                return binarySearch(randomAccessFile, rowId, page.getNumberOfCells(), (page.getBaseAddress() + Page.getHeaderFixedLength()), Page.LEAF_TABLE_PAGE);
             }
             return -1;
         }

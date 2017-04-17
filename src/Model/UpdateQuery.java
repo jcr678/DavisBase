@@ -43,31 +43,21 @@ public class UpdateQuery implements IQuery{
         List<Byte> updateColumnIndexList = getUpdateColumnIndexList(retrievedColumns);
         List<Object> updateColumnValueList = getUpdateColumnValueList(columnDataTypeMapping);
 
-        boolean status = manager.updateRecord(Utils.getUserDatabasePath(databaseName), tableName, searchColumnsIndexList, searchKeysValueList, searchKeysConditionsList, updateColumnIndexList, updateColumnValueList, false);
-
-        // TODO: NEED THE EXACT NUMBER OF ROWS CHANGED.
-        int rowsAffected = 1;
-        if (status) {
-            result = new Result(rowsAffected);
-        }
-        else {
-            result = new Result(0);
-        }
-
+        int rowsAffected = manager.updateRecord(Utils.getUserDatabasePath(databaseName), tableName, searchColumnsIndexList, searchKeysValueList, searchKeysConditionsList, updateColumnIndexList, updateColumnValueList, false);
+        result = new Result(rowsAffected);
         return result;
     }
 
     @Override
     public boolean ValidateQuery() {
-
-        if (!StorageManager.checkTableExists(Utils.getUserDatabasePath(this.databaseName), tableName)) {
-            Utils.printMessage("Table " + tableName + " does not exist.");
-            return false;
-        }
-
         StorageManager manager = new StorageManager();
         List<String> retrievedColumns = manager.fetchAllTableColumns(tableName);
         HashMap<String, Integer> columnDataTypeMapping = manager.fetchAllTableColumndataTypes(tableName);
+
+        if (!manager.checkTableExists(Utils.getUserDatabasePath(this.databaseName), tableName)) {
+            Utils.printMessage("Table " + tableName + " does not exist.");
+            return false;
+        }
 
         // Validate the columns.
         if (this.condition == null) {

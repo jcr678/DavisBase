@@ -16,7 +16,6 @@ public class UserPrompt {
 
         InitializeDatabase();
 		splashScreen();
-        String userCommand;
 
         while(!isExit) {
             System.out.print(DatabaseHelper.prompt);

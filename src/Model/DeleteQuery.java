@@ -33,12 +33,10 @@ public class DeleteQuery implements IQuery {
     public Result ExecuteQuery() {
 
         // Delete the record.
-        boolean status = false;
         int rowCount = 0;
         StorageManager manager = new StorageManager();
         if (condition == null) {
-            rowCount = manager.getTableRecordCount(tableName);
-            status = manager.deleteRecord(Utils.getUserDatabasePath(databaseName), tableName, (new ArrayList<>()), (new ArrayList<>()), (new ArrayList<>()), false);
+            rowCount = manager.deleteRecord(Utils.getUserDatabasePath(databaseName), tableName, (new ArrayList<>()), (new ArrayList<>()), (new ArrayList<>()), false);
         }
         else {
             rowCount = 1;
@@ -54,26 +52,19 @@ public class DeleteQuery implements IQuery {
             List<Short> conditionList = new ArrayList<>();
             conditionList.add(Utils.ConvertFromOperator(condition.operator));
 
-            status = manager.deleteRecord(Utils.getUserDatabasePath(databaseName), tableName, (columnIndexList), (valueList), (conditionList), false);
+            rowCount = manager.deleteRecord(Utils.getUserDatabasePath(databaseName), tableName, (columnIndexList), (valueList), (conditionList), false);
         }
 
-        Result result = null;
-        if (status) {
-            result = new Result(rowCount, this.isInternal);
-        }
-        else {
-            result = new Result(0, this.isInternal);
-        }
-
+        Result result = new Result(rowCount, this.isInternal);
         return result;
     }
 
     @Override
     public boolean ValidateQuery() {
-        /*TODO : replace with actual logic*/
         // Check if the table exists.
-        if (!StorageManager.checkTableExists(Utils.getUserDatabasePath(this.databaseName), tableName)) {
-            Utils.printMessage("Table " + tableName + " does not exist.");
+        StorageManager manager = new StorageManager();
+        if (!manager.checkTableExists(Utils.getUserDatabasePath(this.databaseName), tableName)) {
+            Utils.printMissingTableError(tableName);
             return false;
         }
 
@@ -85,7 +76,6 @@ public class DeleteQuery implements IQuery {
         else {
             // Condition is present.
             // Validate the column in the condition.
-            StorageManager manager = new StorageManager();
             List<String> retrievedColumns = manager.fetchAllTableColumns(tableName);
             HashMap<String, Integer> columnDataTypeMapping = manager.fetchAllTableColumndataTypes(tableName);
 
@@ -95,7 +85,7 @@ public class DeleteQuery implements IQuery {
             }
 
             // Validate column data type.
-            if(!manager.checkConditionValueDataTypeValidity(columnDataTypeMapping, retrievedColumns, condition)) {
+            if(!Utils.checkConditionValueDataTypeValidity(columnDataTypeMapping, retrievedColumns, condition)) {
                 return false;
             }
         }

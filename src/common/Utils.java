@@ -47,15 +47,19 @@ public class Utils {
     }
 
     public static void printMissingDatabaseError(String databaseName) {
-        printError("The database " + databaseName + " does not exist");
+        printError("The database '" + databaseName + "' does not exist");
     }
 
     public static void printMissingDefaultDatabaseError() {
-        printError("The database " + Constants.DEFAULT_USER_DATABASE + " does not exist");
+        printError("The database '" + Constants.DEFAULT_USER_DATABASE + "' does not exist");
     }
 
     public static void printMissingTableError(String tableName) {
-        printError("Table " + tableName + " doesn't exist.");
+        printError("Table '" + tableName + "' doesn't exist.");
+    }
+
+    public static void printDuplicateTableError(String tableName) {
+        printError("Table '" + tableName + "' already exist.");
     }
 
     public static void printMessage(String str) {
@@ -197,7 +201,7 @@ public class Utils {
         return a;
     }
 
-    public boolean checkConditionValueDataTypeValidity(HashMap<String, Integer> columnDataTypeMapping, List<String> columnsList, Condition condition) {
+    public static boolean checkConditionValueDataTypeValidity(HashMap<String, Integer> columnDataTypeMapping, List<String> columnsList, Condition condition) {
         String invalidColumn = "";
         Literal literal = null;
 
@@ -230,7 +234,7 @@ public class Utils {
         return valid;
     }
 
-    public long getDateEpoc(String value, Boolean isDate) {
+    public static long getDateEpoc(String value, Boolean isDate) {
         DateFormat formatter = null;
         if (isDate) {
             formatter = new SimpleDateFormat("yyyy-MM-dd");

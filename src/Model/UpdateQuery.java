@@ -1,14 +1,21 @@
 package Model;
 
-import java.util.Random;
+import common.Constants;
+import common.Utils;
+import datatypes.base.DT;
+import storage.StorageManager;
+
+import java.util.*;
 
 public class UpdateQuery implements IQuery{
+    public String databaseName;
     public String tableName;
     public String columnName;
     public Literal value;
     public Condition condition;
 
-    public UpdateQuery(String tableName, String columnName, Literal value, Condition condition){
+    public UpdateQuery(String databaseName, String tableName, String columnName, Literal value, Condition condition){
+        this.databaseName = databaseName;
         this.tableName = tableName;
         this.columnName = columnName;
         this.value = value;
@@ -17,14 +24,201 @@ public class UpdateQuery implements IQuery{
 
     @Override
     public Result ExecuteQuery() {
-        Random random = new Random();
-        Result result = new Result(random.nextInt(50));
+        Result result = null;
+
+        // public boolean updateRecord(String databaseName, String tableName,
+        // List<Byte> searchColumnsIndexList,
+        // List<Object> searchKeysValueList,
+        // List<Short> searchKeysConditionsList,
+        // List<Byte> updateColumnIndexList,
+        // List<Object> updateColumnValueList,
+        // boolean isIncrement)
+
+        StorageManager manager = new StorageManager();
+        HashMap<String, Byte> columnDataTypeMapping = manager.fetchAllTableColumndataTypes(tableName);
+        List<String> retrievedColumns = manager.fetchAllTableColumns(tableName);
+        List<Byte> searchColumnsIndexList = getSearchColumnsIndexList(retrievedColumns);
+        List<Object> searchKeysValueList = getSearchKeysValueList(retrievedColumns, columnDataTypeMapping);
+        List<Short> searchKeysConditionsList = getSearchKeysConditionsList(retrievedColumns);
+        List<Byte> updateColumnIndexList = getUpdateColumnIndexList(retrievedColumns);
+        List<Object> updateColumnValueList = getUpdateColumnValueList(retrievedColumns, columnDataTypeMapping);
+
+        boolean status = manager.updateRecord(Utils.getUserDatabasePath(databaseName), tableName, searchColumnsIndexList, searchKeysValueList, searchKeysConditionsList, updateColumnIndexList, updateColumnValueList, false);
+
+        // TODO: NEED THE EXACT NUMBER OF ROWS CHANGED.
+        int rowsAffected = 1;
+        if (status) {
+            result = new Result(rowsAffected);
+        }
+        else {
+            result = new Result(0);
+        }
+
         return result;
     }
 
     @Override
     public boolean ValidateQuery() {
-        /*TODO : replace with actual logic*/
+
+        if (!StorageManager.checkTableExists(Utils.getUserDatabasePath(this.databaseName), tableName)) {
+            Utils.printMessage("Table " + tableName + " does not exist.");
+            return false;
+        }
+
+        StorageManager manager = new StorageManager();
+        List<String> retrievedColumns = manager.fetchAllTableColumns(tableName);
+        HashMap<String, Byte> columnDataTypeMapping = manager.fetchAllTableColumndataTypes(tableName);
+
+        // Validate the columns.
+        if (this.condition == null) {
+            // No condition.
+            // Validate the existence of the column. (Update Column)
+            if(!checkColumnValidity(retrievedColumns, false)) {
+                return false;
+            }
+
+            // Validate update column data type.
+            if(!checkValueDataTypeValidity(columnDataTypeMapping, retrievedColumns, false)) {
+                return false;
+            }
+
+            return true;
+        }
+        else {
+            // Validate the column in the condition.
+            // Validate the existence of the column. (Condition Column)
+            if(!checkColumnValidity(retrievedColumns, true)) {
+                return false;
+            }
+
+            // Validate the existence of the column. (Update Column)
+            if(!checkColumnValidity(retrievedColumns, false)) {
+                return false;
+            }
+
+            // Validate condition column data type.
+            if(!checkValueDataTypeValidity(columnDataTypeMapping, retrievedColumns, true)) {
+                return false;
+            }
+
+            // Validate update column data type.
+            if(!checkValueDataTypeValidity(columnDataTypeMapping, retrievedColumns, false)) {
+                return false;
+            }
+        }
+
         return true;
+    }
+
+    private boolean checkValueDataTypeValidity(HashMap<String, Byte> columnDataTypeMapping, List<String> columnsList, boolean isConditionCheck) {
+        String invalidColumn = "";
+
+        String column = isConditionCheck ? condition.column : columnName;
+        Literal columnValue = isConditionCheck ? condition.value : value;
+
+        if (columnsList.contains(column)) {
+            int dataTypeIndex = columnDataTypeMapping.get(column);
+            Literal literal = columnValue;
+
+            // Check if the data type is a integer type.
+            if (dataTypeIndex != Constants.INVALID_CLASS && dataTypeIndex <= Constants.DOUBLE) {
+                // The data is type of integer, real or double.
+                if (!Utils.canConvertStringToDouble(literal.value)) {
+                    invalidColumn = column;
+                }
+            }
+            else if (dataTypeIndex == Constants.DATE) {
+                if (!Utils.isvalidDateFormat(literal.value)) {
+                    invalidColumn = column;
+                }
+            }
+            else if (dataTypeIndex == Constants.DATETIME) {
+                if (!Utils.isvalidDateTimeFormat(literal.value)) {
+                    invalidColumn = column;
+                }
+            }
+        }
+
+        boolean valid = (invalidColumn.length() > 0) ? false : true;
+        if (!valid) {
+            Utils.printMessage("The value of the column " + invalidColumn + " is invalid.");
+
+        }
+
+        return valid;
+    }
+
+    private boolean checkColumnValidity(List<String> retrievedColumns, boolean isConditionCheck) {
+        boolean columnsValid = true;
+        String invalidColumn = "";
+
+        String tableColumn = isConditionCheck ? condition.column : columnName;
+        if (!retrievedColumns.contains(tableColumn.toLowerCase())) {
+            columnsValid = false;
+            invalidColumn = tableColumn;
+        }
+
+        if (!columnsValid) {
+            Utils.printMessage("Column " + invalidColumn + " is not present in the table " + tableName + ".");
+            return false;
+        }
+
+        return true;
+    }
+
+    // public boolean updateRecord(String databaseName, String tableName,
+    // List<Byte> searchColumnsIndexList,
+    // List<Object> searchKeysValueList,
+    // List<Short> searchKeysConditionsList,
+    // List<Byte> updateColumnIndexList,
+    // List<Object> updateColumnValueList,
+    // boolean isIncrement)
+
+    private List<Byte> getSearchColumnsIndexList(List<String>retrievedList) {
+        List<Byte> list = new ArrayList<>();
+        if (condition != null) {
+            int idx = retrievedList.indexOf(condition.column);
+            list.add((byte)idx);
+        }
+
+        return list;
+    }
+
+    private List<Object> getSearchKeysValueList(List<String>retrievedList, HashMap<String, Byte> columnDataTypeMapping) {
+        List<Object> list = new ArrayList<>();
+        if (condition != null) {
+            byte dataTypeIndex = columnDataTypeMapping.get(this.condition.column);
+            DT dataType = DT.createSystemDT(this.condition.value.value, dataTypeIndex);
+            list.add(dataType);
+        }
+
+        return list;
+    }
+
+    private List<Short> getSearchKeysConditionsList(List<String>retrievedList) {
+        List<Short> list = new ArrayList<>();
+        if (condition != null) {
+            list.add(Utils.ConvertFromOperator(condition.operator));
+        }
+
+        return list;
+    }
+
+    private List<Byte> getUpdateColumnIndexList(List<String>retrievedList) {
+        List<Byte> list = new ArrayList<>();
+        int idx = retrievedList.indexOf(columnName);
+        list.add((byte)idx);
+
+        return list;
+    }
+
+    private List<Object> getUpdateColumnValueList(List<String>retrievedList, HashMap<String, Byte> columnDataTypeMapping) {
+        List<Object> list = new ArrayList<>();
+        byte dataTypeIndex = columnDataTypeMapping.get(columnName);
+
+        DT dataType = DT.createSystemDT(value.value, dataTypeIndex);
+        list.add(dataType);
+
+        return list;
     }
 }

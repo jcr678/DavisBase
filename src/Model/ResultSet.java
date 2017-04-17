@@ -37,11 +37,16 @@ public class ResultSet extends Result{
         if(this.columns == null && this.columns.size() == 0) return;
         HashMap<String, Integer> columnSizeMap = new HashMap<>();
 
+        if(this.records == null || this.records.size() == 0){
+            System.out.println("Empty Set");
+            return;
+        }
+
         for(String column : this.columns){
             int maxLength = column.length();
             for(Record record : records){
                 if(record.valueMap.containsKey(column)){
-                    String value = record.valueMap.get(column).value;
+                    String value = record.valueMap.get(column).toString();
                     if(value.length() > maxLength){
                         maxLength = value.length();
                     }
@@ -63,7 +68,9 @@ public class ResultSet extends Result{
         }
 
         System.out.println(line);
-        super.Display();
+        System.out.println("Query Successful");
+        System.out.println(String.format("%d rows in set", this.rowAffected));
+        System.out.println();
     }
 
     private String DisplayRecord(Record record, ArrayList<String> columns, HashMap<String, Integer> columnSizeMap) {
@@ -79,7 +86,7 @@ public class ResultSet extends Result{
                 buffer.append(filler);
             }
         }
-        buffer.append("| ");
+        buffer.append("|");
 
         return buffer.toString();
     }

@@ -17,6 +17,8 @@ import java.util.List;
  */
 public class UpdateStatement {
 
+
+
     public int updateSystemTablesTable(String tableName, int columnCount) {
         /*
          * System Tables Table Schema:
@@ -46,11 +48,11 @@ public class UpdateStatement {
             DataRecord record = new DataRecord();
             if(lastRecord == null) {
                 record.setRowId(1);
-                record.getColumnValueList().add(new DT_Int(record.getRowId()));
             }
             else {
-                record.getColumnValueList().add(new DT_Int(lastRecord.getRowId() + 1));
+                record.setRowId(lastRecord.getRowId() + 1);
             }
+            record.getColumnValueList().add(new DT_Int(record.getRowId()));
             record.getColumnValueList().add(new DT_Text(tableName));
             record.getColumnValueList().add(new DT_Int(0));
             if(lastRecord == null) {

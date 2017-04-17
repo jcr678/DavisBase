@@ -1,13 +1,12 @@
 package storage;
 
-import Model.Condition;
-import Model.Literal;
 import common.Constants;
 import common.Utils;
 import console.ConsoleWriter;
 import datatypes.*;
 import datatypes.base.DT;
 import datatypes.base.DT_Numeric;
+import helpers.UpdateStatementHelper;
 import storage.model.DataRecord;
 import storage.model.InternalCondition;
 import storage.model.Page;
@@ -16,13 +15,7 @@ import storage.model.PointerRecord;
 import java.io.File;
 import java.io.IOException;
 import java.io.RandomAccessFile;
-import java.text.DateFormat;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.time.ZoneId;
-import java.time.ZonedDateTime;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 
@@ -94,18 +87,9 @@ public class StorageManager {
      * @param tableName
      * @return True if the table exists else False.
      */
-    public static boolean checkTableExists(String databaseName, String tableName) {
-        File dirFile = new File(databaseName);
-        if (!dirFile.exists()) {
-            return false;
-        }
-
-        File file = new File(databaseName + "/" + tableName + Constants.DEFAULT_FILE_EXTENSION);
-        if (!file.exists()) {
-            return false;
-        }
-
-        return true;
+    public boolean checkTableExists(String databaseName, String tableName) {
+        return this.databaseExists(databaseName) &&
+            new File(databaseName + "/" + tableName + Constants.DEFAULT_FILE_EXTENSION).exists();
     }
 
     public boolean writeRecord(String databaseName, String tableName, DataRecord record) {
@@ -158,7 +142,7 @@ public class StorageManager {
                             }
                             break;
                     }
-                    this.incrementRowCount(tableName);
+                    UpdateStatementHelper.incrementRowCount(tableName);
                     randomAccessFile.close();
                     return true;
                 }
@@ -798,6 +782,14 @@ public class StorageManager {
         return null;
     }
 
+    public int updateRecord(String databaseName, String tableName, List<Byte> searchColumnIndexList, List<Object> searchValueList, List<Short> searchConditionList, List<Byte> updateColumnIndexList, List<Object> updateColumnValueList, boolean isIncrement) {
+        List<InternalCondition> conditions = new ArrayList<>();
+        for (byte i = 0; i < searchColumnIndexList.size(); i++) {
+            conditions.add(new InternalCondition(searchColumnIndexList.get(i), searchConditionList.get(i), searchValueList.get(i)));
+        }
+        return updateRecord(databaseName, tableName, conditions, updateColumnIndexList, updateColumnValueList, isIncrement);
+    }
+
     public int updateRecord(String databaseName, String tableName, List<InternalCondition> conditions, List<Byte> updateColumnIndexList, List<Object> updateColumnValueList, boolean isIncrement) {
         int updateRecordCount = 0;
         try {
@@ -976,7 +968,7 @@ public class StorageManager {
                                     page.setStartingAddress((short) (page.getBaseAddress() + Page.PAGE_SIZE - 1));
                                 }
                                 this.writePageHeader(randomAccessFile, page);
-                                this.decrementRowCount(tableName);
+                                UpdateStatementHelper.decrementRowCount(tableName);
                                 deletedRecordCount++;
                                 if(deleteOne) {
                                     randomAccessFile.close();
@@ -1165,77 +1157,6 @@ public class StorageManager {
         return true;
     }
 
-    public List<String> showTables() {
-        List<String> tableNames = new ArrayList<>();
-        List<Byte> columnIndexList = new ArrayList<>();
-        List<Object> valueList = new ArrayList<>();
-        List<Short> conditionList = new ArrayList<>();
-
-        List<DataRecord> records = this.findRecord(Utils.getSystemDatabasePath(), Constants.SYSTEM_COLUMNS_TABLENAME, columnIndexList, valueList, conditionList, false);
-
-        for (int i = 0; i < records.size(); i++) {
-            DataRecord record = records.get(i);
-            Object object = record.getColumnValueList().get(1);
-            //System.out.print(((DT) object).getValue());
-            //System.out.print("    |    ");
-            String strValue = ((DT) object).getStringValue();
-            if (!tableNames.contains(strValue)) {
-                tableNames.add(strValue);
-            }
-
-            //System.out.print("\n");
-        }
-
-        return tableNames;
-    }
-
-    public void fetchTableColumns(String tableName, List<Byte> selectionIndexList) {
-        StorageManager manager = new StorageManager();
-        List<Byte> columnIndexList = new ArrayList<>();
-
-        List<Object> valueList = new ArrayList<>();
-        valueList.add(new DT_Text(tableName));
-
-        List<Short> conditionList = new ArrayList<>();
-        conditionList.add(DT_Numeric.EQUALS);
-
-        /*List<Byte> selectionIndexList = new ArrayList<>();
-        selectionIndexList.add((byte) 0);
-        selectionIndexList.add((byte) 1);
-        selectionIndexList.add((byte) 2);
-        selectionIndexList.add((byte) 5);*/
-
-        List<DataRecord> records = manager.findRecord(Utils.getSystemDatabasePath(), Constants.SYSTEM_COLUMNS_TABLENAME, columnIndexList, valueList, conditionList, selectionIndexList, true);
-        for (DataRecord record : records) {
-            for (Object object : record.getColumnValueList()) {
-                System.out.print(((DT) object).getValue());
-                System.out.print("    |    ");
-            }
-            System.out.print("\n");
-        }
-    }
-
-
-
-    public int incrementRowCount(String tableName) {
-        return updateRowCount(tableName, 1);
-    }
-
-    public int decrementRowCount(String tableName) {
-        return updateRowCount(tableName, -1);
-    }
-
-    public int updateRowCount(String tableName, int rowCount) {
-        StorageManager manager = new StorageManager();
-        List<InternalCondition> conditions = new ArrayList<>();
-        conditions.add(new InternalCondition(1, InternalCondition.EQUALS, tableName));
-        List<Byte> updateColumnsIndexList = new ArrayList<>();
-        updateColumnsIndexList.add((byte) 2);
-        List<Object> updateValueList = new ArrayList<>();
-        updateValueList.add(new DT_Int(rowCount));
-        return manager.updateRecord(Utils.getSystemDatabasePath(), Constants.SYSTEM_TABLES_TABLENAME, conditions, updateColumnsIndexList, updateValueList, true);
-    }
-
     public HashMap<String, Integer> fetchAllTableColumndataTypes(String tableName) {
         List<Byte> columnIndexList = new ArrayList<>();
         columnIndexList.add((byte) 1);
@@ -1357,128 +1278,6 @@ public class StorageManager {
         }
         else {
             return false;
-        }
-    }
-
-    public boolean checkDataTypeValidity(HashMap<String, Integer> columnDataTypeMapping, List<String> columnsList, List<Literal> values) {
-        String invalidColumn = "";
-        Literal invalidLiteral = null;
-
-        for (String columnName : columnsList) {
-
-            // Get the data type for the column with name 'columnName'.
-            // Retrieve literal for the corresponding column from the user input.
-            int dataTypeId = columnDataTypeMapping.get(columnName);
-
-            // Retrieve the user input.
-            int idx = columnsList.indexOf(columnName);
-            Literal literal = values.get(idx);
-            invalidLiteral = literal;
-
-            // Check if the data type is a integer type.
-            // If the data type any of the Integer's, Real's or Doubles, then these values, can be represented as a double.
-            // Check if the value can be parsed as a Double, if YES then the data type is valid else returns false.
-            if (dataTypeId != Constants.INVALID_CLASS && dataTypeId <= Constants.DOUBLE) {
-                boolean isValid = Utils.canConvertStringToDouble(literal.value);
-                if (!isValid) {
-                    invalidColumn = columnName;
-                    break;
-                }
-            }
-            else if (dataTypeId == Constants.DATE) {
-                // Checks if the date field has the format 'yyyy-MM-dd'.
-                if (!Utils.isvalidDateFormat(literal.value)) {
-                    invalidColumn = columnName;
-                    break;
-                }
-            } else if (dataTypeId == Constants.DATETIME) {
-                // Checks if the date time field has the format 'yyyy-MM-dd HH:mm:ss'.
-                if (!Utils.isvalidDateTimeFormat(literal.value)) {
-                    invalidColumn = columnName;
-                    break;
-                }
-            }
-
-            // NOTE: If the data type is of type text, any text is accepted, hence no check is explicitly added for the TEXT field.
-        }
-
-        // Check if any data type violation has occurred.
-        boolean valid = (invalidColumn.length() > 0) ? false : true;
-        if (!valid) {
-            Utils.printUnknownColumnValueError(invalidLiteral.value);
-            return false;
-        }
-
-        return true;
-    }
-
-    public boolean checkConditionValueDataTypeValidity(HashMap<String, Integer> columnDataTypeMapping, List<String> columnsList, Condition condition) {
-        String invalidColumn = "";
-        Literal literal = null;
-
-        if (columnsList.contains(condition.column)) {
-            int dataTypeIndex = columnDataTypeMapping.get(condition.column);
-            literal = condition.value;
-
-            // Check if the data type is a integer type.
-            if (dataTypeIndex != Constants.INVALID_CLASS && dataTypeIndex <= Constants.DOUBLE) {
-                // The data is type of integer, real or double.
-                if (!Utils.canConvertStringToDouble(literal.value)) {
-                    invalidColumn = condition.column;
-                }
-            } else if (dataTypeIndex == Constants.DATE) {
-                if (!Utils.isvalidDateFormat(literal.value)) {
-                    invalidColumn = condition.column;
-                }
-            } else if (dataTypeIndex == Constants.DATETIME) {
-                if (!Utils.isvalidDateTimeFormat(literal.value)) {
-                    invalidColumn = condition.column;
-                }
-            }
-        }
-
-        boolean valid = (invalidColumn.length() > 0) ? false : true;
-        if (!valid) {
-            Utils.printUnknownConditionValueError(literal.value);
-        }
-
-        return valid;
-    }
-
-    public long getDateEpoc(String value, Boolean isDate) {
-        DateFormat formatter = null;
-        if (isDate) {
-            formatter = new SimpleDateFormat("yyyy-MM-dd");
-        }
-        else {
-            formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-        }
-        formatter.setLenient(false);
-        Date date = null;
-        try {
-            date = formatter.parse(value);
-
-            /* Define the time zone for Dallas CST */
-            ZoneId zoneId = ZoneId.of ( "America/Chicago" );
-
-            /* Convert date and time parameters for 1974-05-27 to a ZonedDateTime object */
-            ZonedDateTime zdt = ZonedDateTime.ofInstant(date.toInstant(),
-                    ZoneId.systemDefault());
-
-            /* ZonedDateTime toLocalDate() method will display in a simple format */
-            //System.out.println(zdt.toLocalDate());
-            /* Convert a ZonedDateTime object to epochSeconds
-            *  This value can be store 8-byte integer to a binary
-            *  file using RandomAccessFile writeLong()
-            */
-
-            long epochSeconds = zdt.toInstant().toEpochMilli() / 1000;
-            return epochSeconds;
-        }
-        catch (ParseException ex) {
-            //
-            // System.out.println("Exception "+ex);
-            return 0;
         }
     }
 }

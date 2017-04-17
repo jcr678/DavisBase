@@ -1,6 +1,7 @@
 package common;
 
-import Model.DataType;
+import Model.Condition;
+import Model.Literal;
 import Model.Operator;
 import datatypes.*;
 import datatypes.base.DT_Numeric;
@@ -8,7 +9,11 @@ import datatypes.base.DT_Numeric;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
 
 /**
  * Created by dakle on 8/4/17.
@@ -192,4 +197,119 @@ public class Utils {
         return a;
     }
 
+    public boolean checkConditionValueDataTypeValidity(HashMap<String, Integer> columnDataTypeMapping, List<String> columnsList, Condition condition) {
+        String invalidColumn = "";
+        Literal literal = null;
+
+        if (columnsList.contains(condition.column)) {
+            int dataTypeIndex = columnDataTypeMapping.get(condition.column);
+            literal = condition.value;
+
+            // Check if the data type is a integer type.
+            if (dataTypeIndex != Constants.INVALID_CLASS && dataTypeIndex <= Constants.DOUBLE) {
+                // The data is type of integer, real or double.
+                if (!Utils.canConvertStringToDouble(literal.value)) {
+                    invalidColumn = condition.column;
+                }
+            } else if (dataTypeIndex == Constants.DATE) {
+                if (!Utils.isvalidDateFormat(literal.value)) {
+                    invalidColumn = condition.column;
+                }
+            } else if (dataTypeIndex == Constants.DATETIME) {
+                if (!Utils.isvalidDateTimeFormat(literal.value)) {
+                    invalidColumn = condition.column;
+                }
+            }
+        }
+
+        boolean valid = (invalidColumn.length() > 0) ? false : true;
+        if (!valid) {
+            Utils.printUnknownConditionValueError(literal.value);
+        }
+
+        return valid;
+    }
+
+    public long getDateEpoc(String value, Boolean isDate) {
+        DateFormat formatter = null;
+        if (isDate) {
+            formatter = new SimpleDateFormat("yyyy-MM-dd");
+        }
+        else {
+            formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        }
+        formatter.setLenient(false);
+        Date date;
+        try {
+            date = formatter.parse(value);
+
+            /* Convert date and time parameters for 1974-05-27 to a ZonedDateTime object */
+            ZonedDateTime zdt = ZonedDateTime.ofInstant(date.toInstant(),
+                    ZoneId.systemDefault());
+
+            /* ZonedDateTime toLocalDate() method will display in a simple format */
+            //System.out.println(zdt.toLocalDate());
+            /* Convert a ZonedDateTime object to epochSeconds
+            *  This value can be store 8-byte integer to a binary
+            *  file using RandomAccessFile writeLong()
+            */
+
+            return zdt.toInstant().toEpochMilli() / 1000;
+        }
+        catch (ParseException ex) {
+            return 0;
+        }
+    }
+
+    public boolean checkDataTypeValidity(HashMap<String, Integer> columnDataTypeMapping, List<String> columnsList, List<Literal> values) {
+        String invalidColumn = "";
+        Literal invalidLiteral = null;
+
+        for (String columnName : columnsList) {
+
+            // Get the data type for the column with name 'columnName'.
+            // Retrieve literal for the corresponding column from the user input.
+            int dataTypeId = columnDataTypeMapping.get(columnName);
+
+            // Retrieve the user input.
+            int idx = columnsList.indexOf(columnName);
+            Literal literal = values.get(idx);
+            invalidLiteral = literal;
+
+            // Check if the data type is a integer type.
+            // If the data type any of the Integer's, Real's or Doubles, then these values, can be represented as a double.
+            // Check if the value can be parsed as a Double, if YES then the data type is valid else returns false.
+            if (dataTypeId != Constants.INVALID_CLASS && dataTypeId <= Constants.DOUBLE) {
+                boolean isValid = Utils.canConvertStringToDouble(literal.value);
+                if (!isValid) {
+                    invalidColumn = columnName;
+                    break;
+                }
+            }
+            else if (dataTypeId == Constants.DATE) {
+                // Checks if the date field has the format 'yyyy-MM-dd'.
+                if (!Utils.isvalidDateFormat(literal.value)) {
+                    invalidColumn = columnName;
+                    break;
+                }
+            } else if (dataTypeId == Constants.DATETIME) {
+                // Checks if the date time field has the format 'yyyy-MM-dd HH:mm:ss'.
+                if (!Utils.isvalidDateTimeFormat(literal.value)) {
+                    invalidColumn = columnName;
+                    break;
+                }
+            }
+
+            // NOTE: If the data type is of type text, any text is accepted, hence no check is explicitly added for the TEXT field.
+        }
+
+        // Check if any data type violation has occurred.
+        boolean valid = (invalidColumn.length() > 0) ? false : true;
+        if (!valid) {
+            Utils.printUnknownColumnValueError(invalidLiteral.value);
+            return false;
+        }
+
+        return true;
+    }
 }

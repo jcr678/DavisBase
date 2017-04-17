@@ -1,5 +1,7 @@
-package Model;
+package queries;
 
+import Model.IQuery;
+import Model.Result;
 import QueryParser.DatabaseHelper;
 import common.Constants;
 

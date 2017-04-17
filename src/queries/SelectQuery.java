@@ -1,5 +1,6 @@
-package Model;
+package queries;
 
+import Model.*;
 import common.CatalogDB;
 import common.Constants;
 import common.Utils;
@@ -15,7 +16,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 
-public class SelectQuery implements IQuery{
+public class SelectQuery implements IQuery {
     public String databaseName;
     public String tableName;
     public ArrayList<String> columns;

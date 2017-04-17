@@ -1,13 +1,11 @@
-package Model;
+package queries;
 
+import Model.IQuery;
+import Model.Result;
+import Model.ResultSet;
 import common.Constants;
-import common.Utils;
-import storage.StorageManager;
-import storage.model.DataRecord;
 
-import java.io.File;
 import java.util.ArrayList;
-import java.util.List;
 
 /**
  * Created by dhruv on 4/12/2017.

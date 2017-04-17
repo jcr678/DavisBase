@@ -1,5 +1,8 @@
-package Model;
+package queries;
 
+import Model.Column;
+import Model.IQuery;
+import Model.Result;
 import common.Constants;
 import common.Utils;
 import helpers.UpdateStatementHelper;

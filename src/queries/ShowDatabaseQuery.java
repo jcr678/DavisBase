@@ -1,4 +1,6 @@
-package Model;
+package queries;
+
+import Model.*;
 
 import java.io.File;
 import java.util.ArrayList;

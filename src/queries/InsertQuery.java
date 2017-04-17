@@ -1,5 +1,8 @@
-package Model;
+package queries;
 
+import Model.IQuery;
+import Model.Literal;
+import Model.Result;
 import common.Constants;
 import common.Utils;
 import datatypes.*;

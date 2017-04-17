@@ -1,5 +1,8 @@
-package Model;
+package queries;
 
+import Model.Condition;
+import Model.IQuery;
+import Model.Result;
 import QueryParser.DatabaseHelper;
 import common.Utils;
 

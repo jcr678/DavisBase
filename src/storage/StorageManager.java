@@ -257,6 +257,7 @@ public class StorageManager {
                 page.setNumberOfCells((byte) (page.getNumberOfCells() + 1));
                 page.setStartingAddress((short) (page.getStartingAddress() - pointerRecord.getSize()));
                 page.getRecordAddressList().add(location, (short)(page.getStartingAddress() + 1));
+                page.setRightNodeAddress(pointerRecord.getPageNumber());
                 pointerRecord.setPageNumber(page.getPageNumber());
                 pointerRecord.setOffset((short) (page.getStartingAddress() + 1));
                 this.writePageHeader(randomAccessFile, page);
@@ -519,7 +520,7 @@ public class StorageManager {
             int rowId;
             short address;
             while(true) {
-                if(start > end) {
+                if(start > end || start == numberOfRecords) {
                     if(pageType == Page.LEAF_TABLE_PAGE || literalSearch)
                         return start > numberOfRecords ? numberOfRecords : start;
                     if(pageType == Page.INTERIOR_TABLE_PAGE) {

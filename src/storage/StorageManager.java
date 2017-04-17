@@ -720,7 +720,7 @@ public class StorageManager {
                     while (page != null) {
                         for (Object offset : page.getRecordAddressList()) {
                             isMatch = true;
-                            record = getDataRecord(randomAccessFile, page.getPageNumber(), (short) offset, selectionColumnIndexList);
+                            record = getDataRecord(randomAccessFile, page.getPageNumber(), (short) offset);
                             for(int i = 0; i < columnIndexList.size(); i++) {
                                 isMatch = false;
                                 columnIndex = columnIndexList.get(i);
@@ -769,7 +769,17 @@ public class StorageManager {
                                 }
                             }
                             if(isMatch) {
-                                matchRecords.add(record);
+                                DataRecord matchedRecord = record;
+                                if(selectionColumnIndexList != null) {
+                                    matchedRecord = new DataRecord();
+                                    matchedRecord.setRowId(record.getRowId());
+                                    matchedRecord.setPageLocated(record.getPageLocated());
+                                    matchedRecord.setOffset(record.getOffset());
+                                    for (Byte index : selectionColumnIndexList) {
+                                        matchedRecord.getColumnValueList().add(record.getColumnValueList().get(index));
+                                    }
+                                }
+                                matchRecords.add(matchedRecord);
                                 if(getOne) {
                                     randomAccessFile.close();
                                     return matchRecords;

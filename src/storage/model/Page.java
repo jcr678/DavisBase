@@ -74,8 +74,8 @@ public class Page<T> {
         return numberOfCells;
     }
 
-    public short getBaseAddress() {
-        return (short) (pageNumber * PAGE_SIZE);
+    public long getBaseAddress() {
+        return pageNumber * PAGE_SIZE;
     }
 
     public void setNumberOfCells(byte numberOfCells) {

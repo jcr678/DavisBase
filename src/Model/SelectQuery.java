@@ -1,6 +1,18 @@
 package Model;
 
+import common.Constants;
+import common.Utils;
+import datatypes.DT_Text;
+import datatypes.base.DT;
+import datatypes.base.DT_Numeric;
+import javafx.util.Pair;
+import storage.StorageManager;
+import storage.model.DataRecord;
+
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
 
 public class SelectQuery implements IQuery{
     public String databaseName;
@@ -19,15 +31,10 @@ public class SelectQuery implements IQuery{
 
     @Override
     public Result ExecuteQuery() {
-        ArrayList<String> columns = new ArrayList<>();
-        columns.add("FirstName");
-        columns.add("LastName");
-        columns.add("Id");
-        columns.add("Score");
         ResultSet resultSet = ResultSet.CreateResultSet();
-        resultSet.setColumns(columns);
-        ArrayList<Record> records = DummyData();
 
+        ArrayList<Record> records = GetData();
+        resultSet.setColumns(this.columns);
         for(Record record : records){
             resultSet.addRecord(record);
         }
@@ -37,30 +44,139 @@ public class SelectQuery implements IQuery{
 
     @Override
     public boolean ValidateQuery() {
-        /*TODO : replace with actual logic*/
+        Pair<HashMap<String, Integer>, HashMap<Integer, String>> maps = mapOrdinalIdToColumnName(this.tableName);
+        HashMap<String, Integer> columnToIdMap = maps.getKey();
+
+        // TODO : Check if table exists
+        // TODO : Check if data types match
+        if(this.columns != null){
+            for(String column : this.columns){
+                if(!columnToIdMap.containsKey(column)){
+                    System.out.println(String.format("Unknown column '%s' in table '%s'", column, this.tableName));
+                    return false;
+                }
+            }
+        }
+
+        if(condition != null){
+            if(!columnToIdMap.containsKey(condition.column)){
+                System.out.println(String.format("Unknown column '%s' in table '%s'", condition.column, this.tableName));
+                return false;
+            }
+        }
+
         return true;
     }
 
-    private ArrayList<Record> DummyData(){
+    private ArrayList<Record> GetData(){
         ArrayList<Record> records = new ArrayList<>();
-        ArrayList<String> dataList = new ArrayList<>();
-        dataList.add("Dhruva Pendharkar 512 2.0");
-        dataList.add("Parag Dakle 64 3.0");
-        dataList.add("Mahesh S 64 3.8");
-        dataList.add("Takshak Desai 164 5.5");
-        dataList.add("Sahil Dhoked 640 9.34");
-        dataList.add("Chirodeep Roy 964 3.22");
+        Pair<HashMap<String, Integer>, HashMap<Integer, String>> maps = mapOrdinalIdToColumnName(this.tableName);
+        HashMap<String, Integer> columnToIdMap = maps.getKey();
+        ArrayList<Byte> columnsList = new ArrayList<>();
+        List<DataRecord> internalRecords = null;
+        StorageManager manager = new StorageManager();
 
-        for(String data : dataList){
-            String[] parts = data.split(" ");
+        ArrayList<Short> operators = new ArrayList<>();
+        ArrayList<Byte> columnIndices = new ArrayList<>();
+        ArrayList<Object> values = new ArrayList<>();
+        if(condition != null){
+
+            if (columnToIdMap.containsKey(this.condition.column)) {
+                columnIndices.add(columnToIdMap.get(this.condition.column).byteValue());
+            }
+
+            DT dataType = DT.CreateDT(this.condition.value);
+            values.add(dataType);
+
+            Short operatorShort = ConvertFromOperator(condition.operator);
+            operators.add(operatorShort);
+        }
+
+        if(this.columns == null) {
+            internalRecords = manager.findRecord(Utils.getUserDatabasePath(this.databaseName),
+                    this.tableName, columnIndices, values, operators, false);
+
+            this.columns = new ArrayList<>();
+            for (String column : columnToIdMap.keySet()) {
+                columnsList.add(columnToIdMap.get(column).byteValue());
+                this.columns.add(column);
+            }
+        }
+        else {
+            for (String column : this.columns) {
+                if (columnToIdMap.containsKey(column)) {
+                    columnsList.add(columnToIdMap.get(column).byteValue());
+                }
+            }
+
+            internalRecords = manager.findRecord(Utils.getUserDatabasePath(this.databaseName),
+                    this.tableName, columnIndices, values, operators, columnsList, false);
+        }
+
+        Byte[] columnIds = new Byte[columnsList.size()];
+        int k = 0;
+        for(Byte column : columnsList){
+            columnIds[k] = column;
+            k++;
+        }
+
+        HashMap<Integer, String> idToColumnMap = maps.getValue();
+        Arrays.sort(columnIds);
+        for(DataRecord internalRecord : internalRecords){
+            Object[] dataTypes = new DT[internalRecord.getColumnValueList().size()];
+            k=0;
+            for(Object columnValue : internalRecord.getColumnValueList()){
+                dataTypes[k] = columnValue;
+                k++;
+            };
             Record record = Record.CreateRecord();
-            record.put("FirstName", Literal.CreateLiteral(String.format("\"%s\"", parts[0])));
-            record.put("LastName", Literal.CreateLiteral(String.format("\"%s\"", parts[1])));
-            record.put("Id", Literal.CreateLiteral(parts[2]));
-            record.put("Score", Literal.CreateLiteral(parts[3]));
+            for(int i=0;i<columnIds.length;i++) {
+                Literal literal = null;
+                if(idToColumnMap.containsKey((int)columnIds[i])) {
+                    literal = Literal.CreateLiteral((DT)dataTypes[i], Utils.resolveClass(dataTypes[i]));
+                    record.put(idToColumnMap.get((int)columnIds[i]), literal);
+                }
+            }
             records.add(record);
         }
 
         return records;
+    }
+
+    private Short ConvertFromOperator(Operator operator) {
+        switch (operator){
+            case EQUALS: return DT_Numeric.EQUALS;
+            case GREATER_THAN_EQUAL: return DT_Numeric.GREATER_THAN_EQUALS;
+            case GREATER_THAN: return DT_Numeric.GREATER_THAN;
+            case LESS_THAN_EQUAL: return DT_Numeric.LESS_THAN_EQUALS;
+            case LESS_THAN: return DT_Numeric.LESS_THAN;
+        }
+
+        return null;
+    }
+
+    public Pair<HashMap<String, Integer>, HashMap<Integer, String>> mapOrdinalIdToColumnName(String tableName) {
+        HashMap<Integer, String> idToColumnMap = new HashMap<>();
+        HashMap<String, Integer> columnToIdMap = new HashMap<>();
+        List<Byte> columnIndexList = new ArrayList<>();
+        columnIndexList.add((byte) 1);
+
+        List<Object> valueList = new ArrayList<>();
+        valueList.add(new DT_Text(tableName));
+
+        List<Short> conditionList = new ArrayList<>();
+        conditionList.add(DT_Numeric.EQUALS);
+
+        StorageManager manager = new StorageManager();
+        List<DataRecord> records = manager.findRecord(Utils.getSystemDatabasePath(), Constants.SYSTEM_COLUMNS_TABLENAME, columnIndexList, valueList, conditionList, false);
+
+        for (int i = 0; i < records.size(); i++) {
+            DataRecord record = records.get(i);
+            Object object = record.getColumnValueList().get(2);
+            idToColumnMap.put(i, ((DT) object).getStringValue());
+            columnToIdMap.put(((DT) object).getStringValue(), i);
+        }
+
+        return new Pair<>(columnToIdMap, idToColumnMap);
     }
 }

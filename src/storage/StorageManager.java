@@ -139,23 +139,33 @@ public class StorageManager {
                             pointerRecordPage.setStartingAddress((short) (pointerRecordPage.getStartingAddress() - pointerRecord.getSize()));
                             pointerRecordPage.setRightNodeAddress(2);
                             pointerRecordPage.getRecordAddressList().add((short) (pointerRecordPage.getStartingAddress() + 1));
+                            pointerRecord.setPageNumber(pointerRecordPage.getPageNumber());
                             pointerRecord.setOffset((short) (pointerRecordPage.getStartingAddress() + 1));
                             this.writePageHeader(randomAccessFile, pointerRecordPage);
                             this.writeRecord(randomAccessFile, pointerRecord);
                             break;
 
                         default:
-                            if (pageCount > 1) {
-                                System.out.println("Well things look pretty darn bad");
+                            if(pageCount > 1) {
                                 PointerRecord pointerRecord1 = splitPage(randomAccessFile, readPageHeader(randomAccessFile, 0), record);
                                 if(pointerRecord1 == null) {
                                     System.out.println("Well things still look pretty darn bad");
                                 }
-                                else if(pointerRecord1.getPageNumber() == -1){
+                                else if(pointerRecord1.getLeftPageNumber() == -1){
                                     System.out.println("Successfully inserted!");
                                 }
                                 else {
-                                    System.out.println(pointerRecord1.getKey());
+                                    Page<PointerRecord> rootPage = Page.createNewEmptyPage(pointerRecord1);
+                                    rootPage.setPageNumber(0);
+                                    rootPage.setPageType(Page.INTERIOR_TABLE_PAGE);
+                                    rootPage.setNumberOfCells((byte) 1);
+                                    rootPage.setStartingAddress((short)(rootPage.getStartingAddress() - pointerRecord1.getSize()));
+                                    rootPage.setRightNodeAddress(pointerRecord1.getPageNumber());
+                                    rootPage.getRecordAddressList().add((short) (rootPage.getStartingAddress() + 1));
+                                    pointerRecord1.setOffset((short) (rootPage.getStartingAddress() + 1));
+                                    this.writePageHeader(randomAccessFile, rootPage);
+                                    this.writeRecord(randomAccessFile, pointerRecord1);
+                                    System.out.println("Well things still looked pretty darn bad");
                                 }
                             }
                             break;
@@ -164,7 +174,9 @@ public class StorageManager {
                     randomAccessFile.close();
                     return true;
                 }
+                System.out.println(page.getBaseAddress() + " " + page.getPageNumber() + " " + page.getPageType() + " " + page.getNumberOfCells() + " " + page.getStartingAddress());
                 short address = (short) getAddress(file, record.getRowId(), page.getPageNumber());
+                System.out.println(address);
                 page.setNumberOfCells((byte)(page.getNumberOfCells() + 1));
                 page.setStartingAddress((short) (page.getStartingAddress() - record.getSize() - record.getHeaderSize()));
                 if(address == page.getRecordAddressList().size())
@@ -254,6 +266,8 @@ public class StorageManager {
             int pageNumber = binarySearch(randomAccessFile, record.getRowId(), page.getNumberOfCells(), (page.getBaseAddress() + Page.getHeaderFixedLength()), Page.INTERIOR_TABLE_PAGE);
             Page newPage = this.readPageHeader(randomAccessFile, pageNumber);
             PointerRecord pointerRecord = splitPage(randomAccessFile, newPage, record);
+            if(pointerRecord.getPageNumber() == -1)
+                return pointerRecord;
             if(checkSpaceRequirements(page, pointerRecord)) {
                 int location = binarySearch(randomAccessFile, record.getRowId(), page.getNumberOfCells(), (page.getBaseAddress() + Page.getHeaderFixedLength()), Page.INTERIOR_TABLE_PAGE, true);
                 page.setNumberOfCells((byte) (page.getNumberOfCells() + 1));
@@ -277,10 +291,8 @@ public class StorageManager {
                 }
                 page.setRightNodeAddress(pointerRecord.getPageNumber());
                 this.writePageHeader(randomAccessFile, page);
-                PointerRecord pointerRecord1 = splitPage(randomAccessFile, page, pointerRecord, page.getPageNumber(), newPageNumber);
-                if(pointerRecord1 != null) {
-                    pointerRecord1.setPageNumber(newPageNumber);
-                }
+                PointerRecord pointerRecord1;
+                pointerRecord1 = splitPage(randomAccessFile, page, pointerRecord, page.getPageNumber(), newPageNumber);
                 return pointerRecord1;
             }
         }
@@ -316,6 +328,12 @@ public class StorageManager {
                     isFirst = true;
                 }
 
+                if(pageNumber1 == 0) {
+                    pageNumber1 = pageNumber2;
+                    pageNumber2++;
+                }
+                randomAccessFile.setLength(Page.PAGE_SIZE * (pageNumber2 + 1));
+
                 //Page 1
                 Page<PointerRecord> page1 = new Page<>(pageNumber1);
                 page1.setPageType(page.getPageType());
@@ -324,19 +342,19 @@ public class StorageManager {
                 if (isFirst)
                     leftRecords.add(location, record);
                 pointerRecord = leftRecords.get(leftRecords.size() - 1);
+                pointerRecord.setPageNumber(pageNumber2);
                 leftRecords.remove(leftRecords.size() - 1);
                 page1.setNumberOfCells((byte) leftRecords.size());
                 int index = 0;
                 short offset = (short) (Page.PAGE_SIZE - 1);
                 for (PointerRecord pointerRecord1 : leftRecords) {
                     index++;
-                    offset = (short) (page1.getBaseAddress() + Page.PAGE_SIZE - 1 - (pointerRecord1.getSize() * index));
+                    offset = (short) (Page.PAGE_SIZE - (pointerRecord1.getSize() * index));
                     pointerRecord1.setOffset(offset);
                     page1.getRecordAddressList().add(offset);
                 }
                 page1.setStartingAddress((short) (offset + 1));
                 page1.setRightNodeAddress(pointerRecord.getLeftPageNumber());
-                pointerRecord.setLeftPageNumber(pageNumber1);
                 this.writePageHeader(randomAccessFile, page1);
                 for(PointerRecord pointerRecord1 : leftRecords) {
                     this.writeRecord(randomAccessFile, pointerRecord1);
@@ -346,17 +364,21 @@ public class StorageManager {
                 Page<PointerRecord> page2 = new Page<>(pageNumber2);
                 page2.setPageType(page.getPageType());
                 List<PointerRecord> rightRecords = copyRecords(randomAccessFile, (page.getPageNumber() * Page.PAGE_SIZE), page.getRecordAddressList(), (byte) ((page.getNumberOfCells() / 2) + 1), page.getNumberOfCells(), pageNumber2, record);
-                if(!isFirst)
-                    rightRecords.add((location - (page.getRecordAddressList().size() / 2) + 1), record);
+                if(!isFirst) {
+                    int position = (location - (page.getRecordAddressList().size() / 2) + 1);
+                    if(position >= rightRecords.size())
+                        rightRecords.add(record);
+                    else
+                        rightRecords.add(position, record);
+                }
                 page2.setNumberOfCells((byte) rightRecords.size());
                 page2.setRightNodeAddress(page.getRightNodeAddress());
-
                 rightRecords.get(0).setLeftPageNumber(page.getRightNodeAddress());
                 index = 0;
                 offset = (short) (Page.PAGE_SIZE - 1);
                 for(PointerRecord pointerRecord1 : rightRecords) {
                     index++;
-                    offset = (short) (page2.getBaseAddress() + Page.PAGE_SIZE - 1 - (pointerRecord1.getSize() * index));
+                    offset = (short) (Page.PAGE_SIZE - (pointerRecord1.getSize() * index));
                     pointerRecord1.setOffset(offset);
                     page2.getRecordAddressList().add(offset);
                 }
@@ -366,6 +388,7 @@ public class StorageManager {
                     this.writeRecord(randomAccessFile, pointerRecord1);
                 }
 
+                pointerRecord.setLeftPageNumber(pageNumber1);
                 return pointerRecord;
             }
         } catch (Exception e) {
@@ -531,6 +554,7 @@ public class StorageManager {
                     }
                 }
                 mid = (start + end) / 2;
+                System.out.println(seekPosition + " " + mid);
                 randomAccessFile.seek(seekPosition + (Short.BYTES * mid));
                 address = randomAccessFile.readShort();
                 randomAccessFile.seek(seekPosition - Page.getHeaderFixedLength() + address);
@@ -690,8 +714,8 @@ public class StorageManager {
                     while (page != null) {
                         for (Object offset : page.getRecordAddressList()) {
                             isMatch = true;
-                            record = getDataRecord(randomAccessFile, page.getPageNumber(), (short) offset, selectionColumnIndexList);
-                            for (int i = 0; i < columnIndexList.size(); i++) {
+                            record = getDataRecord(randomAccessFile, page.getPageNumber(), (short) offset);
+                            for(int i = 0; i < columnIndexList.size(); i++) {
                                 isMatch = false;
                                 columnIndex = columnIndexList.get(i);
                                 value = valueList.get(i);
@@ -700,47 +724,58 @@ public class StorageManager {
                                     Object object = record.getColumnValueList().get(columnIndex);
                                     switch (Utils.resolveClass(value)) {
                                         case Constants.TINYINT:
-                                            isMatch = ((DT_TinyInt) value).compare((DT_TinyInt) object, condition);
+                                            isMatch = ((DT_TinyInt) object).compare((DT_TinyInt) value, condition);
                                             break;
 
                                         case Constants.SMALLINT:
-                                            isMatch = ((DT_SmallInt) value).compare((DT_SmallInt) object, condition);
+                                            isMatch = ((DT_SmallInt) object).compare((DT_SmallInt) value, condition);
                                             break;
 
                                         case Constants.INT:
-                                            isMatch = ((DT_Int) value).compare((DT_Int) object, condition);
+                                            isMatch = ((DT_Int) object).compare((DT_Int) value, condition);
                                             break;
 
                                         case Constants.BIGINT:
-                                            isMatch = ((DT_BigInt) value).compare((DT_BigInt) object, condition);
+                                            isMatch = ((DT_BigInt) object).compare((DT_BigInt) value, condition);
                                             break;
 
                                         case Constants.REAL:
-                                            isMatch = ((DT_Real) value).compare((DT_Real) object, condition);
+                                            isMatch = ((DT_Real) object).compare((DT_Real) value, condition);
                                             break;
 
                                         case Constants.DOUBLE:
-                                            isMatch = ((DT_Double) value).compare((DT_Double) object, condition);
+                                            isMatch = ((DT_Double) object).compare((DT_Double) value, condition);
                                             break;
 
                                         case Constants.DATE:
-                                            isMatch = ((DT_Date) value).compare((DT_Date) object, condition);
+                                            isMatch = ((DT_Date) object).compare((DT_Date) value, condition);
                                             break;
 
                                         case Constants.DATETIME:
-                                            isMatch = ((DT_DateTime) value).compare((DT_DateTime) object, condition);
+                                            isMatch = ((DT_DateTime) object).compare((DT_DateTime) value, condition);
                                             break;
 
                                         case Constants.TEXT:
-                                            isMatch = ((DT_Text) value).getValue().equalsIgnoreCase(((DT_Text) object).getValue());
+                                            isMatch = ((DT_Text) object).getValue().equalsIgnoreCase(((DT_Text) value).getValue());
                                             break;
                                     }
                                     if(isMatch == false) break;
                                 }
                             }
-                            if (isMatch) {
-                                matchRecords.add(record);
-                                if (getOne) {
+
+                            if(isMatch) {
+                                DataRecord matchedRecord = record;
+                                if(selectionColumnIndexList != null) {
+                                    matchedRecord = new DataRecord();
+                                    matchedRecord.setRowId(record.getRowId());
+                                    matchedRecord.setPageLocated(record.getPageLocated());
+                                    matchedRecord.setOffset(record.getOffset());
+                                    for (Byte index : selectionColumnIndexList) {
+                                        matchedRecord.getColumnValueList().add(record.getColumnValueList().get(index));
+                                    }
+                                }
+                                matchRecords.add(matchedRecord);
+                                if(getOne) {
                                     randomAccessFile.close();
                                     return matchRecords;
                                 }

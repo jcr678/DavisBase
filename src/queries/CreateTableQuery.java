@@ -94,8 +94,8 @@ public class CreateTableQuery implements IQuery {
                 }
 
                 UpdateStatementHelper statement = new UpdateStatementHelper();
-                int startingRowId = statement.updateSystemTablesTable(tableName, 5);
-                boolean systemTableUpdateStatus = statement.updateSystemColumnsTable(tableName, startingRowId, columnNameList, columnDataTypeList, columnKeyConstraintList, columnNullConstraintList);
+                int startingRowId = statement.updateSystemTablesTable(this.databaseName, tableName, columns.size());
+                boolean systemTableUpdateStatus = statement.updateSystemColumnsTable(this.databaseName, tableName, startingRowId, columnNameList, columnDataTypeList, columnKeyConstraintList, columnNullConstraintList);
                 if (systemTableUpdateStatus) {
                     Utils.printMessage("System table successfully updated.");
                 }

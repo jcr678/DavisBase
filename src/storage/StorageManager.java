@@ -73,7 +73,9 @@ public class StorageManager {
                 Page<DataRecord> page = Page.createNewEmptyPage(new DataRecord());
                 randomAccessFile = new RandomAccessFile(file, "rw");
                 randomAccessFile.setLength(Page.PAGE_SIZE);
-                return writePageHeader(randomAccessFile, page);
+                boolean isTableCreated = writePageHeader(randomAccessFile, page);
+                randomAccessFile.close();
+                return isTableCreated;
             }
             return false;
         } catch (IOException e) {
@@ -96,10 +98,11 @@ public class StorageManager {
     }
 
     public boolean writeRecord(String databaseName, String tableName, DataRecord record) {
+        RandomAccessFile randomAccessFile = null;
         try {
             File file = new File(databaseName + "/" + tableName + Constants.DEFAULT_FILE_EXTENSION);
             if (file.exists()) {
-                RandomAccessFile randomAccessFile = new RandomAccessFile(file, "rw");
+                randomAccessFile = new RandomAccessFile(file, "rw");
                 Page page = getPage(randomAccessFile, record, 0);
                 if (page == null) return false;
                 if (!checkSpaceRequirements(page, record)) {
@@ -538,17 +541,18 @@ public class StorageManager {
     }
 
     private int getAddress(File file, int rowId, int pageNumber) {
+        int location = -1;
         try {
             RandomAccessFile randomAccessFile = new RandomAccessFile(file, "r");
             Page page = readPageHeader(randomAccessFile, pageNumber);
             if(page.getPageType() == Page.LEAF_TABLE_PAGE) {
-                return binarySearch(randomAccessFile, rowId, page.getNumberOfCells(), (page.getBaseAddress() + Page.getHeaderFixedLength()), Page.LEAF_TABLE_PAGE);
+                location = binarySearch(randomAccessFile, rowId, page.getNumberOfCells(), (page.getBaseAddress() + Page.getHeaderFixedLength()), Page.LEAF_TABLE_PAGE);
+                randomAccessFile.close();
             }
-            return -1;
         } catch (IOException e) {
             e.printStackTrace();
-            return -1;
         }
+        return location;
     }
 
     private int binarySearch(RandomAccessFile randomAccessFile, int key, int numberOfRecords, long seekPosition, byte pageType) {
@@ -898,8 +902,8 @@ public class StorageManager {
                     if (record != null)
                         page.getPageRecords().add(record);
                 }
+                randomAccessFile.close();
                 return page;
-
             } else {
                 ConsoleWriter.displayMessage("File " + tableName + " does not exist");
                 return null;
@@ -917,6 +921,7 @@ public class StorageManager {
             while (page.getPageType() == Page.INTERIOR_TABLE_PAGE && page.getRightNodeAddress() != Page.RIGHTMOST_PAGE) {
                 page = readPageHeader(randomAccessFile, page.getRightNodeAddress());
             }
+            randomAccessFile.close();
             return page;
         } catch (IOException e) {
             e.printStackTrace();

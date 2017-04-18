@@ -56,11 +56,12 @@ public class SelectQuery implements IQuery {
             return false;
         }
 
-        // TODO : Check if data types match
+        HashMap<String, Integer> columnDataTypeMapping = manager.fetchAllTableColumndataTypes(tableName);
+
         // Validate column data type.
         if (condition != null) {
             List<String> retrievedColumns = manager.fetchAllTableColumns(tableName);
-            if (!Utils.checkConditionValueDataTypeValidity(columnToIdMap, retrievedColumns, condition)) {
+            if (!Utils.checkConditionValueDataTypeValidity(columnDataTypeMapping, retrievedColumns, condition)) {
                 return false;
             }
         }
@@ -112,10 +113,13 @@ public class SelectQuery implements IQuery {
             internalRecords = manager.findRecord(Utils.getUserDatabasePath(this.databaseName),
                     this.tableName, columnIndices, values, operators, false);
 
+            HashMap<Integer, String> idToColumnMap = maps.getValue();
             this.columns = new ArrayList<>();
-            for (String column : columnToIdMap.keySet()) {
-                columnsList.add(columnToIdMap.get(column).byteValue());
-                this.columns.add(column);
+            for (int i=0; i<columnToIdMap.size();i++) {
+                if(idToColumnMap.containsKey(i)){
+                    columnsList.add((byte)i);
+                    this.columns.add(idToColumnMap.get(i));
+                }
             }
         }
         else {

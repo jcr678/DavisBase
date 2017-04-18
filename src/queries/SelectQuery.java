@@ -175,7 +175,7 @@ public class SelectQuery implements IQuery {
 
         for (int i = 0; i < records.size(); i++) {
             DataRecord record = records.get(i);
-            Object object = record.getColumnValueList().get(2);
+            Object object = record.getColumnValueList().get(CatalogDB.COLUMNS_TABLE_SCHEMA_COLUMN_NAME);
             idToColumnMap.put(i, ((DT) object).getStringValue());
             columnToIdMap.put(((DT) object).getStringValue(), i);
         }

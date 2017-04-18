@@ -21,13 +21,13 @@ public class SelectQuery implements IQuery {
     public String tableName;
     public ArrayList<String> columns;
     public boolean isSelectAll;
-    public Condition condition;
+    public ArrayList<Condition> conditions = new ArrayList<>();
 
-    public SelectQuery(String databaseName, String tableName, ArrayList<String> columns, Condition condition, boolean isSelectAll){
+    public SelectQuery(String databaseName, String tableName, ArrayList<String> columns, ArrayList<Condition> conditions, boolean isSelectAll) {
         this.databaseName = databaseName;
         this.tableName = tableName;
         this.columns = columns;
-        this.condition = condition;
+        this.conditions = conditions;
         this.isSelectAll = isSelectAll;
     }
 
@@ -59,10 +59,15 @@ public class SelectQuery implements IQuery {
         HashMap<String, Integer> columnDataTypeMapping = manager.fetchAllTableColumndataTypes(tableName);
 
         // Validate column data type.
-        if (condition != null) {
+        if (conditions != null) {
+            // Retrieve the columns of the tables.
             List<String> retrievedColumns = manager.fetchAllTableColumns(tableName);
-            if (!Utils.checkConditionValueDataTypeValidity(columnDataTypeMapping, retrievedColumns, condition)) {
-                return false;
+
+            // Check for data types.
+            for (Condition condition : conditions) {
+                if (!Utils.checkConditionValueDataTypeValidity(columnDataTypeMapping, retrievedColumns, condition)) {
+                    return false;
+                }
             }
         }
 
@@ -75,10 +80,12 @@ public class SelectQuery implements IQuery {
             }
         }
 
-        if(condition != null){
-            if(!columnToIdMap.containsKey(condition.column)){
-                Utils.printError((String.format("Unknown column '%s' in table '%s'", condition.column, this.tableName)));
-                return false;
+        if(conditions != null) {
+            for (Condition condition : conditions) {
+                if (!columnToIdMap.containsKey(condition.column)) {
+                    Utils.printError((String.format("Unknown column '%s' in table '%s'", condition.column, this.tableName)));
+                    return false;
+                }
             }
         }
 
@@ -90,21 +97,24 @@ public class SelectQuery implements IQuery {
         Pair<HashMap<String, Integer>, HashMap<Integer, String>> maps = mapOrdinalIdToColumnName(this.tableName);
         HashMap<String, Integer> columnToIdMap = maps.getKey();
         ArrayList<Byte> columnsList = new ArrayList<>();
-        List<DataRecord> internalRecords = null;
+        List<DataRecord> internalRecords;
         StorageManager manager = new StorageManager();
 
         InternalCondition internalCondition = null;
-        if(condition != null){
-            internalCondition = new InternalCondition();
-            if (columnToIdMap.containsKey(this.condition.column)) {
-                internalCondition.setIndex(columnToIdMap.get(this.condition.column).byteValue());
+
+        if(this.conditions != null){
+            for(Condition condition : this.conditions) {
+                internalCondition = new InternalCondition();
+                if (columnToIdMap.containsKey(condition.column)) {
+                    internalCondition.setIndex(columnToIdMap.get(condition.column).byteValue());
+                }
+
+                DT dataType = DT.CreateDT(condition.value);
+                internalCondition.setValue(dataType);
+
+                Short operatorShort = Utils.ConvertFromOperator(condition.operator);
+                internalCondition.setConditionType(operatorShort);
             }
-
-            DT dataType = DT.CreateDT(this.condition.value);
-            internalCondition.setValue(dataType);
-
-            Short operatorShort = Utils.ConvertFromOperator(condition.operator);
-            internalCondition.setConditionType(operatorShort);
         }
 
         if(this.columns == null) {
@@ -146,10 +156,10 @@ public class SelectQuery implements IQuery {
             for(Object columnValue : internalRecord.getColumnValueList()){
                 dataTypes[k] = columnValue;
                 k++;
-            };
+            }
             Record record = Record.CreateRecord();
             for(int i=0;i<columnIds.length;i++) {
-                Literal literal = null;
+                Literal literal;
                 if(idToColumnMap.containsKey((int)columnIds[i])) {
                     literal = Literal.CreateLiteral((DT)dataTypes[i], Utils.resolveClass(dataTypes[i]));
                     record.put(idToColumnMap.get((int)columnIds[i]), literal);
@@ -162,7 +172,7 @@ public class SelectQuery implements IQuery {
     }
 
 
-    public Pair<HashMap<String, Integer>, HashMap<Integer, String>> mapOrdinalIdToColumnName(String tableName) {
+    private Pair<HashMap<String, Integer>, HashMap<Integer, String>> mapOrdinalIdToColumnName(String tableName) {
         HashMap<Integer, String> idToColumnMap = new HashMap<>();
         HashMap<String, Integer> columnToIdMap = new HashMap<>();
         List<InternalCondition> conditions = new ArrayList<>();

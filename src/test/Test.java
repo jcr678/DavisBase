@@ -129,29 +129,29 @@ public class Test {
         List<String> columnDataTypeList = new ArrayList<>();
         List<String> columnKeyConstraintList = new ArrayList<>();
         List<String> columnNullConstraintList = new ArrayList<>();
-        int startingRowId = statement.updateSystemTablesTable(String.valueOf(random.nextInt()), 5);
-        if(startingRowId >= 0) {
-            columnNameList.add("rowid");
-            columnNameList.add("table_name");
-            columnNameList.add("record_count");
-            columnNameList.add("col_tbl_st_rowid");
-            columnNameList.add("nxt_avl_col_tbl_rowid");
-            columnDataTypeList.add(DataType.INT.toString());
-            columnDataTypeList.add(DataType.TEXT.toString());
-            columnDataTypeList.add(DataType.INT.toString());
-            columnDataTypeList.add(DataType.INT.toString());
-            columnDataTypeList.add(DataType.INT.toString());
-            columnKeyConstraintList.add(null);
-            columnKeyConstraintList.add(null);
-            columnKeyConstraintList.add(null);
-            columnKeyConstraintList.add(null);
-            columnKeyConstraintList.add(null);
-            columnNullConstraintList.add("NO");
-            columnNullConstraintList.add("NO");
-            columnNullConstraintList.add("NO");
-            columnNullConstraintList.add("NO");
-            columnNullConstraintList.add("NO");
-            statement.updateSystemColumnsTable(Constants.SYSTEM_TABLES_TABLENAME, startingRowId, columnNameList, columnDataTypeList, columnKeyConstraintList, columnNullConstraintList);
-        }
+//        int startingRowId = statement.updateSystemTablesTable(String.valueOf(random.nextInt()), 5);
+//        if(startingRowId >= 0) {
+//            columnNameList.add("rowid");
+//            columnNameList.add("table_name");
+//            columnNameList.add("record_count");
+//            columnNameList.add("col_tbl_st_rowid");
+//            columnNameList.add("nxt_avl_col_tbl_rowid");
+//            columnDataTypeList.add(DataType.INT.toString());
+//            columnDataTypeList.add(DataType.TEXT.toString());
+//            columnDataTypeList.add(DataType.INT.toString());
+//            columnDataTypeList.add(DataType.INT.toString());
+//            columnDataTypeList.add(DataType.INT.toString());
+//            columnKeyConstraintList.add(null);
+//            columnKeyConstraintList.add(null);
+//            columnKeyConstraintList.add(null);
+//            columnKeyConstraintList.add(null);
+//            columnKeyConstraintList.add(null);
+//            columnNullConstraintList.add("NO");
+//            columnNullConstraintList.add("NO");
+//            columnNullConstraintList.add("NO");
+//            columnNullConstraintList.add("NO");
+//            columnNullConstraintList.add("NO");
+//            statement.updateSystemColumnsTable(Constants.SYSTEM_TABLES_TABLENAME, startingRowId, columnNameList, columnDataTypeList, columnKeyConstraintList, columnNullConstraintList);
+//        }
     }
 }

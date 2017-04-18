@@ -71,7 +71,7 @@ public class InternalColumn {
     }
 
     public String getStringIsPrimary() {
-        return isNullable ? "PRI" : null;
+        return isPrimary ? "PRI" : null;
     }
 
     public boolean isNullable() {

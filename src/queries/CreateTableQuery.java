@@ -58,9 +58,8 @@ public class CreateTableQuery implements IQuery {
             else {
                 Utils.printMessage("Table " + tableName + " successfully created.");
                 List<InternalColumn> columnsList = new ArrayList<>();
-                InternalColumn internalColumn = new InternalColumn();
                 for (int i = 0; i < columns.size(); i++) {
-
+                    InternalColumn internalColumn = new InternalColumn();
                         /*  1. Add column name.
                             2. Add column data type.
                             3. Add column key constraint.
@@ -89,6 +88,8 @@ public class CreateTableQuery implements IQuery {
                     else {
                         internalColumn.setNullable(false);
                     }
+
+                    columnsList.add(internalColumn);
                 }
 
                 UpdateStatementHelper statement = new UpdateStatementHelper();

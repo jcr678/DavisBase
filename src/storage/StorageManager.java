@@ -759,29 +759,109 @@ public class StorageManager {
                                 condition = conditionList.get(i).getCondition();
                                 if (record != null && record.getColumnValueList().size() > columnIndex) {
                                     Object object = record.getColumnValueList().get(columnIndex);
-                                    switch (Utils.resolveClass(value)) {
+                                    switch (Utils.resolveClass(object)) {
                                         case Constants.TINYINT:
-                                            isMatch = ((DT_TinyInt) object).compare((DT_TinyInt) value, condition);
+                                            switch (Utils.resolveClass(value)) {
+                                                case Constants.TINYINT:
+                                                    isMatch = ((DT_TinyInt) object).compare((DT_TinyInt) value, condition);
+                                                    break;
+
+                                                case Constants.SMALLINT:
+                                                    isMatch = ((DT_TinyInt) object).compare((DT_SmallInt) value, condition);
+                                                    break;
+
+                                                case Constants.INT:
+                                                    isMatch = ((DT_TinyInt) object).compare((DT_Int) value, condition);
+                                                    break;
+
+                                                case Constants.BIGINT:
+                                                    isMatch = ((DT_TinyInt) object).compare((DT_BigInt) value, condition);
+                                                    break;
+                                            }
                                             break;
 
                                         case Constants.SMALLINT:
-                                            isMatch = ((DT_SmallInt) object).compare((DT_SmallInt) value, condition);
+                                            switch (Utils.resolveClass(value)) {
+                                                case Constants.TINYINT:
+                                                    isMatch = ((DT_SmallInt) object).compare((DT_TinyInt) value, condition);
+                                                    break;
+
+                                                case Constants.SMALLINT:
+                                                    isMatch = ((DT_SmallInt) object).compare((DT_SmallInt) value, condition);
+                                                    break;
+
+                                                case Constants.INT:
+                                                    isMatch = ((DT_SmallInt) object).compare((DT_Int) value, condition);
+                                                    break;
+
+                                                case Constants.BIGINT:
+                                                    isMatch = ((DT_SmallInt) object).compare((DT_BigInt) value, condition);
+                                                    break;
+                                            }
                                             break;
 
                                         case Constants.INT:
-                                            isMatch = ((DT_Int) object).compare((DT_Int) value, condition);
+                                            switch (Utils.resolveClass(value)) {
+                                                case Constants.TINYINT:
+                                                    isMatch = ((DT_Int) object).compare((DT_TinyInt) value, condition);
+                                                    break;
+
+                                                case Constants.SMALLINT:
+                                                    isMatch = ((DT_Int) object).compare((DT_SmallInt) value, condition);
+                                                    break;
+
+                                                case Constants.INT:
+                                                    isMatch = ((DT_Int) object).compare((DT_Int) value, condition);
+                                                    break;
+
+                                                case Constants.BIGINT:
+                                                    isMatch = ((DT_Int) object).compare((DT_BigInt) value, condition);
+                                                    break;
+                                            }
                                             break;
 
                                         case Constants.BIGINT:
-                                            isMatch = ((DT_BigInt) object).compare((DT_BigInt) value, condition);
+                                            switch (Utils.resolveClass(value)) {
+                                                case Constants.TINYINT:
+                                                    isMatch = ((DT_BigInt) object).compare((DT_TinyInt) value, condition);
+                                                    break;
+
+                                                case Constants.SMALLINT:
+                                                    isMatch = ((DT_BigInt) object).compare((DT_SmallInt) value, condition);
+                                                    break;
+
+                                                case Constants.INT:
+                                                    isMatch = ((DT_BigInt) object).compare((DT_Int) value, condition);
+                                                    break;
+
+                                                case Constants.BIGINT:
+                                                    isMatch = ((DT_BigInt) object).compare((DT_BigInt) value, condition);
+                                                    break;
+                                            }
                                             break;
 
                                         case Constants.REAL:
-                                            isMatch = ((DT_Real) object).compare((DT_Real) value, condition);
+                                            switch (Utils.resolveClass(value)) {
+                                                case Constants.REAL:
+                                                    isMatch = ((DT_Real) object).compare((DT_Real) value, condition);
+                                                    break;
+
+                                                case Constants.DOUBLE:
+                                                    isMatch = ((DT_Real) object).compare((DT_Double) value, condition);
+                                                    break;
+                                            }
                                             break;
 
                                         case Constants.DOUBLE:
-                                            isMatch = ((DT_Double) object).compare((DT_Double) value, condition);
+                                            switch (Utils.resolveClass(value)) {
+                                                case Constants.REAL:
+                                                    isMatch = ((DT_Double) object).compare((DT_Real) value, condition);
+                                                    break;
+
+                                                case Constants.DOUBLE:
+                                                    isMatch = ((DT_Double) object).compare((DT_Double) value, condition);
+                                                    break;
+                                            }
                                             break;
 
                                         case Constants.DATE:
@@ -793,10 +873,11 @@ public class StorageManager {
                                             break;
 
                                         case Constants.TEXT:
-                                            isMatch = ((DT_Text) object).getValue().equalsIgnoreCase(((DT_Text) value).getValue());
+                                            if(((DT_Text) object).getValue() != null)
+                                                isMatch = ((DT_Text) object).getValue().equalsIgnoreCase(((DT_Text) value).getValue());
                                             break;
                                     }
-                                    if(isMatch == false) break;
+                                    if(!isMatch) break;
                                 }
                             }
 

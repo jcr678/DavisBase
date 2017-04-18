@@ -29,6 +29,7 @@ public class DT_BigInt extends DT_Numeric<Long> {
 
     @Override
     public boolean compare(DT_Numeric<Long> object2, short condition) {
+        if(value == null) return false;
         switch (condition) {
             case DT_Numeric.EQUALS:
                 return value == object2.getValue();
@@ -48,5 +49,20 @@ public class DT_BigInt extends DT_Numeric<Long> {
             default:
                 return false;
         }
+    }
+
+    public boolean compare(DT_TinyInt object2, short condition) {
+        DT_BigInt object = new DT_BigInt(object2.getValue(), false);
+        return this.compare(object, condition);
+    }
+
+    public boolean compare(DT_SmallInt object2, short condition) {
+        DT_BigInt object = new DT_BigInt(object2.getValue(), false);
+        return this.compare(object, condition);
+    }
+
+    public boolean compare(DT_Int object2, short condition) {
+        DT_BigInt object = new DT_BigInt(object2.getValue(), false);
+        return this.compare(object, condition);
     }
 }

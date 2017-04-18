@@ -36,6 +36,7 @@ public class DT_DateTime extends DT_Numeric<Long> {
 
     @Override
     public boolean compare(DT_Numeric<Long> object2, short condition) {
+        if(value == null) return false;
         switch (condition) {
             case DT_Numeric.EQUALS:
                 return value == object2.getValue();

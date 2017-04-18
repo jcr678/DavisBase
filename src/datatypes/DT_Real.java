@@ -29,9 +29,10 @@ public class DT_Real extends DT_Numeric<Float> {
 
     @Override
     public boolean compare(DT_Numeric<Float> object2, short condition) {
+        if(value == null) return false;
         switch (condition) {
             case DT_Numeric.EQUALS:
-                return value == object2.getValue();
+                return Float.floatToIntBits(value) == Float.floatToIntBits(object2.getValue());
 
             case DT_Numeric.GREATER_THAN:
                 return value > object2.getValue();
@@ -40,13 +41,18 @@ public class DT_Real extends DT_Numeric<Float> {
                 return value < object2.getValue();
 
             case DT_Numeric.GREATER_THAN_EQUALS:
-                return value >= object2.getValue();
+                return Float.floatToIntBits(value) >= Float.floatToIntBits(object2.getValue());
 
             case DT_Numeric.LESS_THAN_EQUALS:
-                return value <= object2.getValue();
+                return Float.floatToIntBits(value) <= Float.floatToIntBits(object2.getValue());
 
             default:
                 return false;
         }
+    }
+
+    public boolean compare(DT_Double object2, short condition) {
+        DT_Double object = new DT_Double(value, false);
+        return object.compare(object2, condition);
     }
 }

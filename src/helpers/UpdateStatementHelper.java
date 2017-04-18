@@ -58,7 +58,7 @@ public class UpdateStatementHelper {
                 record.getColumnValueList().add(new DT_Int(columnCount + 1));
             }
             else {
-                DT_Int startingColumnIndex = (DT_Int) lastRecord.getColumnValueList().get(4);
+                DT_Int startingColumnIndex = (DT_Int) lastRecord.getColumnValueList().get(CatalogDB.TABLES_TABLE_SCHEMA_NXT_AVL_COL_TBL_ROWID);
                 returnValue = startingColumnIndex.getValue();
                 record.getColumnValueList().add(new DT_Int(returnValue));
                 record.getColumnValueList().add(new DT_Int(returnValue + columnCount));

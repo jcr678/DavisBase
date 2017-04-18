@@ -27,6 +27,8 @@ public class CatalogDB {
     public static final byte COLUMNS_TABLE_SCHEMA_ORDINAL_POSITION = 5;
     public static final byte COLUMNS_TABLE_SCHEMA_IS_NULLABLE = 6;
 
+    public static final String PRIMARY_KEY_IDENTIFIER = "PRI";
+
     public boolean createCatalogDB() {
         StorageManager manager = new StorageManager();
         UpdateStatementHelper statement = new UpdateStatementHelper();

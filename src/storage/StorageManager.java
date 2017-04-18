@@ -1,5 +1,6 @@
 package storage;
 
+import common.CatalogDB;
 import common.Constants;
 import common.Utils;
 import console.ConsoleWriter;
@@ -1093,7 +1094,7 @@ public class StorageManager {
     public List<String> fetchAllTableColumns(String tableName) {
         List<String> columnNames = new ArrayList<>();
         List<Byte> columnIndexList = new ArrayList<>();
-        columnIndexList.add((byte) 1);
+        columnIndexList.add(CatalogDB.COLUMNS_TABLE_SCHEMA_TABLE_NAME);
 
         List<Object> valueList = new ArrayList<>();
         valueList.add(new DT_Text(tableName));
@@ -1105,7 +1106,7 @@ public class StorageManager {
 
         for (int i = 0; i < records.size(); i++) {
             DataRecord record = records.get(i);
-            Object object = record.getColumnValueList().get(2);
+            Object object = record.getColumnValueList().get(CatalogDB.COLUMNS_TABLE_SCHEMA_COLUMN_NAME);
             columnNames.add(((DT) object).getStringValue());
         }
 
@@ -1115,7 +1116,7 @@ public class StorageManager {
     public boolean checkNullConstraint(String tableName, HashMap<String, Integer> columnMap) {
 
         List<Byte> columnIndexList = new ArrayList<>();
-        columnIndexList.add((byte) 1);
+        columnIndexList.add(CatalogDB.COLUMNS_TABLE_SCHEMA_TABLE_NAME);
 
         List<Object> valueList = new ArrayList<>();
         valueList.add(new DT_Text(tableName));
@@ -1127,8 +1128,8 @@ public class StorageManager {
 
         for (int i = 0; i < records.size(); i++) {
             DataRecord record = records.get(i);
-            Object nullValueObject = record.getColumnValueList().get(6);
-            Object object = record.getColumnValueList().get(2);
+            Object nullValueObject = record.getColumnValueList().get(CatalogDB.COLUMNS_TABLE_SCHEMA_IS_NULLABLE);
+            Object object = record.getColumnValueList().get(CatalogDB.COLUMNS_TABLE_SCHEMA_COLUMN_NAME);
 
             String isNullStr = ((DT) nullValueObject).getStringValue();
             boolean isNullable = (isNullStr.compareToIgnoreCase("NULL") == 0) ? false : true;
@@ -1148,7 +1149,7 @@ public class StorageManager {
 
     public HashMap<String, Integer> fetchAllTableColumndataTypes(String tableName) {
         List<Byte> columnIndexList = new ArrayList<>();
-        columnIndexList.add((byte) 1);
+        columnIndexList.add(CatalogDB.COLUMNS_TABLE_SCHEMA_TABLE_NAME);
 
         List<Object> valueList = new ArrayList<>();
         valueList.add(new DT_Text(tableName));
@@ -1161,8 +1162,8 @@ public class StorageManager {
 
         for (int i = 0; i < records.size(); i++) {
             DataRecord record = records.get(i);
-            Object object = record.getColumnValueList().get(2);
-            Object dataTypeObject = record.getColumnValueList().get(3);
+            Object object = record.getColumnValueList().get(CatalogDB.COLUMNS_TABLE_SCHEMA_COLUMN_NAME);
+            Object dataTypeObject = record.getColumnValueList().get(CatalogDB.COLUMNS_TABLE_SCHEMA_DATA_TYPE);
 
             String columnName = ((DT) object).getStringValue();
             int columnDataType = Utils.stringToDataType(((DT) dataTypeObject).getStringValue());
@@ -1179,12 +1180,12 @@ public class StorageManager {
 
     public String getTablePrimaryKey(String tableName) {
         List<Byte> columnIndexList = new ArrayList<>();
-        columnIndexList.add((byte) 1);
-        columnIndexList.add((byte) 4);
+        columnIndexList.add(CatalogDB.COLUMNS_TABLE_SCHEMA_TABLE_NAME);
+        columnIndexList.add(CatalogDB.COLUMNS_TABLE_SCHEMA_COLUMN_KEY);
 
         List<Object> valueList = new ArrayList<>();
         valueList.add(new DT_Text(tableName));
-        valueList.add(new DT_Text("PRI"));
+        valueList.add(new DT_Text(CatalogDB.PRIMARY_KEY_IDENTIFIER));
 
         List<Short> conditionList = new ArrayList<>();
         conditionList.add(DT_Numeric.EQUALS);
@@ -1193,7 +1194,7 @@ public class StorageManager {
         List<DataRecord> records = this.findRecord(Utils.getSystemDatabasePath(), Constants.SYSTEM_COLUMNS_TABLENAME, columnIndexList, valueList, conditionList, false);
         String columnName = "";
         for (DataRecord record : records) {
-            Object object = record.getColumnValueList().get(2);
+            Object object = record.getColumnValueList().get(CatalogDB.COLUMNS_TABLE_SCHEMA_COLUMN_NAME);
             columnName = ((DT) object).getStringValue();
             break;
         }
@@ -1203,7 +1204,7 @@ public class StorageManager {
 
     public int getTableRecordCount(String tableName) {
         List<Byte> columnIndexList = new ArrayList<>();
-        columnIndexList.add((byte) 1);
+        columnIndexList.add(CatalogDB.TABLES_TABLE_SCHEMA_TABLE_NAME);
 
 
         List<Object> valueList = new ArrayList<>();
@@ -1212,13 +1213,12 @@ public class StorageManager {
 
         List<Short> conditionList = new ArrayList<>();
         conditionList.add(DT_Numeric.EQUALS);
-        conditionList.add(DT_Numeric.EQUALS);
 
         List<DataRecord> records = this.findRecord(Utils.getSystemDatabasePath(), Constants.SYSTEM_TABLES_TABLENAME, columnIndexList, valueList, conditionList, true);
         int recordCount = 0;
 
         for (DataRecord record : records) {
-            Object object = record.getColumnValueList().get(3);
+            Object object = record.getColumnValueList().get(CatalogDB.TABLES_TABLE_SCHEMA_RECORD_COUNT);
             recordCount = Integer.valueOf(((DT) object).getStringValue());
             break;
         }

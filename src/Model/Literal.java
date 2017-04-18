@@ -2,6 +2,7 @@ package Model;
 
 import QueryParser.DatabaseHelper;
 import common.Constants;
+import common.Utils;
 import datatypes.base.DT;
 
 public class Literal {
@@ -25,9 +26,9 @@ public class Literal {
             case Constants.DOUBLE:
                 return new Literal(DataType.DOUBLE, value.getStringValue());
             case Constants.DATE:
-                return new Literal(DataType.DATE, value.getStringValue());
+                return new Literal(DataType.DATE, Utils.getDateEpocAsString((long)value.getValue(), true));
             case Constants.DATETIME:
-                return new Literal(DataType.DATETIME, value.getStringValue());
+                return new Literal(DataType.DATETIME, Utils.getDateEpocAsString((long)value.getValue(), false));
             case Constants.TEXT:
                 return new Literal(DataType.TEXT, value.getStringValue());
         }

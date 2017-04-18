@@ -9,6 +9,7 @@ import datatypes.base.DT_Numeric;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.time.Instant;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.Date;
@@ -259,6 +260,28 @@ public class Utils {
         catch (ParseException ex) {
             return 0;
         }
+    }
+
+    public static String getDateEpocAsString(long value, Boolean isDate) {
+        /* Define the time zone for Dallas CST */
+        ZoneId zoneId = ZoneId.of ( "America/Chicago" );
+
+        Instant i = Instant.ofEpochSecond (value);
+        ZonedDateTime zdt2 = ZonedDateTime.ofInstant (i, zoneId);
+        Date date = Date.from(zdt2.toInstant());
+
+        DateFormat formatter = null;
+        if (isDate) {
+            formatter = new SimpleDateFormat("yyyy-MM-dd");
+        }
+        else {
+            formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        }
+
+        formatter.setLenient(false);
+
+        String dateStr = formatter.format(date);
+        return dateStr;
     }
 
     public boolean checkDataTypeValidity(HashMap<String, Integer> columnDataTypeMapping, List<String> columnsList, List<Literal> values) {

@@ -66,7 +66,7 @@ public class UpdateStatementHelper {
             record.populateSize();
             if(manager.writeRecord(Utils.getSystemDatabasePath(), Constants.SYSTEM_TABLES_TABLENAME, record)) {
                 conditions.clear();
-                conditions.add(InternalCondition.CreateCondition(CatalogDB.TABLES_TABLE_SCHEMA_TABLE_NAME, InternalCondition.EQUALS, Constants.SYSTEM_TABLES_TABLENAME));
+                conditions.add(InternalCondition.CreateCondition(CatalogDB.TABLES_TABLE_SCHEMA_TABLE_NAME, InternalCondition.EQUALS, new DT_Text(Constants.SYSTEM_TABLES_TABLENAME)));
                 List<Byte> updateColumnsIndexList = new ArrayList<>();
                 updateColumnsIndexList.add(CatalogDB.TABLES_TABLE_SCHEMA_RECORD_COUNT);
                 List<Object> updateValueList = new ArrayList<>();

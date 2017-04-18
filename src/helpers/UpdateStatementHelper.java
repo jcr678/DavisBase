@@ -6,6 +6,7 @@ import common.Utils;
 import datatypes.DT_Int;
 import datatypes.DT_Text;
 import storage.StorageManager;
+import storage.model.InternalColumn;
 import storage.model.InternalCondition;
 import storage.model.DataRecord;
 import storage.model.Page;
@@ -80,7 +81,7 @@ public class UpdateStatementHelper {
         }
     }
 
-    public boolean updateSystemColumnsTable(String databaseName, String tableName, int startingRowId, List<String> columnNames, List<String> columnDataType, List<String> columnKeyConstraints, List<String> columnNullConstraints) {
+    public boolean updateSystemColumnsTable(String databaseName, String tableName, int startingRowId, List<InternalColumn> columns) {
         /*
          * System Tables Table Schema:
          * Column_no    Name                                    Data_type
@@ -94,19 +95,19 @@ public class UpdateStatementHelper {
          *      8       is_nullable                             TEXT
          */
         StorageManager manager = new StorageManager();
-        if(columnNames.size() != columnDataType.size() && columnDataType.size() != columnKeyConstraints.size() && columnKeyConstraints.size() != columnNullConstraints.size()) return false;
+        if(columns != null && columns.size() == 0) return false;
         int i = 0;
-        for(; i < columnNames.size(); i++) {
+        for(; i < columns.size(); i++) {
             DataRecord record = new DataRecord();
             record.setRowId(startingRowId++);
             record.getColumnValueList().add(new DT_Int(record.getRowId()));
             record.getColumnValueList().add(new DT_Text(databaseName));
             record.getColumnValueList().add(new DT_Text(tableName));
-            record.getColumnValueList().add(new DT_Text(columnNames.get(i)));
-            record.getColumnValueList().add(new DT_Text(columnDataType.get(i)));
-            record.getColumnValueList().add(new DT_Text(columnKeyConstraints.get(i)));
+            record.getColumnValueList().add(new DT_Text(columns.get(i).getName()));
+            record.getColumnValueList().add(new DT_Text(columns.get(i).getDataType()));
+            record.getColumnValueList().add(new DT_Text(columns.get(i).getStringIsPrimary()));
             record.getColumnValueList().add(new DT_Int(i + 1));
-            record.getColumnValueList().add(new DT_Text(columnNullConstraints.get(i)));
+            record.getColumnValueList().add(new DT_Text(columns.get(i).getStringIsNullable()));
             record.populateSize();
             if (!manager.writeRecord(Utils.getSystemDatabasePath(), Constants.SYSTEM_COLUMNS_TABLENAME, record)) {
                 break;

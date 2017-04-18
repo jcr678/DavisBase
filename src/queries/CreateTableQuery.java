@@ -7,6 +7,7 @@ import common.Constants;
 import common.Utils;
 import helpers.UpdateStatementHelper;
 import storage.StorageManager;
+import storage.model.InternalColumn;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -56,11 +57,8 @@ public class CreateTableQuery implements IQuery {
             }
             else {
                 Utils.printMessage("Table " + tableName + " successfully created.");
-                List<String> columnNameList = new ArrayList<>();
-                List<String> columnDataTypeList = new ArrayList<>();
-                List<String> columnKeyConstraintList = new ArrayList<>();
-                List<String> columnNullConstraintList = new ArrayList<>();
-
+                List<InternalColumn> columnsList = new ArrayList<>();
+                InternalColumn internalColumn = new InternalColumn();
                 for (int i = 0; i < columns.size(); i++) {
 
                         /*  1. Add column name.
@@ -70,32 +68,32 @@ public class CreateTableQuery implements IQuery {
                          */
 
                     Column column = columns.get(i);
-                    columnNameList.add(column.name);
-                    columnDataTypeList.add(column.type.toString());
+                    internalColumn.setName(column.name);
+                    internalColumn.setDataType(column.type.toString());
 
                     // Set the primary key constraint.
                     if (hasPrimaryKey && i == 0) {
-                        columnKeyConstraintList.add(Constants.PRIMARY_KEY_PRESENT);
+                        internalColumn.setPrimary(true);
                     }
                     else {
-                        columnKeyConstraintList.add(Constants.CONSTRAINT_ABSENT);
+                        internalColumn.setPrimary(false);
                     }
 
                     // Set the NULL constraints.
                     if (hasPrimaryKey && i == 0) {
-                        columnNullConstraintList.add("NO");
+                        internalColumn.setNullable(false);
                     }
                     else if (column.isNull) {
-                        columnNullConstraintList.add("YES");
+                        internalColumn.setNullable(true);
                     }
                     else {
-                        columnNullConstraintList.add("NO");
+                        internalColumn.setNullable(false);
                     }
                 }
 
                 UpdateStatementHelper statement = new UpdateStatementHelper();
                 int startingRowId = statement.updateSystemTablesTable(this.databaseName, tableName, columns.size());
-                boolean systemTableUpdateStatus = statement.updateSystemColumnsTable(this.databaseName, tableName, startingRowId, columnNameList, columnDataTypeList, columnKeyConstraintList, columnNullConstraintList);
+                boolean systemTableUpdateStatus = statement.updateSystemColumnsTable(this.databaseName, tableName, startingRowId, columnsList);
                 if (systemTableUpdateStatus) {
                     Utils.printMessage("System table successfully updated.");
                 }

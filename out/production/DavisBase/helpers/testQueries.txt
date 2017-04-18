@@ -38,6 +38,8 @@ insert into sample_table1 (ssn, fName, nName, address, DOB, DOB1, ti, si, i, bi,
 insert into sample_table1 (ssn, fName, nName, address, DOB, DOB1, ti, si, i, bi, r, d) values (120 , 'r23aeqw', 'jtryrty', 'nmbn', '1989-11-12', '1989-11-12 12:12:12', 12, 256, 500, 50000, 45.56, 45.7989);
 insert into sample_table1 (ssn, fName, nName, address, DOB, DOB1, ti, si, i, bi, r, d) values (121 , 'r23aeqw', 'jtryrty', 'nmbn', '1989-11-12', '1989-11-12 12:12:12', 12, 256, 500, 50000, 45.56, 45.7989);
 
+insert into sample_table1 (ssn, fName, nName, address, DOB, DOB1, ti, si, i, bi, r, d) values (123 , 'r23aeqw', 'jtryrty', 'nmbn', '1990-11-12', '1991-03-09 23:01:14', 12, 256, 500, 50000, 45.56, 45.7989);
+
 insert into sample_table1 (ssn, fName, nName, address, DOB) values ("wer" , 'Mahesh','jtryrty', 'nmbn', '1989-11-12');
 
 

@@ -53,14 +53,15 @@ public class DropDatabaseQuery implements IQuery {
         if(file == null) return true;
         boolean isDeleted = false;
 
-        for (File childFile: file.listFiles()) {
-            if(childFile.isFile()){
-                isDeleted = childFile.delete();
-                if(!isDeleted) return false;
-            }
-            else {
-                isDeleted = RecursivelyDelete(childFile);
-                if(!isDeleted) return false;
+        if(file.isDirectory()) {
+            for (File childFile : file.listFiles()) {
+                if (childFile.isFile()) {
+                    isDeleted = childFile.delete();
+                    if (!isDeleted) return false;
+                } else {
+                    isDeleted = RecursivelyDelete(childFile);
+                    if (!isDeleted) return false;
+                }
             }
         }
 

@@ -63,6 +63,20 @@ public class UserPrompt {
             IQuery query = DatabaseHelper.UseDatabaseQueryHandler(databaseName.trim());
             DatabaseHelper.ExecuteQuery(query);
         }
+        else if(userCommand.toLowerCase().startsWith(DatabaseHelper.DESC_TABLE_COMMAND.toLowerCase())){
+            if(!PartsEqual(userCommand, DatabaseHelper.DESC_TABLE_COMMAND) && !PartsEqual(userCommand, DatabaseHelper.DESCRIBE_TABLE_COMMAND)) {
+                DatabaseHelper.UnrecognisedCommand(userCommand, USE_HELP_MESSAGE);
+                return;
+            }
+
+            String tableName;
+            if(userCommand.toLowerCase().startsWith(DatabaseHelper.DESCRIBE_TABLE_COMMAND.toLowerCase()))
+                tableName = userCommand.substring(DatabaseHelper.DESCRIBE_TABLE_COMMAND.length());
+            else
+                tableName = userCommand.substring(DatabaseHelper.DESC_TABLE_COMMAND.length());
+            IQuery query = DatabaseHelper.DescTableQueryHandler(tableName.trim());
+            DatabaseHelper.ExecuteQuery(query);
+        }
         else if(userCommand.toLowerCase().startsWith(DatabaseHelper.DROP_TABLE_COMMAND.toLowerCase())){
             if(!PartsEqual(userCommand, DatabaseHelper.DROP_TABLE_COMMAND)){
                 DatabaseHelper.UnrecognisedCommand(userCommand, USE_HELP_MESSAGE);

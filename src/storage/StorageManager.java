@@ -1332,6 +1332,7 @@ public class StorageManager {
 
     public String getTablePrimaryKey(String tableName) {
         List<InternalCondition> conditions = new ArrayList<>();
+
         DT_Text tableNameObj = new DT_Text(tableName);
         DT_Text primaryKeyObj = new DT_Text(CatalogDB.PRIMARY_KEY_IDENTIFIER);
 

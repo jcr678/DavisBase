@@ -17,9 +17,6 @@ public class Condition {
         Condition condition = null;
 
         switch (operator){
-            case EQUALS:
-                condition = getConditionInternal(conditionString, operator, "=");
-                break;
             case GREATER_THAN:
                 condition = getConditionInternal(conditionString, operator, ">");
                 break;
@@ -31,6 +28,9 @@ public class Condition {
                 break;
             case GREATER_THAN_EQUAL:
                 condition = getConditionInternal(conditionString, operator, ">=");
+                break;
+            case EQUALS:
+                condition = getConditionInternal(conditionString, operator, "=");
                 break;
         }
 
@@ -66,24 +66,25 @@ public class Condition {
     }
 
     private static Operator GetOperator(String conditionString) {
-        if(conditionString.contains("=")){
-            return Operator.EQUALS;
-        }
-
-        if(conditionString.contains("<")){
-            return Operator.LESS_THAN;
-        }
 
         if(conditionString.contains("<=")){
             return Operator.LESS_THAN_EQUAL;
+        }
+
+        if(conditionString.contains(">=")){
+            return Operator.GREATER_THAN_EQUAL;
         }
 
         if(conditionString.contains(">")){
             return Operator.GREATER_THAN;
         }
 
-        if(conditionString.contains(">=")){
-            return Operator.GREATER_THAN_EQUAL;
+        if(conditionString.contains("<")){
+            return Operator.LESS_THAN;
+        }
+
+        if(conditionString.contains("=")){
+            return Operator.EQUALS;
         }
 
         return null;

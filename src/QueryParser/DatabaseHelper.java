@@ -234,15 +234,22 @@ public class DatabaseHelper {
             columns.add(column);
         }
 
-        if(columnsList.length > 0 && columnsList[0].toLowerCase().endsWith("primary key")){
-            if(columns.get(0).type == DataType.INT){
-                hasPrimaryKey = true;
-            }
-            else{
-                DatabaseHelper.UnrecognisedCommand(columnsList[0], "PRIMARY KEY has to have INT datatype");
-                return null;
-            }
+        for (int i = 0; i < columnsList.length; i++) {
+            if (columnsList[i].toLowerCase().endsWith("primary key")) {
+                if (i == 0) {
+                    if (columns.get(i).type == DataType.INT) {
+                        hasPrimaryKey = true;
+                    } else {
+                        DatabaseHelper.UnrecognisedCommand(columnsList[i], "PRIMARY KEY has to have INT datatype");
+                        return null;
+                    }
+                }
+                else {
+                    DatabaseHelper.UnrecognisedCommand(columnsList[i], "Only first column should be PRIMARY KEY and has to have INT datatype.");
+                    return null;
+                }
 
+            }
         }
 
         query = new CreateTableQuery(DatabaseHelper.CurrentDatabaseName, tableName, columns, hasPrimaryKey);

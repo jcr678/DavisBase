@@ -18,15 +18,16 @@ import java.util.List;
  */
 public class UpdateStatementHelper {
 
-    public int updateSystemTablesTable(String tableName, int columnCount) {
+    public int updateSystemTablesTable(String databaseName, String tableName, int columnCount) {
         /*
          * System Tables Table Schema:
          * Column_no    Name                                    Data_type
          *      1       rowid                                   INT
-         *      2       table_name                              TEXT
-         *      3       record_count                            INT
-         *      4       col_tbl_st_rowid                        INT
-         *      5       nxt_avl_col_tbl_rowid                   INT
+         *      2       database_name                           TEXT
+         *      3       table_name                              TEXT
+         *      4       record_count                            INT
+         *      5       col_tbl_st_rowid                        INT
+         *      6       nxt_avl_col_tbl_rowid                   INT
          */
         StorageManager manager = new StorageManager();
         List<InternalCondition> conditions = new ArrayList<>();
@@ -48,6 +49,7 @@ public class UpdateStatementHelper {
                 record.setRowId(lastRecord.getRowId() + 1);
             }
             record.getColumnValueList().add(new DT_Int(record.getRowId()));
+            record.getColumnValueList().add(new DT_Text(databaseName));
             record.getColumnValueList().add(new DT_Text(tableName));
             record.getColumnValueList().add(new DT_Int(0));
             if(lastRecord == null) {
@@ -78,17 +80,18 @@ public class UpdateStatementHelper {
         }
     }
 
-    public boolean updateSystemColumnsTable(String tableName, int startingRowId, List<String> columnNames, List<String> columnDataType, List<String> columnKeyConstraints, List<String> columnNullConstraints) {
+    public boolean updateSystemColumnsTable(String databaseName, String tableName, int startingRowId, List<String> columnNames, List<String> columnDataType, List<String> columnKeyConstraints, List<String> columnNullConstraints) {
         /*
          * System Tables Table Schema:
          * Column_no    Name                                    Data_type
          *      1       rowid                                   INT
-         *      2       table_name                              TEXT
-         *      3       column_name                             TEXT
-         *      4       data_type                               TEXT
-         *      5       column_key                              TEXT
-         *      6       ordinal_position                        TINYINT
-         *      7       is_nullable                             TEXT
+         *      2       database_name                           TEXT
+         *      3       table_name                              TEXT
+         *      4       column_name                             TEXT
+         *      5       data_type                               TEXT
+         *      6       column_key                              TEXT
+         *      7       ordinal_position                        TINYINT
+         *      8       is_nullable                             TEXT
          */
         StorageManager manager = new StorageManager();
         if(columnNames.size() != columnDataType.size() && columnDataType.size() != columnKeyConstraints.size() && columnKeyConstraints.size() != columnNullConstraints.size()) return false;
@@ -97,6 +100,7 @@ public class UpdateStatementHelper {
             DataRecord record = new DataRecord();
             record.setRowId(startingRowId++);
             record.getColumnValueList().add(new DT_Int(record.getRowId()));
+            record.getColumnValueList().add(new DT_Text(databaseName));
             record.getColumnValueList().add(new DT_Text(tableName));
             record.getColumnValueList().add(new DT_Text(columnNames.get(i)));
             record.getColumnValueList().add(new DT_Text(columnDataType.get(i)));

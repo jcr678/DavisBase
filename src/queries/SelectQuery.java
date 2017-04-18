@@ -56,11 +56,12 @@ public class SelectQuery implements IQuery {
             return false;
         }
 
-        // TODO : Check if data types match
+        HashMap<String, Integer> columnDataTypeMapping = manager.fetchAllTableColumndataTypes(tableName);
+
         // Validate column data type.
         if (condition != null) {
             List<String> retrievedColumns = manager.fetchAllTableColumns(tableName);
-            if (!Utils.checkConditionValueDataTypeValidity(columnToIdMap, retrievedColumns, condition)) {
+            if (!Utils.checkConditionValueDataTypeValidity(columnDataTypeMapping, retrievedColumns, condition)) {
                 return false;
             }
         }

@@ -32,7 +32,12 @@ public class DatabaseHelper {
     private static String copyright = "©2017 Parag Pravin Dakle";
 
     public static IQuery ShowTableListQueryHandler() {
-        return new ShowTableQuery(Constants.DEFAULT_CATALOG_DATABASENAME);
+        if(DatabaseHelper.CurrentDatabaseName.equals("")){
+            System.out.println(DatabaseHelper.NO_DATABASE_SELECTED_MESSAGE);
+            return null;
+        }
+
+        return new ShowTableQuery(DatabaseHelper.CurrentDatabaseName);
     }
 
     public static IQuery DropTableQueryHandler(String tableName) {
@@ -75,7 +80,9 @@ public class DatabaseHelper {
         Condition condition = Condition.CreateCondition(conditionString);
         if(condition == null) return null;
 
-        query = new SelectQuery(DatabaseHelper.CurrentDatabaseName, tableName, columns, condition, isSelectAll);
+        ArrayList<Condition> conditionList = new ArrayList<>();
+        conditionList.add(condition);
+        query = new SelectQuery(DatabaseHelper.CurrentDatabaseName, tableName, columns, conditionList, isSelectAll);
         return query;
     }
 

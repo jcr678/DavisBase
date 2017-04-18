@@ -1,7 +1,6 @@
 package QueryParser;
 
 import Model.*;
-import common.Constants;
 import queries.*;
 
 import java.io.File;
@@ -24,6 +23,8 @@ public class DatabaseHelper {
     public static final String CREATE_TABLE_COMMAND = "CREATE TABLE";
     public static final String CREATE_DATABASE_COMMAND = "CREATE DATABASE";
     public static final String USE_DATABASE_COMMAND = "USE";
+    public static final String DESC_TABLE_COMMAND = "DESC";
+    public static final String DESCRIBE_TABLE_COMMAND = "DESCRIBE";
     private static final String NO_DATABASE_SELECTED_MESSAGE = "No database selected";
 
     public static String CurrentDatabaseName = "";
@@ -109,6 +110,7 @@ public class DatabaseHelper {
         System.out.println("\tSHOW DATABASES;                                  Displays all databases.");
         System.out.println("\tDROP DATABASE database_name;                     Remove database.");
         System.out.println("\tSHOW TABLES;                                     Displays all tables in current database.");
+        System.out.println("\tDESC|DESCRIBE table_name;                                 Displays table schema.");
         System.out.println("\tCREATE TABLE table_name (                        Creates a table in current database.");
         System.out.println("\t\t<column_name> <datatype> [PRIMARY KEY / NOT NULL]");
         System.out.println("\t\t...);");
@@ -288,5 +290,14 @@ public class DatabaseHelper {
                 result.Display();
             }
         }
+    }
+
+    public static IQuery DescTableQueryHandler(String tableName) {
+        if(DatabaseHelper.CurrentDatabaseName.equals("")){
+            System.out.println(DatabaseHelper.NO_DATABASE_SELECTED_MESSAGE);
+            return null;
+        }
+
+        return new DescTableQuery(DatabaseHelper.CurrentDatabaseName, tableName);
     }
 }

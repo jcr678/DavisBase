@@ -29,7 +29,7 @@ public class DatabaseHelper {
     public static String CurrentDatabaseName = "";
     public static String prompt = "davisql> ";
     private static String version = "v1.0b";
-    private static String copyright = "Â©2017 Dhruva Pendharkar";
+    private static String copyright = "©2017 Parag Pravin Dakle";
 
     public static IQuery ShowTableListQueryHandler() {
         return new ShowTableQuery(Constants.DEFAULT_CATALOG_DATABASENAME);

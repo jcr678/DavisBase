@@ -93,25 +93,23 @@ public class SelectQuery implements IQuery {
         List<DataRecord> internalRecords = null;
         StorageManager manager = new StorageManager();
 
-        ArrayList<Short> operators = new ArrayList<>();
-        ArrayList<Byte> columnIndices = new ArrayList<>();
-        ArrayList<Object> values = new ArrayList<>();
+        InternalCondition internalCondition = null;
         if(condition != null){
-
+            internalCondition = new InternalCondition();
             if (columnToIdMap.containsKey(this.condition.column)) {
-                columnIndices.add(columnToIdMap.get(this.condition.column).byteValue());
+                internalCondition.setIndex(columnToIdMap.get(this.condition.column).byteValue());
             }
 
             DT dataType = DT.CreateDT(this.condition.value);
-            values.add(dataType);
+            internalCondition.setValue(dataType);
 
             Short operatorShort = Utils.ConvertFromOperator(condition.operator);
-            operators.add(operatorShort);
+            internalCondition.setConditionType(operatorShort);
         }
 
         if(this.columns == null) {
             internalRecords = manager.findRecord(Utils.getUserDatabasePath(this.databaseName),
-                    this.tableName, columnIndices, values, operators, false);
+                    this.tableName, internalCondition, false);
 
             HashMap<Integer, String> idToColumnMap = maps.getValue();
             this.columns = new ArrayList<>();
@@ -130,7 +128,7 @@ public class SelectQuery implements IQuery {
             }
 
             internalRecords = manager.findRecord(Utils.getUserDatabasePath(this.databaseName),
-                    this.tableName, columnIndices, values, operators, columnsList, false);
+                    this.tableName, internalCondition, columnsList, false);
         }
 
         Byte[] columnIds = new Byte[columnsList.size()];
@@ -168,7 +166,7 @@ public class SelectQuery implements IQuery {
         HashMap<Integer, String> idToColumnMap = new HashMap<>();
         HashMap<String, Integer> columnToIdMap = new HashMap<>();
         List<InternalCondition> conditions = new ArrayList<>();
-        conditions.add(new InternalCondition(CatalogDB.COLUMNS_TABLE_SCHEMA_TABLE_NAME, InternalCondition.EQUALS, new DT_Text(tableName)));
+        conditions.add(InternalCondition.CreateCondition(CatalogDB.COLUMNS_TABLE_SCHEMA_TABLE_NAME, InternalCondition.EQUALS, new DT_Text(tableName)));
 
         StorageManager manager = new StorageManager();
         List<DataRecord> records = manager.findRecord(Utils.getSystemDatabasePath(), Constants.SYSTEM_COLUMNS_TABLENAME, conditions, false);

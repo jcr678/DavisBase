@@ -13,19 +13,31 @@ public class InternalCondition {
 
     private byte index;
 
-    private short condition;
+    private short conditionType;
 
     private Object value;
 
-    public InternalCondition(byte index, short condition, Object value) {
+    public static InternalCondition CreateCondition(byte index, short conditionType, Object value) {
+        InternalCondition condition = new InternalCondition(index, conditionType, value);
+        return condition;
+    }
+
+    public static InternalCondition CreateCondition(int index, short conditionType, Object value) {
+        InternalCondition condition = new InternalCondition(index, conditionType, value);
+        return condition;
+    }
+
+    public InternalCondition() {}
+
+    private InternalCondition(byte index, short conditionType, Object value) {
         this.index = index;
-        this.condition = condition;
+        this.conditionType = conditionType;
         this.value = value;
     }
 
-    public InternalCondition(int index, short condition, Object value) {
+    private InternalCondition(int index, short conditionType, Object value) {
         this.index = (byte) index;
-        this.condition = condition;
+        this.conditionType = conditionType;
         this.value = value;
     }
 
@@ -37,12 +49,12 @@ public class InternalCondition {
         this.index = index;
     }
 
-    public short getCondition() {
-        return condition;
+    public short getConditionType() {
+        return conditionType;
     }
 
-    public void setCondition(short condition) {
-        this.condition = condition;
+    public void setConditionType(short conditionType) {
+        this.conditionType = conditionType;
     }
 
     public Object getValue() {

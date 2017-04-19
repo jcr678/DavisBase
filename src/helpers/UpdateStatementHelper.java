@@ -32,7 +32,7 @@ public class UpdateStatementHelper {
          */
         StorageManager manager = new StorageManager();
         List<InternalCondition> conditions = new ArrayList<>();
-        conditions.add(new InternalCondition(CatalogDB.TABLES_TABLE_SCHEMA_TABLE_NAME, InternalCondition.EQUALS, tableName));
+        conditions.add(InternalCondition.CreateCondition(CatalogDB.TABLES_TABLE_SCHEMA_TABLE_NAME, InternalCondition.EQUALS, tableName));
         List<DataRecord> result = manager.findRecord(Utils.getSystemDatabasePath(), Constants.SYSTEM_TABLES_TABLENAME, conditions, true);
         if(result != null && result.size() == 0) {
             int returnValue = 1;
@@ -66,7 +66,7 @@ public class UpdateStatementHelper {
             record.populateSize();
             if(manager.writeRecord(Utils.getSystemDatabasePath(), Constants.SYSTEM_TABLES_TABLENAME, record)) {
                 conditions.clear();
-                conditions.add(new InternalCondition(CatalogDB.TABLES_TABLE_SCHEMA_TABLE_NAME, InternalCondition.EQUALS, Constants.SYSTEM_TABLES_TABLENAME));
+                conditions.add(InternalCondition.CreateCondition(CatalogDB.TABLES_TABLE_SCHEMA_TABLE_NAME, InternalCondition.EQUALS, Constants.SYSTEM_TABLES_TABLENAME));
                 List<Byte> updateColumnsIndexList = new ArrayList<>();
                 updateColumnsIndexList.add(CatalogDB.TABLES_TABLE_SCHEMA_RECORD_COUNT);
                 List<Object> updateValueList = new ArrayList<>();
@@ -115,7 +115,7 @@ public class UpdateStatementHelper {
         }
         if(i > 0) {
             List<InternalCondition> conditions = new ArrayList<>();
-            conditions.add(new InternalCondition(CatalogDB.TABLES_TABLE_SCHEMA_TABLE_NAME, InternalCondition.EQUALS, Constants.SYSTEM_COLUMNS_TABLENAME));
+            conditions.add(InternalCondition.CreateCondition(CatalogDB.TABLES_TABLE_SCHEMA_TABLE_NAME, InternalCondition.EQUALS, Constants.SYSTEM_COLUMNS_TABLENAME));
             List<Byte> updateColumnsIndexList = new ArrayList<>();
             updateColumnsIndexList.add(CatalogDB.TABLES_TABLE_SCHEMA_RECORD_COUNT);
             List<Object> updateValueList = new ArrayList<>();
@@ -136,9 +136,9 @@ public class UpdateStatementHelper {
     private static int updateRowCount(String tableName, int rowCount) {
         StorageManager manager = new StorageManager();
         List<InternalCondition> conditions = new ArrayList<>();
-        conditions.add(new InternalCondition(1, InternalCondition.EQUALS, tableName));
+        conditions.add(InternalCondition.CreateCondition(CatalogDB.TABLES_TABLE_SCHEMA_TABLE_NAME, InternalCondition.EQUALS, tableName));
         List<Byte> updateColumnsIndexList = new ArrayList<>();
-        updateColumnsIndexList.add((byte) 2);
+        updateColumnsIndexList.add(CatalogDB.TABLES_TABLE_SCHEMA_RECORD_COUNT);
         List<Object> updateValueList = new ArrayList<>();
         updateValueList.add(new DT_Int(rowCount));
         return manager.updateRecord(Utils.getSystemDatabasePath(), Constants.SYSTEM_TABLES_TABLENAME, conditions, updateColumnsIndexList, updateValueList, true);

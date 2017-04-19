@@ -726,9 +726,20 @@ public class StorageManager {
     public List<DataRecord> findRecord(String databaseName, String tableName, List<Byte> columnIndexList, List<Object> valueList, List<Short> conditionList, List<Byte> selectionColumnIndexList, boolean getOne) {
         List<InternalCondition> conditions = new ArrayList<>();
         for (byte i = 0; i < columnIndexList.size(); i++) {
-            conditions.add(new InternalCondition(columnIndexList.get(i), conditionList.get(i), valueList.get(i)));
+            conditions.add(InternalCondition.CreateCondition(columnIndexList.get(i), conditionList.get(i), valueList.get(i)));
         }
         return findRecord(databaseName, tableName, conditions, selectionColumnIndexList, getOne);
+    }
+
+    public List<DataRecord> findRecord(String databaseName, String tableName, InternalCondition condition, boolean getOne) {
+        return findRecord(databaseName, tableName, condition,null, getOne);
+    }
+
+    public List<DataRecord> findRecord(String databaseName, String tableName, InternalCondition condition, List<Byte> selectionColumnIndexList, boolean getOne) {
+        List<InternalCondition> conditionList = new ArrayList<>();
+        if(condition != null)
+            conditionList.add(condition);
+        return findRecord(databaseName, tableName, conditionList, selectionColumnIndexList, getOne);
     }
 
     public List<DataRecord> findRecord(String databaseName, String tableName, List<InternalCondition> conditionList, boolean getOne) {
@@ -756,7 +767,7 @@ public class StorageManager {
                                 isMatch = false;
                                 columnIndex = conditionList.get(i).getIndex();
                                 value = conditionList.get(i).getValue();
-                                condition = conditionList.get(i).getCondition();
+                                condition = conditionList.get(i).getConditionType();
                                 if (record != null && record.getColumnValueList().size() > columnIndex) {
                                     Object object = record.getColumnValueList().get(columnIndex);
                                     switch (Utils.resolveClass(object)) {
@@ -919,7 +930,7 @@ public class StorageManager {
     public int updateRecord(String databaseName, String tableName, List<Byte> searchColumnIndexList, List<Object> searchValueList, List<Short> searchConditionList, List<Byte> updateColumnIndexList, List<Object> updateColumnValueList, boolean isIncrement) {
         List<InternalCondition> conditions = new ArrayList<>();
         for (byte i = 0; i < searchColumnIndexList.size(); i++) {
-            conditions.add(new InternalCondition(searchColumnIndexList.get(i), searchConditionList.get(i), searchValueList.get(i)));
+            conditions.add(InternalCondition.CreateCondition(searchColumnIndexList.get(i), searchConditionList.get(i), searchValueList.get(i)));
         }
         return updateRecord(databaseName, tableName, conditions, updateColumnIndexList, updateColumnValueList, isIncrement);
     }
@@ -1320,19 +1331,11 @@ public class StorageManager {
     }
 
     public String getTablePrimaryKey(String tableName) {
-        List<Byte> columnIndexList = new ArrayList<>();
-        columnIndexList.add(CatalogDB.COLUMNS_TABLE_SCHEMA_TABLE_NAME);
-        columnIndexList.add(CatalogDB.COLUMNS_TABLE_SCHEMA_COLUMN_KEY);
+        List<InternalCondition> conditions = new ArrayList<>();
+        conditions.add(InternalCondition.CreateCondition(CatalogDB.COLUMNS_TABLE_SCHEMA_COLUMN_NAME, InternalCondition.EQUALS, tableName));
+        conditions.add(InternalCondition.CreateCondition(CatalogDB.COLUMNS_TABLE_SCHEMA_COLUMN_KEY, InternalCondition.EQUALS, CatalogDB.PRIMARY_KEY_IDENTIFIER));
 
-        List<Object> valueList = new ArrayList<>();
-        valueList.add(new DT_Text(tableName));
-        valueList.add(new DT_Text(CatalogDB.PRIMARY_KEY_IDENTIFIER));
-
-        List<Short> conditionList = new ArrayList<>();
-        conditionList.add(DT_Numeric.EQUALS);
-        conditionList.add(DT_Numeric.EQUALS);
-
-        List<DataRecord> records = this.findRecord(Utils.getSystemDatabasePath(), Constants.SYSTEM_COLUMNS_TABLENAME, columnIndexList, valueList, conditionList, false);
+        List<DataRecord> records = this.findRecord(Utils.getSystemDatabasePath(), Constants.SYSTEM_COLUMNS_TABLENAME, conditions, false);
         String columnName = "";
         for (DataRecord record : records) {
             Object object = record.getColumnValueList().get(CatalogDB.COLUMNS_TABLE_SCHEMA_COLUMN_NAME);
@@ -1344,18 +1347,9 @@ public class StorageManager {
     }
 
     public int getTableRecordCount(String tableName) {
-        List<Byte> columnIndexList = new ArrayList<>();
-        columnIndexList.add(CatalogDB.TABLES_TABLE_SCHEMA_TABLE_NAME);
+        InternalCondition condition = InternalCondition.CreateCondition(CatalogDB.TABLES_TABLE_SCHEMA_TABLE_NAME, InternalCondition.EQUALS, new DT_Text(tableName));
 
-
-        List<Object> valueList = new ArrayList<>();
-        valueList.add(new DT_Text(tableName));
-
-
-        List<Short> conditionList = new ArrayList<>();
-        conditionList.add(DT_Numeric.EQUALS);
-
-        List<DataRecord> records = this.findRecord(Utils.getSystemDatabasePath(), Constants.SYSTEM_TABLES_TABLENAME, columnIndexList, valueList, conditionList, true);
+        List<DataRecord> records = this.findRecord(Utils.getSystemDatabasePath(), Constants.SYSTEM_TABLES_TABLENAME, condition, true);
         int recordCount = 0;
 
         for (DataRecord record : records) {
@@ -1367,42 +1361,11 @@ public class StorageManager {
         return recordCount;
     }
 
-    /*public String getTablePrimaryKey(String tableName) {
-        List<Byte> columnIndexList = new ArrayList<>();
-        columnIndexList.add((byte) 1);
-
-        List<Object> valueList = new ArrayList<>();
-        valueList.add(new DT_Text(tableName));
-
-        List<Short> conditionList = new ArrayList<>();
-        conditionList.add(DT_Numeric.EQUALS);
-
-        List<Byte> selectionIndexList = new ArrayList<>();
-
-        List<DataRecord> records = this.findRecord(Utils.getSystemDatabasePath(), Constants.SYSTEM_COLUMNS_TABLENAME, columnIndexList, valueList, conditionList, selectionIndexList, true);
-        String columnName = "";
-        for (DataRecord record : records) {
-            columnName = ((DT) record.getColumnValueList().get(4)).getStringValue();
-            if (columnName.compareToIgnoreCase("PRI") == 0) {
-                break;
-            }
-        }
-
-        return columnName;
-    }*/
-
     public boolean checkIfValueForPrimaryKeyExists(String databaseName, String tableName, int value) {
         StorageManager manager = new StorageManager();
-        List<Byte> columnIndexList = new ArrayList<>();
-        columnIndexList.add((byte) 0);
+        InternalCondition condition = InternalCondition.CreateCondition(0, InternalCondition.EQUALS, new DT_Int(value));
 
-        List<Object> valueList = new ArrayList<>();
-        valueList.add(new DT_Int(value));
-
-        List<Short> conditionList = new ArrayList<>();
-        conditionList.add(DT_Numeric.EQUALS);
-
-        List<DataRecord> records = manager.findRecord(Utils.getUserDatabasePath(databaseName), tableName, columnIndexList, valueList, conditionList, false);
+        List<DataRecord> records = manager.findRecord(Utils.getUserDatabasePath(databaseName), tableName, condition, false);
         if (records.size() > 0) {
             return true;
         }

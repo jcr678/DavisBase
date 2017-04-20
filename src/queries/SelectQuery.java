@@ -33,66 +33,76 @@ public class SelectQuery implements IQuery {
 
     @Override
     public Result ExecuteQuery() {
-        ResultSet resultSet = ResultSet.CreateResultSet();
+        try {
+            ResultSet resultSet = ResultSet.CreateResultSet();
 
-        ArrayList<Record> records = GetData();
-        resultSet.setColumns(this.columns);
-        for(Record record : records){
-            resultSet.addRecord(record);
+            ArrayList<Record> records = GetData();
+            resultSet.setColumns(this.columns);
+            for (Record record : records) {
+                resultSet.addRecord(record);
+            }
+
+            return resultSet;
         }
-
-        return resultSet;
+        catch (Exception e) {
+            Utils.printMessage(e.getMessage());
+        }
+        return null;
     }
 
     @Override
     public boolean ValidateQuery() {
-        Pair<HashMap<String, Integer>, HashMap<Integer, String>> maps = mapOrdinalIdToColumnName(this.tableName);
-        HashMap<String, Integer> columnToIdMap = maps.getKey();
-        StorageManager manager = new StorageManager();
+        try {
+            Pair<HashMap<String, Integer>, HashMap<Integer, String>> maps = mapOrdinalIdToColumnName(this.tableName);
+            HashMap<String, Integer> columnToIdMap = maps.getKey();
+            StorageManager manager = new StorageManager();
 
-        // Check if the table exists.
-        if (!manager.checkTableExists(this.databaseName, tableName)) {
-            Utils.printMissingTableError(tableName);
+            // Check if the table exists.
+            if (!manager.checkTableExists(this.databaseName, tableName)) {
+                Utils.printMissingTableError(tableName);
+                return false;
+            }
+
+            HashMap<String, Integer> columnDataTypeMapping = manager.fetchAllTableColumnDataTypes(this.databaseName, tableName);
+
+            // Validate column data type.
+            if (conditions != null) {
+                // Retrieve the columns of the tables.
+                List<String> retrievedColumns = manager.fetchAllTableColumns(this.databaseName, tableName);
+
+                // Check for data types.
+                for (Condition condition : conditions) {
+                    if (!Utils.checkConditionValueDataTypeValidity(columnDataTypeMapping, retrievedColumns, condition)) {
+                        return false;
+                    }
+                }
+            }
+
+            if (this.columns != null) {
+                for (String column : this.columns) {
+                    if (!columnToIdMap.containsKey(column)) {
+                        Utils.printError(String.format("Unknown column '%s' in table '%s'", column, this.tableName));
+                        return false;
+                    }
+                }
+            }
+
+            if (conditions != null) {
+                for (Condition condition : conditions) {
+                    if (!columnToIdMap.containsKey(condition.column)) {
+                        Utils.printError((String.format("Unknown column '%s' in table '%s'", condition.column, this.tableName)));
+                        return false;
+                    }
+                }
+            }
+        } catch (Exception e) {
+            Utils.printMessage(e.getMessage());
             return false;
         }
-
-        HashMap<String, Integer> columnDataTypeMapping = manager.fetchAllTableColumnDataTypes(this.databaseName, tableName);
-
-        // Validate column data type.
-        if (conditions != null) {
-            // Retrieve the columns of the tables.
-            List<String> retrievedColumns = manager.fetchAllTableColumns(this.databaseName, tableName);
-
-            // Check for data types.
-            for (Condition condition : conditions) {
-                if (!Utils.checkConditionValueDataTypeValidity(columnDataTypeMapping, retrievedColumns, condition)) {
-                    return false;
-                }
-            }
-        }
-
-        if(this.columns != null){
-            for(String column : this.columns){
-                if(!columnToIdMap.containsKey(column)){
-                    Utils.printError(String.format("Unknown column '%s' in table '%s'", column, this.tableName));
-                    return false;
-                }
-            }
-        }
-
-        if(conditions != null) {
-            for (Condition condition : conditions) {
-                if (!columnToIdMap.containsKey(condition.column)) {
-                    Utils.printError((String.format("Unknown column '%s' in table '%s'", condition.column, this.tableName)));
-                    return false;
-                }
-            }
-        }
-
         return true;
     }
 
-    private ArrayList<Record> GetData(){
+    private ArrayList<Record> GetData() throws Exception {
         ArrayList<Record> records = new ArrayList<>();
         Pair<HashMap<String, Integer>, HashMap<Integer, String>> maps = mapOrdinalIdToColumnName(this.tableName);
         HashMap<String, Integer> columnToIdMap = maps.getKey();
@@ -172,7 +182,7 @@ public class SelectQuery implements IQuery {
     }
 
 
-    private Pair<HashMap<String, Integer>, HashMap<Integer, String>> mapOrdinalIdToColumnName(String tableName) {
+    private Pair<HashMap<String, Integer>, HashMap<Integer, String>> mapOrdinalIdToColumnName(String tableName) throws Exception {
         HashMap<Integer, String> idToColumnMap = new HashMap<>();
         HashMap<String, Integer> columnToIdMap = new HashMap<>();
         List<InternalCondition> conditions = new ArrayList<>();

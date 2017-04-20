@@ -7,6 +7,7 @@ import common.Constants;
 import common.Utils;
 import datatypes.*;
 import datatypes.base.DT;
+import errors.InternalException;
 import storage.StorageManager;
 import storage.model.DataRecord;
 
@@ -27,97 +28,106 @@ public class InsertQuery implements IQuery {
 
     @Override
     public Result ExecuteQuery() {
-        // All checks are done. Now insert the values.
-        StorageManager manager = new StorageManager();
-        List<String> retrievedColumns = manager.fetchAllTableColumns(this.databaseName, tableName);
-        HashMap<String, Integer> columnDataTypeMapping = manager.fetchAllTableColumnDataTypes(this.databaseName, tableName);
+        try {
+            // All checks are done. Now insert the values.
+            StorageManager manager = new StorageManager();
+            List<String> retrievedColumns = manager.fetchAllTableColumns(this.databaseName, tableName);
+            HashMap<String, Integer> columnDataTypeMapping = manager.fetchAllTableColumnDataTypes(this.databaseName, tableName);
 
-        DataRecord record  = new DataRecord();
-        generateRecords(record.getColumnValueList(), columnDataTypeMapping, retrievedColumns);
+            DataRecord record = new DataRecord();
+            generateRecords(record.getColumnValueList(), columnDataTypeMapping, retrievedColumns);
 
-        int rowID = findRowID(manager, retrievedColumns);
-        record.setRowId(rowID);
-        record.populateSize();
+            int rowID = findRowID(manager, retrievedColumns);
+            record.setRowId(rowID);
+            record.populateSize();
 
-        Result result = null;
-        boolean status = manager.writeRecord(this.databaseName, tableName, record);
-        if (status) {
-            result = new Result(1);
+            Result result = null;
+            boolean status = manager.writeRecord(this.databaseName, tableName, record);
+            if (status) {
+                result = new Result(1);
+            } else {
+                result = new Result(0);
+            }
+
+            return result;
         }
-        else {
-            result = new Result(0);
+        catch (InternalException e) {
+            Utils.printMessage(e.getMessage());
         }
-
-        return result;
+        return null;
     }
 
     @Override
     public boolean ValidateQuery() {
-        // validate if the table and the columns of the table.
-        StorageManager manager = new StorageManager();
-        if (!manager.checkTableExists(this.databaseName, tableName)) {
-            Utils.printMissingTableError(tableName);
-            return false;
-        }
-
-        // Table columns.
-        List<String> retrievedColumns = manager.fetchAllTableColumns(this.databaseName, tableName);
-        HashMap<String, Integer> columnDataTypeMapping = manager.fetchAllTableColumnDataTypes(this.databaseName, tableName);
-
-        if (columns == null) {
-            // No columns are provided.
-            // Check values size.
-            if (values.size() < retrievedColumns.size() || values.size() > retrievedColumns.size()) {
-                Utils.printError("Column count doesn't match value count at row 1");
+        try {
+            // validate if the table and the columns of the table.
+            StorageManager manager = new StorageManager();
+            if (!manager.checkTableExists(this.databaseName, tableName)) {
+                Utils.printMissingTableError(tableName);
                 return false;
             }
 
-            // Check Columns datatype are valid.
-            Utils utils = new Utils();
-            if(!utils.checkDataTypeValidity(columnDataTypeMapping, retrievedColumns, values)) {
-                return false;
+            // Table columns.
+            List<String> retrievedColumns = manager.fetchAllTableColumns(this.databaseName, tableName);
+            HashMap<String, Integer> columnDataTypeMapping = manager.fetchAllTableColumnDataTypes(this.databaseName, tableName);
+
+            if (columns == null) {
+                // No columns are provided.
+                // Check values size.
+                if (values.size() < retrievedColumns.size() || values.size() > retrievedColumns.size()) {
+                    Utils.printError("Column count doesn't match value count at row 1");
+                    return false;
+                }
+
+                // Check Columns datatype are valid.
+                Utils utils = new Utils();
+                if (!utils.checkDataTypeValidity(columnDataTypeMapping, retrievedColumns, values)) {
+                    return false;
+                }
+            } else {
+                // Columns are provided.
+                // Validate columns.
+                // If the column list is greater than the columns in the table then throw an error.
+                if (columns.size() > retrievedColumns.size()) {
+                    Utils.printError("Column count doesn't match value count at row 1");
+                    return false;
+                }
+
+                // Check columns validity.
+                boolean areColumnsValid = checkColumnValidity(retrievedColumns);
+                if (!areColumnsValid) {
+                    return false;
+                }
+
+                // Check Columns datatype are valid.
+                boolean areColumnsDataTypeValid = validateColumnDataTypes(columnDataTypeMapping);
+                if (!areColumnsDataTypeValid) {
+                    return false;
+                }
             }
-        }
-        else  {
-            // Columns are provided.
-            // Validate columns.
-            // If the column list is greater than the columns in the table then throw an error.
-            if (columns.size() > retrievedColumns.size()) {
-                Utils.printError("Column count doesn't match value count at row 1");
+
+            // Common methods.
+            // Validate null columns.
+            boolean isNullConstraintValid = checkNullConstraint(manager, retrievedColumns);
+            if (!isNullConstraintValid) {
                 return false;
             }
 
-            // Check columns validity.
-            boolean areColumnsValid = checkColumnValidity(retrievedColumns);
-            if (!areColumnsValid) {
-                return false;
-            }
-
-            // Check Columns datatype are valid.
-            boolean areColumnsDataTypeValid = validateColumnDataTypes(columnDataTypeMapping);
-            if (!areColumnsDataTypeValid) {
-                return false;
-            }
-        }
-
-        // Common methods.
-        // Validate null columns.
-        boolean isNullConstraintValid = checkNullConstraint(manager, retrievedColumns);
-        if (!isNullConstraintValid) {
-            return false;
-        }
-
-        // Valid columns.
+            // Valid columns.
         /*Test test = new Test();
         test.fetchTableColumns(tableName);*/
 
 
-        // PRIMARY KEY CONSTRAINT
-        boolean isPrimaryKeyConstraintValid = checkPrimaryKeyConstraint(manager, retrievedColumns);
-        if (!isPrimaryKeyConstraintValid) {
+            // PRIMARY KEY CONSTRAINT
+            boolean isPrimaryKeyConstraintValid = checkPrimaryKeyConstraint(manager, retrievedColumns);
+            if (!isPrimaryKeyConstraintValid) {
+                return false;
+            }
+        }
+        catch (InternalException e) {
+            Utils.printMessage(e.getMessage());
             return false;
         }
-
         return true;
     }
 
@@ -149,7 +159,7 @@ public class InsertQuery implements IQuery {
         return true;
     }
 
-    private boolean checkNullConstraint(StorageManager manager, List<String> retrievedColumnNames) {
+    private boolean checkNullConstraint(StorageManager manager, List<String> retrievedColumnNames) throws InternalException {
         HashMap<String, Integer> columnsList = new HashMap<>();
 
         if (columns != null) {
@@ -170,7 +180,7 @@ public class InsertQuery implements IQuery {
         return true;
     }
 
-    private boolean checkPrimaryKeyConstraint(StorageManager manager, List<String> retrievedColumnNames) {
+    private boolean checkPrimaryKeyConstraint(StorageManager manager, List<String> retrievedColumnNames) throws InternalException {
         String primaryKeyColumnName = manager.getTablePrimaryKey(tableName, databaseName);
         List<String> columnList = (columns != null) ? columns : retrievedColumnNames;
 
@@ -352,7 +362,7 @@ public class InsertQuery implements IQuery {
     }
 
 
-    private int findRowID (StorageManager manager, List<String> retrievedList) {
+    private int findRowID (StorageManager manager, List<String> retrievedList) throws InternalException {
         int rowCount = manager.getTableRecordCount(this.databaseName, tableName);
         String primaryKeyColumnName = manager.getTablePrimaryKey(tableName, databaseName);
         if (primaryKeyColumnName.length() > 0) {

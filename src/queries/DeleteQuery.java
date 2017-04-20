@@ -5,6 +5,7 @@ import Model.IQuery;
 import Model.Result;
 import common.Utils;
 import datatypes.base.DT;
+import errors.InternalException;
 import storage.StorageManager;
 
 import java.util.ArrayList;
@@ -33,62 +34,70 @@ public class DeleteQuery implements IQuery {
     @Override
     public Result ExecuteQuery() {
 
-        // Delete the record.
-        int rowCount = 0;
-        StorageManager manager = new StorageManager();
-        if (condition == null) {
-            rowCount = manager.deleteRecord(databaseName, tableName, (new ArrayList<>()), (new ArrayList<>()), (new ArrayList<>()), false);
+        try {
+            // Delete the record.
+            int rowCount = 0;
+            StorageManager manager = new StorageManager();
+            if (condition == null) {
+                rowCount = manager.deleteRecord(databaseName, tableName, (new ArrayList<>()), (new ArrayList<>()), (new ArrayList<>()), false);
+            } else {
+                rowCount = 1;
+                List<String> retrievedColumns = manager.fetchAllTableColumns(this.databaseName, tableName);
+                int idx = retrievedColumns.indexOf(condition.column);
+                List<Byte> columnIndexList = new ArrayList<>();
+                columnIndexList.add((byte) idx);
+
+                DT dataType = DT.CreateDT(this.condition.value);
+                List<Object> valueList = new ArrayList<>();
+                valueList.add(dataType);
+
+                List<Short> conditionList = new ArrayList<>();
+                conditionList.add(Utils.ConvertFromOperator(condition.operator));
+
+                rowCount = manager.deleteRecord(databaseName, tableName, (columnIndexList), (valueList), (conditionList), false);
+            }
+
+            Result result = new Result(rowCount, this.isInternal);
+            return result;
+        } catch (InternalException e) {
+            Utils.printMessage(e.getMessage());
         }
-        else {
-            rowCount = 1;
-            List<String> retrievedColumns = manager.fetchAllTableColumns(this.databaseName, tableName);
-            int idx = retrievedColumns.indexOf(condition.column);
-            List<Byte> columnIndexList = new ArrayList<>();
-            columnIndexList.add((byte)idx);
-
-            DT dataType = DT.CreateDT(this.condition.value);
-            List<Object> valueList = new ArrayList<>();
-            valueList.add(dataType);
-
-            List<Short> conditionList = new ArrayList<>();
-            conditionList.add(Utils.ConvertFromOperator(condition.operator));
-
-            rowCount = manager.deleteRecord(databaseName, tableName, (columnIndexList), (valueList), (conditionList), false);
-        }
-
-        Result result = new Result(rowCount, this.isInternal);
-        return result;
+        return null;
     }
 
     @Override
     public boolean ValidateQuery() {
-        // Check if the table exists.
-        StorageManager manager = new StorageManager();
-        if (!manager.checkTableExists(this.databaseName, tableName)) {
-            Utils.printMissingTableError(tableName);
+        try {
+            // Check if the table exists.
+            StorageManager manager = new StorageManager();
+            if (!manager.checkTableExists(this.databaseName, tableName)) {
+                Utils.printMissingTableError(tableName);
+                return false;
+            }
+
+            // Validate the columns.
+            if (this.condition == null) {
+                // No condition.
+                return true;
+            } else {
+                // Condition is present.
+                // Validate the column in the condition.
+                List<String> retrievedColumns = manager.fetchAllTableColumns(this.databaseName, tableName);
+                HashMap<String, Integer> columnDataTypeMapping = manager.fetchAllTableColumnDataTypes(this.databaseName, tableName);
+
+                // Validate the existence of the column.
+                if (!checkConditionColumnValidity(retrievedColumns)) {
+                    return false;
+                }
+
+                // Validate column data type.
+                if (!Utils.checkConditionValueDataTypeValidity(columnDataTypeMapping, retrievedColumns, condition)) {
+                    return false;
+                }
+            }
+        } catch (InternalException e) {
+            Utils.printMessage(e.getMessage());
             return false;
-        }
-
-        // Validate the columns.
-        if (this.condition == null) {
-            // No condition.
-            return true;
-        }
-        else {
-            // Condition is present.
-            // Validate the column in the condition.
-            List<String> retrievedColumns = manager.fetchAllTableColumns(this.databaseName, tableName);
-            HashMap<String, Integer> columnDataTypeMapping = manager.fetchAllTableColumnDataTypes(this.databaseName, tableName);
-
-            // Validate the existence of the column.
-            if(!checkConditionColumnValidity(retrievedColumns)) {
-                return false;
-            }
-
-            // Validate column data type.
-            if(!Utils.checkConditionValueDataTypeValidity(columnDataTypeMapping, retrievedColumns, condition)) {
-                return false;
-            }
         }
         return true;
     }

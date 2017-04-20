@@ -923,7 +923,7 @@ public class StorageManager {
         return null;
     }
 
-    public int updateRecord(String databaseName, String tableName, List<Byte> searchColumnIndexList, List<Object> searchValueList, List<Short> searchConditionList, List<Byte> updateColumnIndexList, List<Object> updateColumnValueList, boolean isIncrement) throws Exception {
+    public int updateRecord(String databaseName, String tableName, List<Byte> searchColumnIndexList, List<Object> searchValueList, List<Short> searchConditionList, List<Byte> updateColumnIndexList, List<Object> updateColumnValueList, boolean isIncrement) throws InternalException {
         List<InternalCondition> conditions = new ArrayList<>();
         for (byte i = 0; i < searchColumnIndexList.size(); i++) {
             conditions.add(InternalCondition.CreateCondition(searchColumnIndexList.get(i), searchConditionList.get(i), searchValueList.get(i)));
@@ -931,7 +931,7 @@ public class StorageManager {
         return updateRecord(databaseName, tableName, conditions, updateColumnIndexList, updateColumnValueList, isIncrement);
     }
 
-    public int updateRecord(String databaseName, String tableName, List<InternalCondition> conditions, List<Byte> updateColumnIndexList, List<Object> updateColumnValueList, boolean isIncrement) throws Exception {
+    public int updateRecord(String databaseName, String tableName, List<InternalCondition> conditions, List<Byte> updateColumnIndexList, List<Object> updateColumnValueList, boolean isIncrement) throws InternalException {
         int updateRecordCount = 0;
         try {
             if (conditions == null || updateColumnIndexList == null
@@ -1372,7 +1372,7 @@ public class StorageManager {
         return recordCount;
     }
 
-    public boolean checkIfValueForPrimaryKeyExists(String databaseName, String tableName, int value) throws Exception {
+    public boolean checkIfValueForPrimaryKeyExists(String databaseName, String tableName, int value) throws InternalException {
         StorageManager manager = new StorageManager();
         InternalCondition condition = InternalCondition.CreateCondition(0, InternalCondition.EQUALS, new DT_Int(value));
 

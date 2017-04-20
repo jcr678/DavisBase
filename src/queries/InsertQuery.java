@@ -29,8 +29,8 @@ public class InsertQuery implements IQuery {
     public Result ExecuteQuery() {
         // All checks are done. Now insert the values.
         StorageManager manager = new StorageManager();
-        List<String> retrievedColumns = manager.fetchAllTableColumns(tableName);
-        HashMap<String, Integer> columnDataTypeMapping = manager.fetchAllTableColumndataTypes(tableName);
+        List<String> retrievedColumns = manager.fetchAllTableColumns(this.databaseName, tableName);
+        HashMap<String, Integer> columnDataTypeMapping = manager.fetchAllTableColumnDataTypes(this.databaseName, tableName);
 
         DataRecord record  = new DataRecord();
         generateRecords(record.getColumnValueList(), columnDataTypeMapping, retrievedColumns);
@@ -61,8 +61,8 @@ public class InsertQuery implements IQuery {
         }
 
         // Table columns.
-        List<String> retrievedColumns = manager.fetchAllTableColumns(tableName);
-        HashMap<String, Integer> columnDataTypeMapping = manager.fetchAllTableColumndataTypes(tableName);
+        List<String> retrievedColumns = manager.fetchAllTableColumns(this.databaseName, tableName);
+        HashMap<String, Integer> columnDataTypeMapping = manager.fetchAllTableColumnDataTypes(this.databaseName, tableName);
 
         if (columns == null) {
             // No columns are provided.
@@ -163,7 +163,7 @@ public class InsertQuery implements IQuery {
             }
         }
 
-        if (!manager.checkNullConstraint(tableName, columnsList)) {
+        if (!manager.checkNullConstraint(this.databaseName, tableName, columnsList)) {
             return false;
         }
 
@@ -353,7 +353,7 @@ public class InsertQuery implements IQuery {
 
 
     private int findRowID (StorageManager manager, List<String> retrievedList) {
-        int rowCount = manager.getTableRecordCount(tableName);
+        int rowCount = manager.getTableRecordCount(this.databaseName, tableName);
         String primaryKeyColumnName = manager.getTablePrimaryKey(tableName, databaseName);
         if (primaryKeyColumnName.length() > 0) {
             // The primary key is present.

@@ -56,12 +56,12 @@ public class SelectQuery implements IQuery {
             return false;
         }
 
-        HashMap<String, Integer> columnDataTypeMapping = manager.fetchAllTableColumndataTypes(tableName);
+        HashMap<String, Integer> columnDataTypeMapping = manager.fetchAllTableColumnDataTypes(this.databaseName, tableName);
 
         // Validate column data type.
         if (conditions != null) {
             // Retrieve the columns of the tables.
-            List<String> retrievedColumns = manager.fetchAllTableColumns(tableName);
+            List<String> retrievedColumns = manager.fetchAllTableColumns(this.databaseName, tableName);
 
             // Check for data types.
             for (Condition condition : conditions) {

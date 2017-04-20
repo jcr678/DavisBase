@@ -38,8 +38,8 @@ public class UpdateQuery implements IQuery {
 
         StorageManager manager = new StorageManager();
 
-        HashMap<String, Integer> columnDataTypeMapping = manager.fetchAllTableColumndataTypes(tableName);
-        List<String> retrievedColumns = manager.fetchAllTableColumns(tableName);
+        HashMap<String, Integer> columnDataTypeMapping = manager.fetchAllTableColumnDataTypes(this.databaseName, tableName);
+        List<String> retrievedColumns = manager.fetchAllTableColumns(this.databaseName, tableName);
         List<Byte> searchColumnsIndexList = getSearchColumnsIndexList(retrievedColumns);
         List<Object> searchKeysValueList = getSearchKeysValueList(columnDataTypeMapping);
         List<Short> searchKeysConditionsList = getSearchKeysConditionsList(retrievedColumns);
@@ -56,8 +56,8 @@ public class UpdateQuery implements IQuery {
     @Override
     public boolean ValidateQuery() {
         StorageManager manager = new StorageManager();
-        List<String> retrievedColumns = manager.fetchAllTableColumns(tableName);
-        HashMap<String, Integer> columnDataTypeMapping = manager.fetchAllTableColumndataTypes(tableName);
+        List<String> retrievedColumns = manager.fetchAllTableColumns(this.databaseName, tableName);
+        HashMap<String, Integer> columnDataTypeMapping = manager.fetchAllTableColumnDataTypes(this.databaseName, tableName);
 
         if (!manager.checkTableExists(this.databaseName, tableName)) {
             Utils.printMissingTableError(tableName);

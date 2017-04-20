@@ -41,7 +41,7 @@ public class DeleteQuery implements IQuery {
         }
         else {
             rowCount = 1;
-            List<String> retrievedColumns = manager.fetchAllTableColumns(tableName);
+            List<String> retrievedColumns = manager.fetchAllTableColumns(this.databaseName, tableName);
             int idx = retrievedColumns.indexOf(condition.column);
             List<Byte> columnIndexList = new ArrayList<>();
             columnIndexList.add((byte)idx);
@@ -77,8 +77,8 @@ public class DeleteQuery implements IQuery {
         else {
             // Condition is present.
             // Validate the column in the condition.
-            List<String> retrievedColumns = manager.fetchAllTableColumns(tableName);
-            HashMap<String, Integer> columnDataTypeMapping = manager.fetchAllTableColumndataTypes(tableName);
+            List<String> retrievedColumns = manager.fetchAllTableColumns(this.databaseName, tableName);
+            HashMap<String, Integer> columnDataTypeMapping = manager.fetchAllTableColumnDataTypes(this.databaseName, tableName);
 
             // Validate the existence of the column.
             if(!checkConditionColumnValidity(retrievedColumns)) {

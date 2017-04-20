@@ -1225,14 +1225,21 @@ public class StorageManager {
     // ====================================================================================
     // Query processing methods
     // ====================================================================================
-    public List<String> fetchAllTableColumns(String tableName) {
+    public List<String> fetchAllTableColumns(String databaseName, String tableName) {
         List<String> columnNames = new ArrayList<>();
+        List<InternalCondition> conditions = new ArrayList<>();
         InternalCondition condition = new InternalCondition();
+        condition.setIndex(CatalogDB.COLUMNS_TABLE_SCHEMA_DATABASE_NAME);
+        condition.setValue(new DT_Text(databaseName));
+        condition.setConditionType(InternalCondition.EQUALS);
+        conditions.add(condition);
+        condition = new InternalCondition();
         condition.setIndex(CatalogDB.COLUMNS_TABLE_SCHEMA_TABLE_NAME);
         condition.setValue(new DT_Text(tableName));
         condition.setConditionType(InternalCondition.EQUALS);
+        conditions.add(condition);
 
-        List<DataRecord> records = this.findRecord(Constants.DEFAULT_CATALOG_DATABASENAME, Constants.SYSTEM_COLUMNS_TABLENAME, condition, false);
+        List<DataRecord> records = this.findRecord(Constants.DEFAULT_CATALOG_DATABASENAME, Constants.SYSTEM_COLUMNS_TABLENAME, conditions, false);
 
         for (int i = 0; i < records.size(); i++) {
             DataRecord record = records.get(i);
@@ -1243,14 +1250,21 @@ public class StorageManager {
         return columnNames;
     }
 
-    public boolean checkNullConstraint(String tableName, HashMap<String, Integer> columnMap) {
+    public boolean checkNullConstraint(String databaseName, String tableName, HashMap<String, Integer> columnMap) {
 
+        List<InternalCondition> conditions = new ArrayList<>();
         InternalCondition condition = new InternalCondition();
+        condition.setIndex(CatalogDB.COLUMNS_TABLE_SCHEMA_DATABASE_NAME);
+        condition.setValue(new DT_Text(databaseName));
+        condition.setConditionType(InternalCondition.EQUALS);
+        conditions.add(condition);
+        condition = new InternalCondition();
         condition.setIndex(CatalogDB.COLUMNS_TABLE_SCHEMA_TABLE_NAME);
         condition.setValue(new DT_Text(tableName));
         condition.setConditionType(InternalCondition.EQUALS);
+        conditions.add(condition);
 
-        List<DataRecord> records = this.findRecord(Constants.DEFAULT_CATALOG_DATABASENAME, Constants.SYSTEM_COLUMNS_TABLENAME, condition, false);
+        List<DataRecord> records = this.findRecord(Constants.DEFAULT_CATALOG_DATABASENAME, Constants.SYSTEM_COLUMNS_TABLENAME, conditions, false);
 
         for (int i = 0; i < records.size(); i++) {
             DataRecord record = records.get(i);
@@ -1273,13 +1287,20 @@ public class StorageManager {
         return true;
     }
 
-    public HashMap<String, Integer> fetchAllTableColumndataTypes(String tableName) {
+    public HashMap<String, Integer> fetchAllTableColumnDataTypes(String databaseName, String tableName) {
+        List<InternalCondition> conditions = new ArrayList<>();
         InternalCondition condition = new InternalCondition();
+        condition.setIndex(CatalogDB.COLUMNS_TABLE_SCHEMA_DATABASE_NAME);
+        condition.setValue(new DT_Text(databaseName));
+        condition.setConditionType(InternalCondition.EQUALS);
+        conditions.add(condition);
+        condition = new InternalCondition();
         condition.setIndex(CatalogDB.COLUMNS_TABLE_SCHEMA_TABLE_NAME);
         condition.setValue(new DT_Text(tableName));
         condition.setConditionType(InternalCondition.EQUALS);
+        conditions.add(condition);
 
-        List<DataRecord> records = this.findRecord(Constants.DEFAULT_CATALOG_DATABASENAME, Constants.SYSTEM_COLUMNS_TABLENAME, condition, false);
+        List<DataRecord> records = this.findRecord(Constants.DEFAULT_CATALOG_DATABASENAME, Constants.SYSTEM_COLUMNS_TABLENAME, conditions, false);
         HashMap<String, Integer> columDataTypeMapping = new HashMap<>();
 
         for (int i = 0; i < records.size(); i++) {
@@ -1295,16 +1316,17 @@ public class StorageManager {
         return columDataTypeMapping;
     }
 
-    public String getTablePrimaryKey(String tableName, String databaseName) {
+    public String getTablePrimaryKey(String databaseName, String tableName) {
         List<InternalCondition> conditions = new ArrayList<>();
 
         DT_Text tableNameObj = new DT_Text(tableName);
         DT_Text primaryKeyObj = new DT_Text(CatalogDB.PRIMARY_KEY_IDENTIFIER);
         DT_Text databaseObj = new DT_Text(databaseName);
 
+
+        conditions.add(InternalCondition.CreateCondition(CatalogDB.COLUMNS_TABLE_SCHEMA_DATABASE_NAME, InternalCondition.EQUALS, databaseObj));
         conditions.add(InternalCondition.CreateCondition(CatalogDB.COLUMNS_TABLE_SCHEMA_TABLE_NAME, InternalCondition.EQUALS, tableNameObj));
         conditions.add(InternalCondition.CreateCondition(CatalogDB.COLUMNS_TABLE_SCHEMA_COLUMN_KEY, InternalCondition.EQUALS, primaryKeyObj));
-        conditions.add(InternalCondition.CreateCondition(CatalogDB.COLUMNS_TABLE_SCHEMA_DATABASE_NAME, InternalCondition.EQUALS, databaseObj));
 
         List<DataRecord> records = this.findRecord(Constants.DEFAULT_CATALOG_DATABASENAME, Constants.SYSTEM_COLUMNS_TABLENAME, conditions, false);
         String columnName = "";
@@ -1317,10 +1339,20 @@ public class StorageManager {
         return columnName;
     }
 
-    public int getTableRecordCount(String tableName) {
-        InternalCondition condition = InternalCondition.CreateCondition(CatalogDB.TABLES_TABLE_SCHEMA_TABLE_NAME, InternalCondition.EQUALS, new DT_Text(tableName));
+    public int getTableRecordCount(String databaseName, String tableName) {
+        List<InternalCondition> conditions = new ArrayList<>();
+        InternalCondition condition = new InternalCondition();
+        condition.setIndex(CatalogDB.TABLES_TABLE_SCHEMA_DATABASE_NAME);
+        condition.setValue(new DT_Text(databaseName));
+        condition.setConditionType(InternalCondition.EQUALS);
+        conditions.add(condition);
+        condition = new InternalCondition();
+        condition.setIndex(CatalogDB.TABLES_TABLE_SCHEMA_TABLE_NAME);
+        condition.setValue(new DT_Text(tableName));
+        condition.setConditionType(InternalCondition.EQUALS);
+        conditions.add(condition);
 
-        List<DataRecord> records = this.findRecord(Constants.DEFAULT_CATALOG_DATABASENAME, Constants.SYSTEM_TABLES_TABLENAME, condition, true);
+        List<DataRecord> records = this.findRecord(Constants.DEFAULT_CATALOG_DATABASENAME, Constants.SYSTEM_TABLES_TABLENAME, conditions, true);
         int recordCount = 0;
 
         for (DataRecord record : records) {

@@ -5,14 +5,18 @@ package errors;
  */
 public class InternalException extends Exception {
 
-    public static String BASE_ERROR_STRING = "ERROR(100): ";
-//    public static String DATATYPE_MISMATCH_EXCEPTION = BASE_ERROR_STRING + "Unknown database '%1'";
-//    public static String  = BASE_ERROR_STRING + "Can't drop database '%1'; database doesn't exist";
-//    public static String DATABASE_EXISTS_EXCEPTION = BASE_ERROR_STRING + "Can't create database '%1'; database exists";
-//    public static String GENERIC_EXCEPTION = BASE_ERROR_STRING + " Can't perform database operation. %1";
+    public static String BASE_ERROR_STRING = "ERROR(200): ";
+    public static String INVALID_DATATYPE_EXCEPTION = BASE_ERROR_STRING + "Invalid datatype given.";
+    public static String DATATYPE_MISMATCH_EXCEPTION = BASE_ERROR_STRING + "Invalid datatype given. Expected %s";
+    public static String INVALID_CONDITION_EXCEPTION = BASE_ERROR_STRING + "Invalid condition given. Currently only %s supported";
+    public static String GENERIC_EXCEPTION = BASE_ERROR_STRING + "An error was encountered while performing the given operation.";
 
-    public InternalException(String message, String databaseName) {
-        super(message.replace("%1", databaseName));
+    public InternalException(String message, String parameter) {
+        super(message.replace("%1", parameter));
+    }
+
+    public InternalException(String message) {
+        super(message);
     }
 
 }

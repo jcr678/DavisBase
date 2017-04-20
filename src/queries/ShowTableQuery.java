@@ -30,8 +30,12 @@ public class ShowTableQuery implements IQuery {
         conditionList.add(condition);
 
         IQuery query = new SelectQuery(Constants.DEFAULT_CATALOG_DATABASENAME, Constants.SYSTEM_TABLES_TABLENAME, columns, conditionList, false);
-        ResultSet resultSet = (ResultSet) query.ExecuteQuery();
-        return resultSet;
+        if (query.ValidateQuery()) {
+            ResultSet resultSet = (ResultSet) query.ExecuteQuery();
+            return resultSet;
+        }
+
+        return null;
     }
 
     @Override

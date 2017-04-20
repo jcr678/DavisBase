@@ -1332,8 +1332,12 @@ public class StorageManager {
 
     public String getTablePrimaryKey(String tableName) {
         List<InternalCondition> conditions = new ArrayList<>();
-        conditions.add(InternalCondition.CreateCondition(CatalogDB.COLUMNS_TABLE_SCHEMA_COLUMN_NAME, InternalCondition.EQUALS, new DT_Text(tableName)));
-        conditions.add(InternalCondition.CreateCondition(CatalogDB.COLUMNS_TABLE_SCHEMA_COLUMN_KEY, InternalCondition.EQUALS, new DT_Text(CatalogDB.PRIMARY_KEY_IDENTIFIER)));
+
+        DT_Text tableNameObj = new DT_Text(tableName);
+        DT_Text primaryKeyObj = new DT_Text(CatalogDB.PRIMARY_KEY_IDENTIFIER);
+
+        conditions.add(InternalCondition.CreateCondition(CatalogDB.COLUMNS_TABLE_SCHEMA_COLUMN_NAME, InternalCondition.EQUALS, tableNameObj));
+        conditions.add(InternalCondition.CreateCondition(CatalogDB.COLUMNS_TABLE_SCHEMA_COLUMN_KEY, InternalCondition.EQUALS, primaryKeyObj));
 
         List<DataRecord> records = this.findRecord(Utils.getSystemDatabasePath(), Constants.SYSTEM_COLUMNS_TABLENAME, conditions, false);
         String columnName = "";

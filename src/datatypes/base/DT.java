@@ -33,11 +33,9 @@ public abstract class DT<T> {
             case DOUBLE:
                 return new DT_Double(Double.valueOf(value.value));
             case DATETIME:
-                // TODO : Create DateTime
-                return new DT_DateTime();
+                return new DT_DateTime(Utils.getDateEpoc(value.value, false));
             case DATE:
-                // TODO : Create Date
-                return new DT_Date();
+                return new DT_Date(Utils.getDateEpoc(value.value, true));
             case TEXT:
                 return new DT_Text(value.value);
         }

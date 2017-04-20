@@ -26,6 +26,7 @@ public class DatabaseHelper {
     public static final String DESC_TABLE_COMMAND = "DESC";
     public static final String DESCRIBE_TABLE_COMMAND = "DESCRIBE";
     private static final String NO_DATABASE_SELECTED_MESSAGE = "No database selected";
+    public static final String USE_HELP_MESSAGE = "Please use 'HELP' to see a list of commands";
 
     public static String CurrentDatabaseName = "";
     public static String prompt = "davisql> ";
@@ -275,14 +276,23 @@ public class DatabaseHelper {
     }
 
     public static boolean IsDatabaseExists(String databaseName) {
-        /*TODO : Replace using constants file*/
+
+        if (databaseName == null || databaseName.length() == 0) {
+            DatabaseHelper.UnrecognisedCommand("", USE_HELP_MESSAGE);
+            return false;
+        }
+
         String DEFAULT_DATA_DIRNAME = "data";
         File dirFile = new File(DEFAULT_DATA_DIRNAME+ "/" + databaseName);
         return dirFile.exists();
     }
 
     public static boolean isTableExists(String databaseName, String tableName) {
-        /*TODO : Replace using constants file*/
+        if (tableName == null || databaseName == null || tableName.length() == 0 || databaseName.length() == 0) {
+            DatabaseHelper.UnrecognisedCommand("", USE_HELP_MESSAGE);
+            return false;
+        }
+
         String DEFAULT_DATA_DIRNAME = "data";
         String DEFAULT_TABLE_EXTENSION = "tbl";
 

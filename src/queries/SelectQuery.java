@@ -52,7 +52,7 @@ public class SelectQuery implements IQuery {
 
         // Check if the table exists.
         if (!manager.checkTableExists(this.databaseName, tableName)) {
-            Utils.printMissingTableError(tableName);
+            Utils.printMissingTableError(this.databaseName, tableName);
             return false;
         }
 

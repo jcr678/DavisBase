@@ -56,7 +56,7 @@ public class InsertQuery implements IQuery {
         // validate if the table and the columns of the table.
         StorageManager manager = new StorageManager();
         if (!manager.checkTableExists(this.databaseName, tableName)) {
-            Utils.printMissingTableError(tableName);
+            Utils.printMissingTableError(this.databaseName, tableName);
             return false;
         }
 

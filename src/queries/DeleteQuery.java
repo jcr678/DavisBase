@@ -65,7 +65,7 @@ public class DeleteQuery implements IQuery {
         // Check if the table exists.
         StorageManager manager = new StorageManager();
         if (!manager.checkTableExists(this.databaseName, tableName)) {
-            Utils.printMissingTableError(tableName);
+            Utils.printMissingTableError(this.databaseName, tableName);
             return false;
         }
 

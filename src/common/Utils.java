@@ -33,12 +33,12 @@ public class Utils {
         printError("The database '" + databaseName + "' does not exist");
     }
 
-    public static void printMissingTableError(String tableName) {
-        printError("Table '" + tableName + "' doesn't exist.");
+    public static void printMissingTableError(String database, String tableName) {
+        printError("Table '" + database + "." + tableName + "' doesn't exist.");
     }
 
-    public static void printDuplicateTableError(String tableName) {
-        printError("Table '" + tableName + "' already exist.");
+    public static void printDuplicateTableError(String database, String tableName) {
+        printError("Table '" + database + "." + tableName + "' already exist.");
     }
 
     public static void printMessage(String str) {

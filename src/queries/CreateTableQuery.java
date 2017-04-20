@@ -46,7 +46,7 @@ public class CreateTableQuery implements IQuery {
 
         if (storageManager.checkTableExists(this.databaseName, tableName)) {
             // Table already exists.
-            Utils.printDuplicateTableError(tableName);
+            Utils.printDuplicateTableError(this.databaseName, tableName);
             return false;
         }
         else {

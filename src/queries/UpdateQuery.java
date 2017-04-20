@@ -60,7 +60,7 @@ public class UpdateQuery implements IQuery {
         HashMap<String, Integer> columnDataTypeMapping = manager.fetchAllTableColumnDataTypes(this.databaseName, tableName);
 
         if (!manager.checkTableExists(this.databaseName, tableName)) {
-            Utils.printMissingTableError(tableName);
+            Utils.printMissingTableError(this.databaseName, tableName);
             return false;
         }
 

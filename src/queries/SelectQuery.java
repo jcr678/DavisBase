@@ -149,7 +149,6 @@ public class SelectQuery implements IQuery {
         }
 
         HashMap<Integer, String> idToColumnMap = maps.getValue();
-        Arrays.sort(columnIds);
         for(DataRecord internalRecord : internalRecords){
             Object[] dataTypes = new DT[internalRecord.getColumnValueList().size()];
             k=0;

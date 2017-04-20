@@ -21,26 +21,8 @@ import java.util.List;
  */
 public class Utils {
 
-    /** return the DakleBase VERSION */
-    public static String getVersion() {
-        return Constants.VERSION;
-    }
-
-    public static String getCopyright() {
-        return Constants.COPYRIGHT;
-    }
-
-    public static void displayVersion() {
-        System.out.println("DakleBaseLite Version " + getVersion());
-        System.out.println(getCopyright());
-    }
-
-    public static String getSystemDatabasePath() {
-        return Constants.DEFAULT_DATA_DIRNAME + "/" + Constants.DEFAULT_CATALOG_DATABASENAME;
-    }
-
-    public static String getUserDatabasePath(String database) {
-        return Constants.DEFAULT_DATA_DIRNAME + "/" + database;
+    public static String getDatabasePath(String databaseName) {
+        return Constants.DEFAULT_DATA_DIRNAME + "/" + databaseName;
     }
 
     public static void printError(String errorMessage) {
@@ -183,19 +165,6 @@ public class Utils {
         }
 
         return null;
-    }
-
-    /**
-     * @param s The String to be repeated
-     * @param num The number of time to repeat String s.
-     * @return String A String object, which is the String s appended to itself num times.
-     */
-    public static String line(String s, int num) {
-        String a = "";
-        for(int i=0;i<num;i++) {
-            a += s;
-        }
-        return a;
     }
 
     public static boolean checkConditionValueDataTypeValidity(HashMap<String, Integer> columnDataTypeMapping, List<String> columnsList, Condition condition) {

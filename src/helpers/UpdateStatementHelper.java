@@ -2,13 +2,12 @@ package helpers;
 
 import common.CatalogDB;
 import common.Constants;
-import common.Utils;
 import datatypes.DT_Int;
 import datatypes.DT_Text;
 import storage.StorageManager;
+import storage.model.DataRecord;
 import storage.model.InternalColumn;
 import storage.model.InternalCondition;
-import storage.model.DataRecord;
 import storage.model.Page;
 
 import java.util.ArrayList;
@@ -33,10 +32,11 @@ public class UpdateStatementHelper {
         StorageManager manager = new StorageManager();
         List<InternalCondition> conditions = new ArrayList<>();
         conditions.add(InternalCondition.CreateCondition(CatalogDB.TABLES_TABLE_SCHEMA_TABLE_NAME, InternalCondition.EQUALS, new DT_Text(tableName)));
-        List<DataRecord> result = manager.findRecord(Utils.getSystemDatabasePath(), Constants.SYSTEM_TABLES_TABLENAME, conditions, true);
+        conditions.add(InternalCondition.CreateCondition(CatalogDB.TABLES_TABLE_SCHEMA_DATABASE_NAME, InternalCondition.EQUALS, new DT_Text(databaseName)));
+        List<DataRecord> result = manager.findRecord(Constants.DEFAULT_CATALOG_DATABASENAME, Constants.SYSTEM_TABLES_TABLENAME, conditions, true);
         if(result != null && result.size() == 0) {
             int returnValue = 1;
-            Page<DataRecord> page = manager.getLastRecordAndPage(Utils.getSystemDatabasePath(), Constants.SYSTEM_TABLES_TABLENAME);
+            Page<DataRecord> page = manager.getLastRecordAndPage(Constants.DEFAULT_CATALOG_DATABASENAME, Constants.SYSTEM_TABLES_TABLENAME);
             //Check if record exists
             DataRecord lastRecord = null;
             if (page.getPageRecords().size() > 0) {
@@ -64,14 +64,14 @@ public class UpdateStatementHelper {
                 record.getColumnValueList().add(new DT_Int(returnValue + columnCount));
             }
             record.populateSize();
-            if(manager.writeRecord(Utils.getSystemDatabasePath(), Constants.SYSTEM_TABLES_TABLENAME, record)) {
+            if(manager.writeRecord(Constants.DEFAULT_CATALOG_DATABASENAME, Constants.SYSTEM_TABLES_TABLENAME, record)) {
                 conditions.clear();
                 conditions.add(InternalCondition.CreateCondition(CatalogDB.TABLES_TABLE_SCHEMA_TABLE_NAME, InternalCondition.EQUALS, new DT_Text(Constants.SYSTEM_TABLES_TABLENAME)));
                 List<Byte> updateColumnsIndexList = new ArrayList<>();
                 updateColumnsIndexList.add(CatalogDB.TABLES_TABLE_SCHEMA_RECORD_COUNT);
                 List<Object> updateValueList = new ArrayList<>();
                 updateValueList.add(new DT_Int(1));
-                manager.updateRecord(Utils.getSystemDatabasePath(), Constants.SYSTEM_TABLES_TABLENAME, conditions, updateColumnsIndexList, updateValueList, true);
+                manager.updateRecord(Constants.DEFAULT_CATALOG_DATABASENAME, Constants.SYSTEM_TABLES_TABLENAME, conditions, updateColumnsIndexList, updateValueList, true);
             }
             return returnValue;
         }
@@ -109,38 +109,40 @@ public class UpdateStatementHelper {
             record.getColumnValueList().add(new DT_Int(i + 1));
             record.getColumnValueList().add(new DT_Text(columns.get(i).getStringIsNullable()));
             record.populateSize();
-            if (!manager.writeRecord(Utils.getSystemDatabasePath(), Constants.SYSTEM_COLUMNS_TABLENAME, record)) {
+            if (!manager.writeRecord(Constants.DEFAULT_CATALOG_DATABASENAME, Constants.SYSTEM_COLUMNS_TABLENAME, record)) {
                 break;
             }
         }
         if(i > 0) {
             List<InternalCondition> conditions = new ArrayList<>();
+            conditions.add(InternalCondition.CreateCondition(CatalogDB.TABLES_TABLE_SCHEMA_DATABASE_NAME, InternalCondition.EQUALS, new DT_Text(databaseName)));
             conditions.add(InternalCondition.CreateCondition(CatalogDB.TABLES_TABLE_SCHEMA_TABLE_NAME, InternalCondition.EQUALS, new DT_Text(Constants.SYSTEM_COLUMNS_TABLENAME)));
             List<Byte> updateColumnsIndexList = new ArrayList<>();
             updateColumnsIndexList.add(CatalogDB.TABLES_TABLE_SCHEMA_RECORD_COUNT);
             List<Object> updateValueList = new ArrayList<>();
             updateValueList.add(new DT_Int(i));
-            manager.updateRecord(Utils.getSystemDatabasePath(), Constants.SYSTEM_TABLES_TABLENAME, conditions, updateColumnsIndexList, updateValueList, true);
+            manager.updateRecord(Constants.DEFAULT_CATALOG_DATABASENAME, Constants.SYSTEM_TABLES_TABLENAME, conditions, updateColumnsIndexList, updateValueList, true);
         }
         return true;
     }
 
-    public static int incrementRowCount(String tableName) {
-        return updateRowCount(tableName, 1);
+    public static int incrementRowCount(String databaseName, String tableName) {
+        return updateRowCount(databaseName, tableName, 1);
     }
 
-    public static int decrementRowCount(String tableName) {
-        return updateRowCount(tableName, -1);
+    public static int decrementRowCount(String databaseName, String tableName) {
+        return updateRowCount(databaseName, tableName, -1);
     }
 
-    private static int updateRowCount(String tableName, int rowCount) {
+    private static int updateRowCount(String databaseName, String tableName, int rowCount) {
         StorageManager manager = new StorageManager();
         List<InternalCondition> conditions = new ArrayList<>();
+        conditions.add(InternalCondition.CreateCondition(CatalogDB.TABLES_TABLE_SCHEMA_DATABASE_NAME, InternalCondition.EQUALS, new DT_Text()));
         conditions.add(InternalCondition.CreateCondition(CatalogDB.TABLES_TABLE_SCHEMA_TABLE_NAME, InternalCondition.EQUALS, new DT_Text(tableName)));
         List<Byte> updateColumnsIndexList = new ArrayList<>();
         updateColumnsIndexList.add(CatalogDB.TABLES_TABLE_SCHEMA_RECORD_COUNT);
         List<Object> updateValueList = new ArrayList<>();
         updateValueList.add(new DT_Int(rowCount));
-        return manager.updateRecord(Utils.getSystemDatabasePath(), Constants.SYSTEM_TABLES_TABLENAME, conditions, updateColumnsIndexList, updateValueList, true);
+        return manager.updateRecord(Constants.DEFAULT_CATALOG_DATABASENAME, Constants.SYSTEM_TABLES_TABLENAME, conditions, updateColumnsIndexList, updateValueList, true);
     }
 }

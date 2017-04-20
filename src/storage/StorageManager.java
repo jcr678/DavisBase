@@ -25,11 +25,9 @@ import java.util.List;
  */
 public class StorageManager {
 
-    private String DEFAULT_DATA_PATH = Constants.DEFAULT_DATA_DIRNAME;
-
     public boolean createDatabase(String databaseName) {
         try {
-            File dirFile = new File(DEFAULT_DATA_PATH + "/" + databaseName);
+            File dirFile = new File(Utils.getDatabasePath(databaseName));
             if (dirFile.exists()) {
                 return false;
             }
@@ -42,7 +40,7 @@ public class StorageManager {
 
     public boolean dropDatabase(String databaseName) {
         try {
-            File dirFile = new File(DEFAULT_DATA_PATH + "/" + databaseName);
+            File dirFile = new File(Utils.getDatabasePath(databaseName));
             if (!dirFile.exists()) {
                 System.out.println("Database " + databaseName + " doesn't!");
                 return false;
@@ -55,17 +53,17 @@ public class StorageManager {
     }
 
     public boolean databaseExists(String databaseName) {
-        File databaseDir = new File(databaseName);
+        File databaseDir = new File(Utils.getDatabasePath(databaseName));
         return  databaseDir.exists();
     }
 
     public boolean createTable(String databaseName, String tableName) {
         try {
-            File dirFile = new File(databaseName);
+            File dirFile = new File(Utils.getDatabasePath(databaseName));
             if (!dirFile.exists()) {
                 dirFile.mkdir();
             }
-            File file = new File(databaseName + "/" + tableName);
+            File file = new File(Utils.getDatabasePath(databaseName) + "/" + tableName);
             if (file.exists()) {
                 return false;
             }
@@ -93,15 +91,15 @@ public class StorageManager {
      */
     public boolean checkTableExists(String databaseName, String tableName) {
         boolean databaseExists = this.databaseExists(databaseName);
-        boolean fileExists = new File(databaseName + "/" + tableName + Constants.DEFAULT_FILE_EXTENSION).exists();
+        boolean fileExists = new File(Utils.getDatabasePath(databaseName) + "/" + tableName + Constants.DEFAULT_FILE_EXTENSION).exists();
 
         return (databaseExists && fileExists);
     }
 
     public boolean writeRecord(String databaseName, String tableName, DataRecord record) {
-        RandomAccessFile randomAccessFile = null;
+        RandomAccessFile randomAccessFile;
         try {
-            File file = new File(databaseName + "/" + tableName + Constants.DEFAULT_FILE_EXTENSION);
+            File file = new File(Utils.getDatabasePath(databaseName) + "/" + tableName + Constants.DEFAULT_FILE_EXTENSION);
             if (file.exists()) {
                 randomAccessFile = new RandomAccessFile(file, "rw");
                 Page page = getPage(randomAccessFile, record, 0);
@@ -142,7 +140,7 @@ public class StorageManager {
                             }
                             break;
                     }
-                    UpdateStatementHelper.incrementRowCount(tableName);
+                    UpdateStatementHelper.incrementRowCount(databaseName, tableName);
                     randomAccessFile.close();
                     return true;
                 }
@@ -719,18 +717,6 @@ public class StorageManager {
         return true;
     }
 
-    public List<DataRecord> findRecord(String databaseName, String tableName, List<Byte> columnIndexList, List<Object> valueList, List<Short> conditionList, boolean getOne) {
-        return findRecord(databaseName, tableName, columnIndexList, valueList, conditionList, null, getOne);
-    }
-
-    public List<DataRecord> findRecord(String databaseName, String tableName, List<Byte> columnIndexList, List<Object> valueList, List<Short> conditionList, List<Byte> selectionColumnIndexList, boolean getOne) {
-        List<InternalCondition> conditions = new ArrayList<>();
-        for (byte i = 0; i < columnIndexList.size(); i++) {
-            conditions.add(InternalCondition.CreateCondition(columnIndexList.get(i), conditionList.get(i), valueList.get(i)));
-        }
-        return findRecord(databaseName, tableName, conditions, selectionColumnIndexList, getOne);
-    }
-
     public List<DataRecord> findRecord(String databaseName, String tableName, InternalCondition condition, boolean getOne) {
         return findRecord(databaseName, tableName, condition,null, getOne);
     }
@@ -748,7 +734,7 @@ public class StorageManager {
 
     public List<DataRecord> findRecord(String databaseName, String tableName, List<InternalCondition> conditionList, List<Byte> selectionColumnIndexList, boolean getOne) {
         try {
-            File file = new File(databaseName + "/" + tableName + Constants.DEFAULT_FILE_EXTENSION);
+            File file = new File(Utils.getDatabasePath(databaseName) + "/" + tableName + Constants.DEFAULT_FILE_EXTENSION);
             if (file.exists()) {
                 RandomAccessFile randomAccessFile = new RandomAccessFile(file, "r");
                 if (conditionList != null) {
@@ -943,7 +929,7 @@ public class StorageManager {
                 return updateRecordCount;
             if (updateColumnIndexList.size() != updateColumnValueList.size())
                 return updateRecordCount;
-            File file = new File(databaseName + "/" + tableName + Constants.DEFAULT_FILE_EXTENSION);
+            File file = new File(Utils.getDatabasePath(databaseName) + "/" + tableName + Constants.DEFAULT_FILE_EXTENSION);
             if (file.exists()) {
                 List<DataRecord> records = findRecord(databaseName, tableName, conditions, false);
                 if (records != null) {
@@ -984,7 +970,7 @@ public class StorageManager {
 
     public Page<DataRecord> getLastRecordAndPage(String databaseName, String tableName) {
         try {
-            File file = new File(databaseName + "/" + tableName + Constants.DEFAULT_FILE_EXTENSION);
+            File file = new File(Utils.getDatabasePath(databaseName) + "/" + tableName + Constants.DEFAULT_FILE_EXTENSION);
             if (file.exists()) {
                 RandomAccessFile randomAccessFile = new RandomAccessFile(file, "r");
                 Page<DataRecord> page = getLastPage(file);
@@ -1039,14 +1025,10 @@ public class StorageManager {
         }
     }
 
-    public int deleteRecord(String databaseName, String tableName, List<Byte> columnIndexList, List<Object> valueList, List<Short> conditionList) {
-        return deleteRecord(databaseName, tableName, columnIndexList, valueList, conditionList, true);
-    }
-
     public int deleteRecord(String databaseName, String tableName, List<Byte> columnIndexList, List<Object> valueList, List<Short> conditionList, boolean deleteOne) {
         int deletedRecordCount = 0;
         try {
-            File file = new File(databaseName + "/" + tableName + Constants.DEFAULT_FILE_EXTENSION);
+            File file = new File(Utils.getDatabasePath(databaseName) + "/" + tableName + Constants.DEFAULT_FILE_EXTENSION);
             if (file.exists()) {
                 RandomAccessFile randomAccessFile = new RandomAccessFile(file, "rw");
                 if(columnIndexList != null) {
@@ -1114,7 +1096,7 @@ public class StorageManager {
                                     page.setStartingAddress((short) (page.getBaseAddress() + Page.PAGE_SIZE - 1));
                                 }
                                 this.writePageHeader(randomAccessFile, page);
-                                UpdateStatementHelper.decrementRowCount(tableName);
+                                UpdateStatementHelper.decrementRowCount(databaseName, tableName);
                                 deletedRecordCount++;
                                 if(deleteOne) {
                                     randomAccessFile.close();
@@ -1245,16 +1227,12 @@ public class StorageManager {
     // ====================================================================================
     public List<String> fetchAllTableColumns(String tableName) {
         List<String> columnNames = new ArrayList<>();
-        List<Byte> columnIndexList = new ArrayList<>();
-        columnIndexList.add(CatalogDB.COLUMNS_TABLE_SCHEMA_TABLE_NAME);
+        InternalCondition condition = new InternalCondition();
+        condition.setIndex(CatalogDB.COLUMNS_TABLE_SCHEMA_TABLE_NAME);
+        condition.setValue(new DT_Text(tableName));
+        condition.setConditionType(InternalCondition.EQUALS);
 
-        List<Object> valueList = new ArrayList<>();
-        valueList.add(new DT_Text(tableName));
-
-        List<Short> conditionList = new ArrayList<>();
-        conditionList.add(DT_Numeric.EQUALS);
-
-        List<DataRecord> records = this.findRecord(Utils.getSystemDatabasePath(), Constants.SYSTEM_COLUMNS_TABLENAME, columnIndexList, valueList, conditionList, false);
+        List<DataRecord> records = this.findRecord(Constants.DEFAULT_CATALOG_DATABASENAME, Constants.SYSTEM_COLUMNS_TABLENAME, condition, false);
 
         for (int i = 0; i < records.size(); i++) {
             DataRecord record = records.get(i);
@@ -1267,16 +1245,12 @@ public class StorageManager {
 
     public boolean checkNullConstraint(String tableName, HashMap<String, Integer> columnMap) {
 
-        List<Byte> columnIndexList = new ArrayList<>();
-        columnIndexList.add(CatalogDB.COLUMNS_TABLE_SCHEMA_TABLE_NAME);
+        InternalCondition condition = new InternalCondition();
+        condition.setIndex(CatalogDB.COLUMNS_TABLE_SCHEMA_TABLE_NAME);
+        condition.setValue(new DT_Text(tableName));
+        condition.setConditionType(InternalCondition.EQUALS);
 
-        List<Object> valueList = new ArrayList<>();
-        valueList.add(new DT_Text(tableName));
-
-        List<Short> conditionList = new ArrayList<>();
-        conditionList.add(DT_Numeric.EQUALS);
-
-        List<DataRecord> records = this.findRecord(Utils.getSystemDatabasePath(), Constants.SYSTEM_COLUMNS_TABLENAME, columnIndexList, valueList, conditionList, false);
+        List<DataRecord> records = this.findRecord(Constants.DEFAULT_CATALOG_DATABASENAME, Constants.SYSTEM_COLUMNS_TABLENAME, condition, false);
 
         for (int i = 0; i < records.size(); i++) {
             DataRecord record = records.get(i);
@@ -1300,16 +1274,12 @@ public class StorageManager {
     }
 
     public HashMap<String, Integer> fetchAllTableColumndataTypes(String tableName) {
-        List<Byte> columnIndexList = new ArrayList<>();
-        columnIndexList.add(CatalogDB.COLUMNS_TABLE_SCHEMA_TABLE_NAME);
+        InternalCondition condition = new InternalCondition();
+        condition.setIndex(CatalogDB.COLUMNS_TABLE_SCHEMA_TABLE_NAME);
+        condition.setValue(new DT_Text(tableName));
+        condition.setConditionType(InternalCondition.EQUALS);
 
-        List<Object> valueList = new ArrayList<>();
-        valueList.add(new DT_Text(tableName));
-
-        List<Short> conditionList = new ArrayList<>();
-        conditionList.add(DT_Numeric.EQUALS);
-
-        List<DataRecord> records = this.findRecord(Utils.getSystemDatabasePath(), Constants.SYSTEM_COLUMNS_TABLENAME, columnIndexList, valueList, conditionList, false);
+        List<DataRecord> records = this.findRecord(Constants.DEFAULT_CATALOG_DATABASENAME, Constants.SYSTEM_COLUMNS_TABLENAME, condition, false);
         HashMap<String, Integer> columDataTypeMapping = new HashMap<>();
 
         for (int i = 0; i < records.size(); i++) {
@@ -1319,12 +1289,7 @@ public class StorageManager {
 
             String columnName = ((DT) object).getStringValue();
             int columnDataType = Utils.stringToDataType(((DT) dataTypeObject).getStringValue());
-
-            //System.out.print(((DT) object).getValue());
-            //System.out.print("    |    ");
             columDataTypeMapping.put(columnName.toLowerCase(), columnDataType);
-
-            //System.out.print("\n");
         }
 
         return columDataTypeMapping;
@@ -1335,7 +1300,7 @@ public class StorageManager {
         conditions.add(InternalCondition.CreateCondition(CatalogDB.COLUMNS_TABLE_SCHEMA_COLUMN_NAME, InternalCondition.EQUALS, new DT_Text(tableName)));
         conditions.add(InternalCondition.CreateCondition(CatalogDB.COLUMNS_TABLE_SCHEMA_COLUMN_KEY, InternalCondition.EQUALS, new DT_Text(CatalogDB.PRIMARY_KEY_IDENTIFIER)));
 
-        List<DataRecord> records = this.findRecord(Utils.getSystemDatabasePath(), Constants.SYSTEM_COLUMNS_TABLENAME, conditions, false);
+        List<DataRecord> records = this.findRecord(Constants.DEFAULT_CATALOG_DATABASENAME, Constants.SYSTEM_COLUMNS_TABLENAME, conditions, false);
         String columnName = "";
         for (DataRecord record : records) {
             Object object = record.getColumnValueList().get(CatalogDB.COLUMNS_TABLE_SCHEMA_COLUMN_NAME);
@@ -1349,7 +1314,7 @@ public class StorageManager {
     public int getTableRecordCount(String tableName) {
         InternalCondition condition = InternalCondition.CreateCondition(CatalogDB.TABLES_TABLE_SCHEMA_TABLE_NAME, InternalCondition.EQUALS, new DT_Text(tableName));
 
-        List<DataRecord> records = this.findRecord(Utils.getSystemDatabasePath(), Constants.SYSTEM_TABLES_TABLENAME, condition, true);
+        List<DataRecord> records = this.findRecord(Constants.DEFAULT_CATALOG_DATABASENAME, Constants.SYSTEM_TABLES_TABLENAME, condition, true);
         int recordCount = 0;
 
         for (DataRecord record : records) {
@@ -1365,7 +1330,7 @@ public class StorageManager {
         StorageManager manager = new StorageManager();
         InternalCondition condition = InternalCondition.CreateCondition(0, InternalCondition.EQUALS, new DT_Int(value));
 
-        List<DataRecord> records = manager.findRecord(Utils.getUserDatabasePath(databaseName), tableName, condition, false);
+        List<DataRecord> records = manager.findRecord(databaseName, tableName, condition, false);
         if (records.size() > 0) {
             return true;
         }

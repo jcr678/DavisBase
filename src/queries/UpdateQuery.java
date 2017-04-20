@@ -46,7 +46,7 @@ public class UpdateQuery implements IQuery {
         List<Byte> updateColumnIndexList = getUpdateColumnIndexList(retrievedColumns);
         List<Object> updateColumnValueList = getUpdateColumnValueList(columnDataTypeMapping);
 
-        int rowsAffected = manager.updateRecord(Utils.getUserDatabasePath(databaseName), tableName, searchColumnsIndexList, searchKeysValueList, searchKeysConditionsList, updateColumnIndexList, updateColumnValueList, false);
+        int rowsAffected = manager.updateRecord(databaseName, tableName, searchColumnsIndexList, searchKeysValueList, searchKeysConditionsList, updateColumnIndexList, updateColumnValueList, false);
 
         Result result;
         result = new Result(rowsAffected);
@@ -59,7 +59,7 @@ public class UpdateQuery implements IQuery {
         List<String> retrievedColumns = manager.fetchAllTableColumns(tableName);
         HashMap<String, Integer> columnDataTypeMapping = manager.fetchAllTableColumndataTypes(tableName);
 
-        if (!manager.checkTableExists(Utils.getUserDatabasePath(this.databaseName), tableName)) {
+        if (!manager.checkTableExists(this.databaseName, tableName)) {
             Utils.printMissingTableError(tableName);
             return false;
         }

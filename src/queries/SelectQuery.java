@@ -51,7 +51,7 @@ public class SelectQuery implements IQuery {
         StorageManager manager = new StorageManager();
 
         // Check if the table exists.
-        if (!manager.checkTableExists(Utils.getUserDatabasePath(this.databaseName), tableName)) {
+        if (!manager.checkTableExists(this.databaseName, tableName)) {
             Utils.printMissingTableError(tableName);
             return false;
         }
@@ -118,7 +118,7 @@ public class SelectQuery implements IQuery {
         }
 
         if(this.columns == null) {
-            internalRecords = manager.findRecord(Utils.getUserDatabasePath(this.databaseName),
+            internalRecords = manager.findRecord(this.databaseName,
                     this.tableName, internalCondition, false);
 
             HashMap<Integer, String> idToColumnMap = maps.getValue();
@@ -137,7 +137,7 @@ public class SelectQuery implements IQuery {
                 }
             }
 
-            internalRecords = manager.findRecord(Utils.getUserDatabasePath(this.databaseName),
+            internalRecords = manager.findRecord(this.databaseName,
                     this.tableName, internalCondition, columnsList, false);
         }
 
@@ -179,7 +179,7 @@ public class SelectQuery implements IQuery {
         conditions.add(InternalCondition.CreateCondition(CatalogDB.COLUMNS_TABLE_SCHEMA_TABLE_NAME, InternalCondition.EQUALS, new DT_Text(tableName)));
 
         StorageManager manager = new StorageManager();
-        List<DataRecord> records = manager.findRecord(Utils.getSystemDatabasePath(), Constants.SYSTEM_COLUMNS_TABLENAME, conditions, false);
+        List<DataRecord> records = manager.findRecord(Constants.DEFAULT_CATALOG_DATABASENAME, Constants.SYSTEM_COLUMNS_TABLENAME, conditions, false);
 
         for (int i = 0; i < records.size(); i++) {
             DataRecord record = records.get(i);

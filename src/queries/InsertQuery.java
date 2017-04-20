@@ -40,7 +40,7 @@ public class InsertQuery implements IQuery {
         record.populateSize();
 
         Result result = null;
-        boolean status = manager.writeRecord(Utils.getUserDatabasePath(this.databaseName), tableName, record);
+        boolean status = manager.writeRecord(this.databaseName, tableName, record);
         if (status) {
             result = new Result(1);
         }
@@ -55,7 +55,7 @@ public class InsertQuery implements IQuery {
     public boolean ValidateQuery() {
         // validate if the table and the columns of the table.
         StorageManager manager = new StorageManager();
-        if (!manager.checkTableExists(Utils.getUserDatabasePath(this.databaseName), tableName)) {
+        if (!manager.checkTableExists(this.databaseName, tableName)) {
             Utils.printMissingTableError(tableName);
             return false;
         }
@@ -125,7 +125,6 @@ public class InsertQuery implements IQuery {
         if (!checkColumnDataTypeValidity(columnDataTypeMapping)) {
             return false;
         }
-
 
         return true;
     }

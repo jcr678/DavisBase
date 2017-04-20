@@ -3,7 +3,6 @@ package queries;
 import Model.Condition;
 import Model.IQuery;
 import Model.Result;
-import common.Constants;
 import common.Utils;
 import datatypes.base.DT;
 import storage.StorageManager;
@@ -11,7 +10,6 @@ import storage.StorageManager;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Random;
 
 public class DeleteQuery implements IQuery {
     public String databaseName;
@@ -39,7 +37,7 @@ public class DeleteQuery implements IQuery {
         int rowCount = 0;
         StorageManager manager = new StorageManager();
         if (condition == null) {
-            rowCount = manager.deleteRecord(Utils.getUserDatabasePath(databaseName), tableName, (new ArrayList<>()), (new ArrayList<>()), (new ArrayList<>()), false);
+            rowCount = manager.deleteRecord(databaseName, tableName, (new ArrayList<>()), (new ArrayList<>()), (new ArrayList<>()), false);
         }
         else {
             rowCount = 1;
@@ -55,7 +53,7 @@ public class DeleteQuery implements IQuery {
             List<Short> conditionList = new ArrayList<>();
             conditionList.add(Utils.ConvertFromOperator(condition.operator));
 
-            rowCount = manager.deleteRecord(Utils.getUserDatabasePath(databaseName), tableName, (columnIndexList), (valueList), (conditionList), false);
+            rowCount = manager.deleteRecord(databaseName, tableName, (columnIndexList), (valueList), (conditionList), false);
         }
 
         Result result = new Result(rowCount, this.isInternal);
@@ -66,7 +64,7 @@ public class DeleteQuery implements IQuery {
     public boolean ValidateQuery() {
         // Check if the table exists.
         StorageManager manager = new StorageManager();
-        if (!manager.checkTableExists(Utils.getUserDatabasePath(this.databaseName), tableName)) {
+        if (!manager.checkTableExists(this.databaseName, tableName)) {
             Utils.printMissingTableError(tableName);
             return false;
         }

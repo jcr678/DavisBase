@@ -35,8 +35,8 @@ public class CatalogDB {
     public boolean createCatalogDB() {
         StorageManager manager = new StorageManager();
         UpdateStatementHelper statement = new UpdateStatementHelper();
-        manager.createTable(Utils.getSystemDatabasePath(), Constants.SYSTEM_TABLES_TABLENAME + Constants.DEFAULT_FILE_EXTENSION);
-        manager.createTable(Utils.getSystemDatabasePath(), Constants.SYSTEM_COLUMNS_TABLENAME + Constants.DEFAULT_FILE_EXTENSION);
+        manager.createTable(Constants.DEFAULT_CATALOG_DATABASENAME, Constants.SYSTEM_TABLES_TABLENAME + Constants.DEFAULT_FILE_EXTENSION);
+        manager.createTable(Constants.DEFAULT_CATALOG_DATABASENAME, Constants.SYSTEM_COLUMNS_TABLENAME + Constants.DEFAULT_FILE_EXTENSION);
         int startingRowId = statement.updateSystemTablesTable(Constants.DEFAULT_CATALOG_DATABASENAME, Constants.SYSTEM_TABLES_TABLENAME, 6);
         startingRowId *= statement.updateSystemTablesTable(Constants.DEFAULT_CATALOG_DATABASENAME, Constants.SYSTEM_COLUMNS_TABLENAME, 8);
         if(startingRowId >= 0) {

@@ -36,21 +36,21 @@ public class CreateTableQuery implements IQuery {
         StorageManager storageManager = new StorageManager();
 
         // Check if database exists
-        if (storageManager.databaseExists(this.databaseName)) {
+        if (!storageManager.databaseExists(this.databaseName)) {
             // Database does not exist.
             Utils.printMissingDatabaseError(databaseName);
             return false;
         }
         
 
-        if (storageManager.checkTableExists(Utils.getUserDatabasePath(this.databaseName), tableName)) {
+        if (storageManager.checkTableExists(this.databaseName, tableName)) {
             // Table already exists.
             Utils.printDuplicateTableError(tableName);
             return false;
         }
         else {
             // Create new table.
-            boolean status = storageManager.createTable(Utils.getUserDatabasePath(this.databaseName), tableName + Constants.DEFAULT_FILE_EXTENSION);
+            boolean status = storageManager.createTable(this.databaseName, tableName + Constants.DEFAULT_FILE_EXTENSION);
             if (!status) {
                 Utils.printError("Failed to create table " + tableName);
                 return false;

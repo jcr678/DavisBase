@@ -171,7 +171,7 @@ public class InsertQuery implements IQuery {
     }
 
     private boolean checkPrimaryKeyConstraint(StorageManager manager, List<String> retrievedColumnNames) {
-        String primaryKeyColumnName = manager.getTablePrimaryKey(tableName);
+        String primaryKeyColumnName = manager.getTablePrimaryKey(tableName, databaseName);
         List<String> columnList = (columns != null) ? columns : retrievedColumnNames;
 
         if (primaryKeyColumnName.length() > 0) {
@@ -355,7 +355,7 @@ public class InsertQuery implements IQuery {
 
     private int findRowID (StorageManager manager, List<String> retrievedList) {
         int rowCount = manager.getTableRecordCount(tableName);
-        String primaryKeyColumnName = manager.getTablePrimaryKey(tableName);
+        String primaryKeyColumnName = manager.getTablePrimaryKey(tableName, databaseName);
         if (primaryKeyColumnName.length() > 0) {
             // The primary key is present.
             // Check if the same primary key with same value is present.

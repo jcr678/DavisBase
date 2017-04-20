@@ -1295,14 +1295,16 @@ public class StorageManager {
         return columDataTypeMapping;
     }
 
-    public String getTablePrimaryKey(String tableName) {
+    public String getTablePrimaryKey(String tableName, String databaseName) {
         List<InternalCondition> conditions = new ArrayList<>();
 
         DT_Text tableNameObj = new DT_Text(tableName);
         DT_Text primaryKeyObj = new DT_Text(CatalogDB.PRIMARY_KEY_IDENTIFIER);
+        DT_Text databaseObj = new DT_Text(databaseName);
 
-        conditions.add(InternalCondition.CreateCondition(CatalogDB.COLUMNS_TABLE_SCHEMA_COLUMN_NAME, InternalCondition.EQUALS, tableNameObj));
+        conditions.add(InternalCondition.CreateCondition(CatalogDB.COLUMNS_TABLE_SCHEMA_TABLE_NAME, InternalCondition.EQUALS, tableNameObj));
         conditions.add(InternalCondition.CreateCondition(CatalogDB.COLUMNS_TABLE_SCHEMA_COLUMN_KEY, InternalCondition.EQUALS, primaryKeyObj));
+        conditions.add(InternalCondition.CreateCondition(CatalogDB.COLUMNS_TABLE_SCHEMA_DATABASE_NAME, InternalCondition.EQUALS, databaseObj));
 
         List<DataRecord> records = this.findRecord(Constants.DEFAULT_CATALOG_DATABASENAME, Constants.SYSTEM_COLUMNS_TABLENAME, conditions, false);
         String columnName = "";

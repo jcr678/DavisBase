@@ -10,7 +10,12 @@ public class Literal {
     public String value;
 
     public static Literal CreateLiteral(DT value, Byte type) {
-        if(type == Constants.INVALID_CLASS) return null;
+        if(type == Constants.INVALID_CLASS) {
+            return null;
+        }
+        else if (value.isNull()) {
+            return new Literal(DataType.DOUBLE_DATETIME_NULL, value.getStringValue());
+        }
 
         switch(type) {
             case Constants.TINYINT:

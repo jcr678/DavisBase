@@ -250,8 +250,7 @@ public class InsertQuery implements IQuery {
                 } else {
                     Byte dataType = (byte)columnDataTypeMapping.get(column).intValue();
                     DT obj = getDataTypeObject(dataType);
-
-                    //obj.setNull(true);
+                    obj.setNull(true);
                     columnList.add(obj);
                 }
             }

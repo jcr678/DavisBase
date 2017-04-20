@@ -12,7 +12,6 @@ import storage.model.InternalColumn;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.SplittableRandom;
 
 public class CreateTableQuery implements IQuery {
     public String tableName;
@@ -95,7 +94,7 @@ public class CreateTableQuery implements IQuery {
             }
 
             // Create new table.
-            boolean status = storageManager.createTable(Utils.getUserDatabasePath(this.databaseName), tableName + Constants.DEFAULT_FILE_EXTENSION);
+            boolean status = storageManager.createTable(this.databaseName, tableName + Constants.DEFAULT_FILE_EXTENSION);
             if (status) {
                 UpdateStatementHelper statement = new UpdateStatementHelper();
                 int startingRowId = statement.updateSystemTablesTable(this.databaseName, tableName, columns.size());

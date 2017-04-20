@@ -257,7 +257,9 @@ public class Utils {
         String invalidColumn = "";
         Literal invalidLiteral = null;
 
-        for (String columnName : columnsList) {
+
+        for (int i =0; i < values.size(); i++) {
+            String columnName = columnsList.get(i);
 
             // Get the data type for the column with name 'columnName'.
             // Retrieve literal for the corresponding column from the user input.

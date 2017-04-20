@@ -31,11 +31,11 @@ public class DropTableQuery implements IQuery {
 
         Condition condition = Condition.CreateCondition(String.format("table_name = '%s'", this.tableName));
         IQuery deleteEntryQuery = new DeleteQuery(CATALOG_DATABASE, CATALOG_TABLE, condition, true);
-        DatabaseHelper.ExecuteQuery(deleteEntryQuery);
+        deleteEntryQuery.ExecuteQuery();
 
-        condition = condition = Condition.CreateCondition(String.format("table_name = '%s'", this.tableName));
-        deleteEntryQuery = deleteEntryQuery = new DeleteQuery(CATALOG_DATABASE, CATALOG_COLUMNS, condition, true);
-        DatabaseHelper.ExecuteQuery(deleteEntryQuery);
+        condition = Condition.CreateCondition(String.format("table_name = '%s'", this.tableName));
+        deleteEntryQuery  = new DeleteQuery(CATALOG_DATABASE, CATALOG_COLUMNS, condition, true);
+        deleteEntryQuery.ExecuteQuery();
 
         File table = new File(String.format("%s/%s/%s.%s", DEFAULT_DATA_DIRNAME, this.databaseName, this.tableName, TABLE_FILE_EXTENSION));
         boolean isDeleted = RecursivelyDelete(table);

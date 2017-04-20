@@ -1,8 +1,10 @@
 package queries;
 
+import Model.Condition;
 import Model.IQuery;
 import Model.Result;
 import QueryParser.DatabaseHelper;
+import common.Constants;
 import common.Utils;
 
 import java.io.File;
@@ -22,6 +24,14 @@ public class DropDatabaseQuery implements IQuery {
         /*TODO : Replace using constants file*/
         String DEFAULT_DATA_DIRNAME = "data";
         File database = new File(DEFAULT_DATA_DIRNAME + "/" + this.databaseName);
+
+        Condition condition = Condition.CreateCondition(String.format("database_name = '%s'", this.databaseName));
+        IQuery deleteEntryQuery = new DeleteQuery(Constants.DEFAULT_CATALOG_DATABASENAME, Constants.SYSTEM_TABLES_TABLENAME, condition, true);
+        deleteEntryQuery.ExecuteQuery();
+
+        deleteEntryQuery = new DeleteQuery(Constants.DEFAULT_CATALOG_DATABASENAME, Constants.SYSTEM_COLUMNS_TABLENAME, condition, true);
+        deleteEntryQuery.ExecuteQuery();
+
         boolean isDeleted = RecursivelyDelete(database);
 
         if(!isDeleted){

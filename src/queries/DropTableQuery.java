@@ -39,7 +39,7 @@ public class DropTableQuery implements IQuery {
         deleteEntryQuery.ExecuteQuery();
 
         File table = new File(String.format("%s/%s/%s%s", Constants.DEFAULT_DATA_DIRNAME, this.databaseName, this.tableName, Constants.DEFAULT_FILE_EXTENSION));
-        boolean isDeleted = RecursivelyDelete(table);
+        boolean isDeleted = Utils.RecursivelyDelete(table);
 
         if(!isDeleted){
             Utils.printError(String.format("Unable to delete table '%s.%s'", this.databaseName, this.tableName));
@@ -61,24 +61,5 @@ public class DropTableQuery implements IQuery {
         }
 
         return true;
-    }
-
-    public boolean RecursivelyDelete(File file){
-        if(file == null) return true;
-        boolean isDeleted = false;
-
-        if(file.isDirectory()) {
-            for (File childFile : file.listFiles()) {
-                if (childFile.isFile()) {
-                    isDeleted = childFile.delete();
-                    if (!isDeleted) return false;
-                } else {
-                    isDeleted = RecursivelyDelete(childFile);
-                    if (!isDeleted) return false;
-                }
-            }
-        }
-
-        return file.delete();
     }
 }

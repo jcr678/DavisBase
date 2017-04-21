@@ -22,9 +22,7 @@ public class DropDatabaseQuery implements IQuery {
 
     @Override
     public Result ExecuteQuery() {
-        /*TODO : Replace using constants file*/
-        String DEFAULT_DATA_DIRNAME = "data";
-        File database = new File(DEFAULT_DATA_DIRNAME + "/" + this.databaseName);
+        File database = new File(Utils.getDatabasePath(databaseName));
 
         Condition condition = Condition.CreateCondition(String.format("database_name = '%s'", this.databaseName));
         ArrayList<Condition> conditions = new ArrayList<>();
@@ -36,7 +34,7 @@ public class DropDatabaseQuery implements IQuery {
         deleteEntryQuery = new DeleteQuery(Constants.DEFAULT_CATALOG_DATABASENAME, Constants.SYSTEM_COLUMNS_TABLENAME, conditions, true);
         deleteEntryQuery.ExecuteQuery();
 
-        boolean isDeleted = RecursivelyDelete(database);
+        boolean isDeleted = Utils.RecursivelyDelete(database);
 
         if(!isDeleted){
             Utils.printError(String.format("Unable to delete database '%s'", this.databaseName));
@@ -61,24 +59,5 @@ public class DropDatabaseQuery implements IQuery {
         }
 
         return true;
-    }
-
-    public boolean RecursivelyDelete(File file){
-        if(file == null) return true;
-        boolean isDeleted = false;
-
-        if(file.isDirectory()) {
-            for (File childFile : file.listFiles()) {
-                if (childFile.isFile()) {
-                    isDeleted = childFile.delete();
-                    if (!isDeleted) return false;
-                } else {
-                    isDeleted = RecursivelyDelete(childFile);
-                    if (!isDeleted) return false;
-                }
-            }
-        }
-
-        return file.delete();
     }
 }

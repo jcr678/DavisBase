@@ -207,18 +207,20 @@ public class StorageManager {
                     page1.setPageType(page.getPageType());
                     page1.setPageNumber(pageNumber1);
                     List<DataRecord> leftRecords = copyRecords(randomAccessFile, (page.getPageNumber() * Page.PAGE_SIZE), page.getRecordAddressList(), (byte) 0, (byte) (page.getNumberOfCells() / 2), page1.getPageNumber(), record);
-                    if (isFirst)
+                    if (isFirst) {
+                        record.setPageLocated(page1.getPageNumber());
                         leftRecords.add(location, record);
+                    }
                     page1.setNumberOfCells((byte) leftRecords.size());
                     int index = 0;
-                    short offset = (short) (Page.PAGE_SIZE - 1);
+                    short offset = Page.PAGE_SIZE;
                     for (DataRecord dataRecord : leftRecords) {
                         index++;
                         offset = (short) (Page.PAGE_SIZE - ((dataRecord.getSize() + dataRecord.getHeaderSize()) * index));
                         dataRecord.setOffset(offset);
                         page1.getRecordAddressList().add(offset);
                     }
-                    page1.setStartingAddress((short) (offset + 1));
+                    page1.setStartingAddress((short) (offset - 1));
                     page1.setRightNodeAddress(pageNumber2);
                     this.writePageHeader(randomAccessFile, page1);
                     for(DataRecord dataRecord : leftRecords) {
@@ -230,6 +232,7 @@ public class StorageManager {
                     page2.setPageType(page.getPageType());
                     List<DataRecord> rightRecords = copyRecords(randomAccessFile, (page.getPageNumber() * Page.PAGE_SIZE), page.getRecordAddressList(), (byte) ((page.getNumberOfCells() / 2) + 1), page.getNumberOfCells(), pageNumber2, record);
                     if(!isFirst) {
+                        record.setPageLocated(page2.getPageNumber());
                         int position = (location - (page.getRecordAddressList().size() / 2) + 1);
                         if(position >= rightRecords.size())
                             rightRecords.add(record);
@@ -240,14 +243,14 @@ public class StorageManager {
                     page2.setRightNodeAddress(page.getRightNodeAddress());
                     pointerRecord.setKey(rightRecords.get(0).getRowId());
                     index = 0;
-                    offset = (short) (Page.PAGE_SIZE - 1);
+                    offset = Page.PAGE_SIZE;
                     for(DataRecord dataRecord : rightRecords) {
                         index++;
                         offset = (short) (Page.PAGE_SIZE - ((dataRecord.getSize() + dataRecord.getHeaderSize()) * index));
                         dataRecord.setOffset(offset);
                         page2.getRecordAddressList().add(offset);
                     }
-                    page2.setStartingAddress((short) (offset + 1));
+                    page2.setStartingAddress((short) (offset - 1));
                     this.writePageHeader(randomAccessFile, page2);
                     for(DataRecord dataRecord : rightRecords) {
                         this.writeRecord(randomAccessFile, dataRecord);
@@ -341,14 +344,14 @@ public class StorageManager {
                 leftRecords.remove(leftRecords.size() - 1);
                 page1.setNumberOfCells((byte) leftRecords.size());
                 int index = 0;
-                short offset = (short) (Page.PAGE_SIZE - 1);
+                short offset = Page.PAGE_SIZE;
                 for (PointerRecord pointerRecord1 : leftRecords) {
                     index++;
                     offset = (short) (Page.PAGE_SIZE - (pointerRecord1.getSize() * index));
                     pointerRecord1.setOffset(offset);
                     page1.getRecordAddressList().add(offset);
                 }
-                page1.setStartingAddress((short) (offset + 1));
+                page1.setStartingAddress((short) (offset - 1));
                 page1.setRightNodeAddress(pointerRecord.getLeftPageNumber());
                 this.writePageHeader(randomAccessFile, page1);
                 for(PointerRecord pointerRecord1 : leftRecords) {
@@ -370,14 +373,14 @@ public class StorageManager {
                 page2.setRightNodeAddress(page.getRightNodeAddress());
                 rightRecords.get(0).setLeftPageNumber(page.getRightNodeAddress());
                 index = 0;
-                offset = (short) (Page.PAGE_SIZE - 1);
+                offset = Page.PAGE_SIZE;
                 for(PointerRecord pointerRecord1 : rightRecords) {
                     index++;
                     offset = (short) (Page.PAGE_SIZE - (pointerRecord1.getSize() * index));
                     pointerRecord1.setOffset(offset);
                     page2.getRecordAddressList().add(offset);
                 }
-                page2.setStartingAddress((short) (offset + 1));
+                page2.setStartingAddress((short) (offset - 1));
                 this.writePageHeader(randomAccessFile, page2);
                 for(PointerRecord pointerRecord1 : rightRecords) {
                     this.writeRecord(randomAccessFile, pointerRecord1);

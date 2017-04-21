@@ -188,7 +188,10 @@ public class DatabaseHelper {
         Condition condition = Condition.CreateCondition(conditionString);
         if(condition == null) return null;
 
-        query = new DeleteQuery(DatabaseHelper.CurrentDatabaseName, tableName, condition);
+        ArrayList<Condition> conditions = new ArrayList<>();
+        conditions.add(condition);
+
+        query = new DeleteQuery(DatabaseHelper.CurrentDatabaseName, tableName, conditions);
         return query;
     }
 

@@ -301,7 +301,7 @@ public class DatabaseHelper {
             return false;
         }
 
-        File tableFile = new File(String.format("%s/%s/%s%s", Constants.DEFAULT_CATALOG_DATABASENAME, databaseName, tableName, Constants.DEFAULT_FILE_EXTENSION));
+        File tableFile = new File(String.format("%s/%s/%s%s", Constants.DEFAULT_DATA_DIRNAME, databaseName, tableName, Constants.DEFAULT_FILE_EXTENSION));
         return tableFile.exists();
     }
 

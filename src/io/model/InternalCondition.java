@@ -1,4 +1,4 @@
-package storage.model;
+package io.model;
 
 /**
  * Created by Mahesh on 16/4/17.

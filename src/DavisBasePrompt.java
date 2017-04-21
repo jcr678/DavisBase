@@ -1,6 +1,6 @@
-import Model.IQuery;
+import model.IQuery;
 import QueryParser.DatabaseHelper;
-import common.CatalogDB;
+import common.SystemDatabaseHelper;
 import common.Constants;
 
 import java.io.File;
@@ -10,7 +10,7 @@ import java.util.Scanner;
  * Created by Mahesh on 15/4/17.
  */
 
-public class UserPrompt {
+public class DavisBasePrompt {
 
   private static boolean isExit = false;
   private static Scanner scanner = new Scanner(System.in).useDelimiter(";");
@@ -283,7 +283,7 @@ public class UserPrompt {
             File catalogDir = new File(Constants.DEFAULT_DATA_DIRNAME + "/" + Constants.DEFAULT_CATALOG_DATABASENAME);
             if(!catalogDir.exists()) {
                 if(catalogDir.mkdirs()) {
-                    new CatalogDB().createCatalogDB();
+                    new SystemDatabaseHelper().createCatalogDB();
                 }
             }
         }

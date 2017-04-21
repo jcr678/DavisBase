@@ -1,13 +1,13 @@
 package queries;
 
-import Model.Condition;
-import Model.IQuery;
-import Model.Literal;
-import Model.Result;
+import model.Condition;
+import model.IQuery;
+import model.Literal;
+import model.Result;
 import common.Utils;
 import datatypes.base.DT;
-import errors.InternalException;
-import storage.StorageManager;
+import exceptions.InternalException;
+import io.IOManager;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -42,7 +42,7 @@ public class UpdateQuery implements IQuery {
             // List<Object> updateColumnValueList,
             // boolean isIncrement)
 
-            StorageManager manager = new StorageManager();
+            IOManager manager = new IOManager();
 
             HashMap<String, Integer> columnDataTypeMapping = manager.fetchAllTableColumnDataTypes(this.databaseName, tableName);
             List<String> retrievedColumns = manager.fetchAllTableColumns(this.databaseName, tableName);
@@ -67,7 +67,7 @@ public class UpdateQuery implements IQuery {
     @Override
     public boolean ValidateQuery() {
         try {
-            StorageManager manager = new StorageManager();
+            IOManager manager = new IOManager();
 
             if (!manager.checkTableExists(this.databaseName, tableName)) {
                 Utils.printMissingTableError(this.databaseName, tableName);

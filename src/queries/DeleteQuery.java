@@ -1,12 +1,12 @@
 package queries;
 
-import Model.Condition;
-import Model.IQuery;
-import Model.Result;
+import model.Condition;
+import model.IQuery;
+import model.Result;
 import common.Utils;
 import datatypes.base.DT;
-import errors.InternalException;
-import storage.StorageManager;
+import exceptions.InternalException;
+import io.IOManager;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -41,7 +41,7 @@ public class DeleteQuery implements IQuery {
         try {
             // Delete the record.
             int rowCount = 0;
-            StorageManager manager = new StorageManager();
+            IOManager manager = new IOManager();
 
             if (conditions == null) {
                 rowCount = manager.deleteRecord(databaseName, tableName, (new ArrayList<>()), (new ArrayList<>()), (new ArrayList<>()), false);
@@ -77,7 +77,7 @@ public class DeleteQuery implements IQuery {
     public boolean ValidateQuery() {
         try {
             // Check if the table exists.
-            StorageManager manager = new StorageManager();
+            IOManager manager = new IOManager();
             if (!manager.checkTableExists(this.databaseName, tableName)) {
                 Utils.printMissingTableError(this.databaseName, tableName);
                 return false;

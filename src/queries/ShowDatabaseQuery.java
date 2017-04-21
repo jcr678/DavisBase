@@ -1,6 +1,6 @@
 package queries;
 
-import Model.*;
+import model.*;
 import common.Constants;
 
 import java.io.File;

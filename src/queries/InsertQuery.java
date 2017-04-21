@@ -1,13 +1,13 @@
 package queries;
 
-import Model.*;
+import model.*;
 import common.Constants;
 import common.Utils;
 import datatypes.*;
 import datatypes.base.DT;
-import errors.InternalException;
-import storage.StorageManager;
-import storage.model.DataRecord;
+import exceptions.InternalException;
+import io.IOManager;
+import io.model.DataRecord;
 import java.util.*;
 
 public class InsertQuery implements IQuery {
@@ -27,7 +27,7 @@ public class InsertQuery implements IQuery {
     public Result ExecuteQuery() {
         try {
             // All checks are done. Now insert the values.
-            StorageManager manager = new StorageManager();
+            IOManager manager = new IOManager();
             List<String> retrievedColumns = manager.fetchAllTableColumns(this.databaseName, tableName);
             HashMap<String, Integer> columnDataTypeMapping = manager.fetchAllTableColumnDataTypes(this.databaseName, tableName);
 
@@ -58,7 +58,7 @@ public class InsertQuery implements IQuery {
     public boolean ValidateQuery() {
         try {
             // validate if the table and the columns of the table.
-            StorageManager manager = new StorageManager();
+            IOManager manager = new IOManager();
             if (!manager.checkTableExists(this.databaseName, tableName)) {
                 Utils.printMissingTableError(this.databaseName, tableName);
                 return false;
@@ -153,7 +153,7 @@ public class InsertQuery implements IQuery {
         return true;
     }
 
-    private boolean checkNullConstraint(StorageManager manager, List<String> retrievedColumnNames) throws InternalException {
+    private boolean checkNullConstraint(IOManager manager, List<String> retrievedColumnNames) throws InternalException {
         HashMap<String, Integer> columnsList = new HashMap<>();
 
         if (columns != null) {
@@ -174,7 +174,7 @@ public class InsertQuery implements IQuery {
         return true;
     }
 
-    private boolean checkPrimaryKeyConstraint(StorageManager manager, List<String> retrievedColumnNames) throws InternalException {
+    private boolean checkPrimaryKeyConstraint(IOManager manager, List<String> retrievedColumnNames) throws InternalException {
 
         String primaryKeyColumnName = manager.getTablePrimaryKey(databaseName, tableName);
         List<String> columnList = (columns != null) ? columns : retrievedColumnNames;
@@ -357,7 +357,7 @@ public class InsertQuery implements IQuery {
     }
 
 
-    private int findRowID (StorageManager manager, List<String> retrievedList) throws InternalException {
+    private int findRowID (IOManager manager, List<String> retrievedList) throws InternalException {
         int rowCount = manager.getTableRecordCount(this.databaseName, tableName);
         String primaryKeyColumnName = manager.getTablePrimaryKey(databaseName, tableName);
         if (primaryKeyColumnName.length() > 0) {

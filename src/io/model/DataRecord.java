@@ -1,4 +1,4 @@
-package storage.model;
+package io.model;
 
 import common.Constants;
 import common.Utils;

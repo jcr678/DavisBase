@@ -1,14 +1,14 @@
 package queries;
 
-import Model.Column;
-import Model.IQuery;
-import Model.Result;
+import model.Column;
+import model.IQuery;
+import model.Result;
 import common.Constants;
+import common.SystemDatabaseHelper;
 import common.Utils;
-import errors.InternalException;
-import helpers.UpdateStatementHelper;
-import storage.StorageManager;
-import storage.model.InternalColumn;
+import exceptions.InternalException;
+import io.IOManager;
+import io.model.InternalColumn;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -40,16 +40,16 @@ public class CreateTableQuery implements IQuery {
     @Override
     public boolean ValidateQuery() {
         try {
-            StorageManager storageManager = new StorageManager();
+            IOManager IOManager = new IOManager();
 
             // Check if database exists
-            if (!storageManager.databaseExists(this.databaseName)) {
+            if (!IOManager.databaseExists(this.databaseName)) {
                 // Database does not exist.
                 Utils.printMissingDatabaseError(databaseName);
                 return false;
             }
 
-            if (storageManager.checkTableExists(this.databaseName, tableName)) {
+            if (IOManager.checkTableExists(this.databaseName, tableName)) {
                 // Table already exists.
                 Utils.printDuplicateTableError(this.databaseName, tableName);
                 return false;
@@ -95,11 +95,11 @@ public class CreateTableQuery implements IQuery {
             }
 
             // Create new table.
-            boolean status = storageManager.createTable(this.databaseName, tableName + Constants.DEFAULT_FILE_EXTENSION);
+            boolean status = IOManager.createTable(this.databaseName, tableName + Constants.DEFAULT_FILE_EXTENSION);
             if (status) {
-                UpdateStatementHelper statement = new UpdateStatementHelper();
-                int startingRowId = statement.updateSystemTablesTable(this.databaseName, tableName, columns.size());
-                boolean systemTableUpdateStatus = statement.updateSystemColumnsTable(this.databaseName, tableName, startingRowId, columnsList);
+                SystemDatabaseHelper databaseHelper = new SystemDatabaseHelper();
+                int startingRowId = databaseHelper.updateSystemTablesTable(this.databaseName, tableName, columns.size());
+                boolean systemTableUpdateStatus = databaseHelper.updateSystemColumnsTable(this.databaseName, tableName, startingRowId, columnsList);
 
                 if (!systemTableUpdateStatus) {
                     Utils.printError("Failed to create table " + tableName);

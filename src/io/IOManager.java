@@ -1,17 +1,16 @@
-package storage;
+package io;
 
-import common.CatalogDB;
 import common.Constants;
+import common.SystemDatabaseHelper;
 import common.Utils;
 import datatypes.*;
 import datatypes.base.DT;
 import datatypes.base.DT_Numeric;
-import errors.InternalException;
-import helpers.UpdateStatementHelper;
-import storage.model.DataRecord;
-import storage.model.InternalCondition;
-import storage.model.Page;
-import storage.model.PointerRecord;
+import exceptions.InternalException;
+import io.model.DataRecord;
+import io.model.InternalCondition;
+import io.model.Page;
+import io.model.PointerRecord;
 
 import java.io.File;
 import java.io.RandomAccessFile;
@@ -23,7 +22,7 @@ import java.util.List;
  * Created by Mahesh on 9/4/17.
  */
 
-public class StorageManager {
+public class IOManager {
 
     public boolean databaseExists(String databaseName) {
         File databaseDir = new File(Utils.getDatabasePath(databaseName));
@@ -115,7 +114,7 @@ public class StorageManager {
                             }
                             break;
                     }
-                    UpdateStatementHelper.incrementRowCount(databaseName, tableName);
+                    SystemDatabaseHelper.incrementRowCount(databaseName, tableName);
                     randomAccessFile.close();
                     return true;
                 }
@@ -130,7 +129,7 @@ public class StorageManager {
                 record.setOffset((short) (page.getStartingAddress() + 1));
                 this.writePageHeader(randomAccessFile, page);
                 this.writeRecord(randomAccessFile, record);
-                UpdateStatementHelper.incrementRowCount(databaseName, tableName);
+                SystemDatabaseHelper.incrementRowCount(databaseName, tableName);
                 randomAccessFile.close();
             } else {
                 Utils.printMessage(String.format("Table '%s.%s' doesn't exist.", databaseName, tableName));
@@ -1281,7 +1280,7 @@ public class StorageManager {
                                     page.setStartingAddress((short) (page.getBaseAddress() + Page.PAGE_SIZE - 1));
                                 }
                                 this.writePageHeader(randomAccessFile, page);
-                                UpdateStatementHelper.decrementRowCount(databaseName, tableName);
+                                SystemDatabaseHelper.decrementRowCount(databaseName, tableName);
                                 deletedRecordCount++;
                                 if(deleteOne) {
                                     randomAccessFile.close();
@@ -1418,12 +1417,12 @@ public class StorageManager {
         List<String> columnNames = new ArrayList<>();
         List<InternalCondition> conditions = new ArrayList<>();
         InternalCondition condition = new InternalCondition();
-        condition.setIndex(CatalogDB.COLUMNS_TABLE_SCHEMA_DATABASE_NAME);
+        condition.setIndex(SystemDatabaseHelper.COLUMNS_TABLE_SCHEMA_DATABASE_NAME);
         condition.setValue(new DT_Text(databaseName));
         condition.setConditionType(InternalCondition.EQUALS);
         conditions.add(condition);
         condition = new InternalCondition();
-        condition.setIndex(CatalogDB.COLUMNS_TABLE_SCHEMA_TABLE_NAME);
+        condition.setIndex(SystemDatabaseHelper.COLUMNS_TABLE_SCHEMA_TABLE_NAME);
         condition.setValue(new DT_Text(tableName));
         condition.setConditionType(InternalCondition.EQUALS);
         conditions.add(condition);
@@ -1432,7 +1431,7 @@ public class StorageManager {
 
         for (int i = 0; i < records.size(); i++) {
             DataRecord record = records.get(i);
-            Object object = record.getColumnValueList().get(CatalogDB.COLUMNS_TABLE_SCHEMA_COLUMN_NAME);
+            Object object = record.getColumnValueList().get(SystemDatabaseHelper.COLUMNS_TABLE_SCHEMA_COLUMN_NAME);
             columnNames.add(((DT) object).getStringValue());
         }
 
@@ -1443,12 +1442,12 @@ public class StorageManager {
 
         List<InternalCondition> conditions = new ArrayList<>();
         InternalCondition condition = new InternalCondition();
-        condition.setIndex(CatalogDB.COLUMNS_TABLE_SCHEMA_DATABASE_NAME);
+        condition.setIndex(SystemDatabaseHelper.COLUMNS_TABLE_SCHEMA_DATABASE_NAME);
         condition.setValue(new DT_Text(databaseName));
         condition.setConditionType(InternalCondition.EQUALS);
         conditions.add(condition);
         condition = new InternalCondition();
-        condition.setIndex(CatalogDB.COLUMNS_TABLE_SCHEMA_TABLE_NAME);
+        condition.setIndex(SystemDatabaseHelper.COLUMNS_TABLE_SCHEMA_TABLE_NAME);
         condition.setValue(new DT_Text(tableName));
         condition.setConditionType(InternalCondition.EQUALS);
         conditions.add(condition);
@@ -1457,8 +1456,8 @@ public class StorageManager {
 
         for (int i = 0; i < records.size(); i++) {
             DataRecord record = records.get(i);
-            Object nullValueObject = record.getColumnValueList().get(CatalogDB.COLUMNS_TABLE_SCHEMA_IS_NULLABLE);
-            Object object = record.getColumnValueList().get(CatalogDB.COLUMNS_TABLE_SCHEMA_COLUMN_NAME);
+            Object nullValueObject = record.getColumnValueList().get(SystemDatabaseHelper.COLUMNS_TABLE_SCHEMA_IS_NULLABLE);
+            Object object = record.getColumnValueList().get(SystemDatabaseHelper.COLUMNS_TABLE_SCHEMA_COLUMN_NAME);
 
             String isNullStr = ((DT) nullValueObject).getStringValue().toUpperCase();
             boolean isNullable = isNullStr.equals("YES");
@@ -1476,12 +1475,12 @@ public class StorageManager {
     public HashMap<String, Integer> fetchAllTableColumnDataTypes(String databaseName, String tableName) throws InternalException {
         List<InternalCondition> conditions = new ArrayList<>();
         InternalCondition condition = new InternalCondition();
-        condition.setIndex(CatalogDB.COLUMNS_TABLE_SCHEMA_DATABASE_NAME);
+        condition.setIndex(SystemDatabaseHelper.COLUMNS_TABLE_SCHEMA_DATABASE_NAME);
         condition.setValue(new DT_Text(databaseName));
         condition.setConditionType(InternalCondition.EQUALS);
         conditions.add(condition);
         condition = new InternalCondition();
-        condition.setIndex(CatalogDB.COLUMNS_TABLE_SCHEMA_TABLE_NAME);
+        condition.setIndex(SystemDatabaseHelper.COLUMNS_TABLE_SCHEMA_TABLE_NAME);
         condition.setValue(new DT_Text(tableName));
         condition.setConditionType(InternalCondition.EQUALS);
         conditions.add(condition);
@@ -1491,8 +1490,8 @@ public class StorageManager {
 
         for (int i = 0; i < records.size(); i++) {
             DataRecord record = records.get(i);
-            Object object = record.getColumnValueList().get(CatalogDB.COLUMNS_TABLE_SCHEMA_COLUMN_NAME);
-            Object dataTypeObject = record.getColumnValueList().get(CatalogDB.COLUMNS_TABLE_SCHEMA_DATA_TYPE);
+            Object object = record.getColumnValueList().get(SystemDatabaseHelper.COLUMNS_TABLE_SCHEMA_COLUMN_NAME);
+            Object dataTypeObject = record.getColumnValueList().get(SystemDatabaseHelper.COLUMNS_TABLE_SCHEMA_DATA_TYPE);
 
             String columnName = ((DT) object).getStringValue();
             int columnDataType = Utils.stringToDataType(((DT) dataTypeObject).getStringValue());
@@ -1506,18 +1505,18 @@ public class StorageManager {
         List<InternalCondition> conditions = new ArrayList<>();
 
         DT_Text tableNameObj = new DT_Text(tableName);
-        DT_Text primaryKeyObj = new DT_Text(CatalogDB.PRIMARY_KEY_IDENTIFIER);
+        DT_Text primaryKeyObj = new DT_Text(SystemDatabaseHelper.PRIMARY_KEY_IDENTIFIER);
         DT_Text databaseObj = new DT_Text(databaseName);
 
 
-        conditions.add(InternalCondition.CreateCondition(CatalogDB.COLUMNS_TABLE_SCHEMA_DATABASE_NAME, InternalCondition.EQUALS, databaseObj));
-        conditions.add(InternalCondition.CreateCondition(CatalogDB.COLUMNS_TABLE_SCHEMA_TABLE_NAME, InternalCondition.EQUALS, tableNameObj));
-        conditions.add(InternalCondition.CreateCondition(CatalogDB.COLUMNS_TABLE_SCHEMA_COLUMN_KEY, InternalCondition.EQUALS, primaryKeyObj));
+        conditions.add(InternalCondition.CreateCondition(SystemDatabaseHelper.COLUMNS_TABLE_SCHEMA_DATABASE_NAME, InternalCondition.EQUALS, databaseObj));
+        conditions.add(InternalCondition.CreateCondition(SystemDatabaseHelper.COLUMNS_TABLE_SCHEMA_TABLE_NAME, InternalCondition.EQUALS, tableNameObj));
+        conditions.add(InternalCondition.CreateCondition(SystemDatabaseHelper.COLUMNS_TABLE_SCHEMA_COLUMN_KEY, InternalCondition.EQUALS, primaryKeyObj));
 
         List<DataRecord> records = this.findRecord(Constants.DEFAULT_CATALOG_DATABASENAME, Constants.SYSTEM_COLUMNS_TABLENAME, conditions, false);
         String columnName = "";
         for (DataRecord record : records) {
-            Object object = record.getColumnValueList().get(CatalogDB.COLUMNS_TABLE_SCHEMA_COLUMN_NAME);
+            Object object = record.getColumnValueList().get(SystemDatabaseHelper.COLUMNS_TABLE_SCHEMA_COLUMN_NAME);
             columnName = ((DT) object).getStringValue();
             break;
         }
@@ -1528,12 +1527,12 @@ public class StorageManager {
     public int getTableRecordCount(String databaseName, String tableName) throws InternalException {
         List<InternalCondition> conditions = new ArrayList<>();
         InternalCondition condition = new InternalCondition();
-        condition.setIndex(CatalogDB.TABLES_TABLE_SCHEMA_DATABASE_NAME);
+        condition.setIndex(SystemDatabaseHelper.TABLES_TABLE_SCHEMA_DATABASE_NAME);
         condition.setValue(new DT_Text(databaseName));
         condition.setConditionType(InternalCondition.EQUALS);
         conditions.add(condition);
         condition = new InternalCondition();
-        condition.setIndex(CatalogDB.TABLES_TABLE_SCHEMA_TABLE_NAME);
+        condition.setIndex(SystemDatabaseHelper.TABLES_TABLE_SCHEMA_TABLE_NAME);
         condition.setValue(new DT_Text(tableName));
         condition.setConditionType(InternalCondition.EQUALS);
         conditions.add(condition);
@@ -1542,7 +1541,7 @@ public class StorageManager {
         int recordCount = 0;
 
         for (DataRecord record : records) {
-            Object object = record.getColumnValueList().get(CatalogDB.TABLES_TABLE_SCHEMA_RECORD_COUNT);
+            Object object = record.getColumnValueList().get(SystemDatabaseHelper.TABLES_TABLE_SCHEMA_RECORD_COUNT);
             recordCount = Integer.valueOf(((DT) object).getStringValue());
             break;
         }
@@ -1551,7 +1550,7 @@ public class StorageManager {
     }
 
     public boolean checkIfValueForPrimaryKeyExists(String databaseName, String tableName, int value) throws InternalException {
-        StorageManager manager = new StorageManager();
+        IOManager manager = new IOManager();
         InternalCondition condition = InternalCondition.CreateCondition(0, InternalCondition.EQUALS, new DT_Int(value));
 
         List<DataRecord> records = manager.findRecord(databaseName, tableName, condition, false);

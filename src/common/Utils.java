@@ -1,9 +1,9 @@
 package common;
 
-import Model.Condition;
-import Model.DataType;
-import Model.Literal;
-import Model.Operator;
+import model.Condition;
+import model.DataType;
+import model.Literal;
+import model.Operator;
 import datatypes.*;
 import datatypes.base.DT_Numeric;
 

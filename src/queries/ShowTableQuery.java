@@ -1,9 +1,9 @@
 package queries;
 
-import Model.Condition;
-import Model.IQuery;
-import Model.Result;
-import Model.ResultSet;
+import model.Condition;
+import model.IQuery;
+import model.Result;
+import model.ResultSet;
 import QueryParser.DatabaseHelper;
 import common.Constants;
 import common.Utils;

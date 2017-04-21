@@ -1,4 +1,4 @@
-package storage.model;
+package io.model;
 
 import java.util.ArrayList;
 import java.util.List;

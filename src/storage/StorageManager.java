@@ -3,10 +3,10 @@ package storage;
 import common.CatalogDB;
 import common.Constants;
 import common.Utils;
-import console.ConsoleWriter;
 import datatypes.*;
 import datatypes.base.DT;
 import datatypes.base.DT_Numeric;
+import errors.InternalException;
 import helpers.UpdateStatementHelper;
 import storage.model.DataRecord;
 import storage.model.InternalCondition;
@@ -25,39 +25,12 @@ import java.util.List;
  */
 public class StorageManager {
 
-    public boolean createDatabase(String databaseName) {
-        try {
-            File dirFile = new File(Utils.getDatabasePath(databaseName));
-            if (dirFile.exists()) {
-                return false;
-            }
-            return dirFile.mkdirs();
-        } catch (Exception e) {
-            e.printStackTrace();
-            return false;
-        }
-    }
-
-    public boolean dropDatabase(String databaseName) {
-        try {
-            File dirFile = new File(Utils.getDatabasePath(databaseName));
-            if (!dirFile.exists()) {
-                System.out.println("Database " + databaseName + " doesn't!");
-                return false;
-            }
-            return dirFile.mkdirs();
-        } catch (Exception e) {
-            e.printStackTrace();
-            return false;
-        }
-    }
-
     public boolean databaseExists(String databaseName) {
         File databaseDir = new File(Utils.getDatabasePath(databaseName));
         return  databaseDir.exists();
     }
 
-    public boolean createTable(String databaseName, String tableName) {
+    public boolean createTable(String databaseName, String tableName) throws InternalException {
         try {
             File dirFile = new File(Utils.getDatabasePath(databaseName));
             if (!dirFile.exists()) {
@@ -77,9 +50,8 @@ public class StorageManager {
                 return isTableCreated;
             }
             return false;
-        } catch (IOException e) {
-            e.printStackTrace();
-            return false;
+        } catch (Exception e) {
+            throw new InternalException(InternalException.GENERIC_EXCEPTION);
         }
     }
 
@@ -96,7 +68,7 @@ public class StorageManager {
         return (databaseExists && fileExists);
     }
 
-    public boolean writeRecord(String databaseName, String tableName, DataRecord record) {
+    public boolean writeRecord(String databaseName, String tableName, DataRecord record) throws InternalException {
         RandomAccessFile randomAccessFile;
         try {
             File file = new File(Utils.getDatabasePath(databaseName) + "/" + tableName + Constants.DEFAULT_FILE_EXTENSION);
@@ -157,12 +129,11 @@ public class StorageManager {
                 this.writeRecord(randomAccessFile, record);
                 randomAccessFile.close();
             } else {
-                ConsoleWriter.displayMessage("File " + tableName + " does not exist");
+                Utils.printMessage(String.format("Table '%s.%s' doesn't exist.", databaseName, tableName));
             }
             return true;
-        } catch (IOException e) {
-            e.printStackTrace();
-            return false;
+        } catch (Exception e) {
+            throw new InternalException(InternalException.GENERIC_EXCEPTION);
         }
     }
 
@@ -184,7 +155,7 @@ public class StorageManager {
         return false;
     }
 
-    private PointerRecord splitPage(RandomAccessFile randomAccessFile, Page page, DataRecord record, int pageNumber1, int pageNumber2) {
+    private PointerRecord splitPage(RandomAccessFile randomAccessFile, Page page, DataRecord record, int pageNumber1, int pageNumber2) throws InternalException {
         try {
             if (page != null && record != null) {
                 int location;
@@ -279,61 +250,62 @@ public class StorageManager {
                 return pointerRecord;
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            throw new InternalException(InternalException.GENERIC_EXCEPTION);
         }
         return null;
     }
 
-    private PointerRecord splitPage(RandomAccessFile randomAccessFile, Page page, DataRecord record) {
-        if(page.getPageType() == Page.INTERIOR_TABLE_PAGE) {
-            int pageNumber = binarySearch(randomAccessFile, record.getRowId(), page.getNumberOfCells(), (page.getBaseAddress() + Page.getHeaderFixedLength()), Page.INTERIOR_TABLE_PAGE);
-            Page newPage = this.readPageHeader(randomAccessFile, pageNumber);
-            PointerRecord pointerRecord = splitPage(randomAccessFile, newPage, record);
-            if(pointerRecord.getPageNumber() == -1)
-                return pointerRecord;
-            if(checkSpaceRequirements(page, pointerRecord)) {
-                int location = binarySearch(randomAccessFile, record.getRowId(), page.getNumberOfCells(), (page.getBaseAddress() + Page.getHeaderFixedLength()), Page.INTERIOR_TABLE_PAGE, true);
-                page.setNumberOfCells((byte) (page.getNumberOfCells() + 1));
-                page.setStartingAddress((short) (page.getStartingAddress() - pointerRecord.getSize()));
-                page.getRecordAddressList().add(location, (short)(page.getStartingAddress() + 1));
-                page.setRightNodeAddress(pointerRecord.getPageNumber());
-                pointerRecord.setPageNumber(page.getPageNumber());
-                pointerRecord.setOffset((short) (page.getStartingAddress() + 1));
-                this.writePageHeader(randomAccessFile, page);
-                this.writeRecord(randomAccessFile, pointerRecord);
-                return new PointerRecord();
-            }
-            else {
+    private PointerRecord splitPage(RandomAccessFile randomAccessFile, Page page, DataRecord record) throws InternalException {
+        try {
+            if (page.getPageType() == Page.INTERIOR_TABLE_PAGE) {
+                int pageNumber = binarySearch(randomAccessFile, record.getRowId(), page.getNumberOfCells(), (page.getBaseAddress() + Page.getHeaderFixedLength()), Page.INTERIOR_TABLE_PAGE);
+                Page newPage = this.readPageHeader(randomAccessFile, pageNumber);
+                PointerRecord pointerRecord = splitPage(randomAccessFile, newPage, record);
+                if (pointerRecord.getPageNumber() == -1)
+                    return pointerRecord;
+                if (checkSpaceRequirements(page, pointerRecord)) {
+                    int location = binarySearch(randomAccessFile, record.getRowId(), page.getNumberOfCells(), (page.getBaseAddress() + Page.getHeaderFixedLength()), Page.INTERIOR_TABLE_PAGE, true);
+                    page.setNumberOfCells((byte) (page.getNumberOfCells() + 1));
+                    page.setStartingAddress((short) (page.getStartingAddress() - pointerRecord.getSize()));
+                    page.getRecordAddressList().add(location, (short) (page.getStartingAddress() + 1));
+                    page.setRightNodeAddress(pointerRecord.getPageNumber());
+                    pointerRecord.setPageNumber(page.getPageNumber());
+                    pointerRecord.setOffset((short) (page.getStartingAddress() + 1));
+                    this.writePageHeader(randomAccessFile, page);
+                    this.writeRecord(randomAccessFile, pointerRecord);
+                    return new PointerRecord();
+                } else {
+                    int newPageNumber;
+                    try {
+                        newPageNumber = (int) (randomAccessFile.length() / Page.PAGE_SIZE);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                        return null;
+                    }
+                    page.setRightNodeAddress(pointerRecord.getPageNumber());
+                    this.writePageHeader(randomAccessFile, page);
+                    PointerRecord pointerRecord1;
+                    pointerRecord1 = splitPage(randomAccessFile, page, pointerRecord, page.getPageNumber(), newPageNumber);
+                    return pointerRecord1;
+                }
+            } else if (page.getPageType() == Page.LEAF_TABLE_PAGE) {
                 int newPageNumber;
                 try {
                     newPageNumber = (int) (randomAccessFile.length() / Page.PAGE_SIZE);
-                }
-                catch (IOException e) {
+                } catch (IOException e) {
                     e.printStackTrace();
                     return null;
                 }
-                page.setRightNodeAddress(pointerRecord.getPageNumber());
-                this.writePageHeader(randomAccessFile, page);
-                PointerRecord pointerRecord1;
-                pointerRecord1 = splitPage(randomAccessFile, page, pointerRecord, page.getPageNumber(), newPageNumber);
-                return pointerRecord1;
+                PointerRecord pointerRecord = splitPage(randomAccessFile, page, record, page.getPageNumber(), newPageNumber);
+                if (pointerRecord != null)
+                    pointerRecord.setPageNumber(newPageNumber);
+                return pointerRecord;
             }
+            return null;
         }
-        else if(page.getPageType() == Page.LEAF_TABLE_PAGE) {
-            int newPageNumber;
-            try {
-                newPageNumber = (int) (randomAccessFile.length() / Page.PAGE_SIZE);
-            }
-            catch (IOException e) {
-                e.printStackTrace();
-                return null;
-            }
-            PointerRecord pointerRecord = splitPage(randomAccessFile, page, record, page.getPageNumber(), newPageNumber);
-            if(pointerRecord != null)
-                pointerRecord.setPageNumber(newPageNumber);
-            return pointerRecord;
+        catch (Exception e) {
+            throw new InternalException(InternalException.GENERIC_EXCEPTION);
         }
-        return null;
     }
 
     private PointerRecord splitPage(RandomAccessFile randomAccessFile, Page page, PointerRecord record, int pageNumber1, int pageNumber2) {
@@ -420,7 +392,7 @@ public class StorageManager {
         return null;
     }
 
-    private <T> List<T> copyRecords(RandomAccessFile randomAccessFile, long pageStartAddress, List<Short> recordAddresses, byte startIndex, byte endIndex, int pageNumber, T object) {
+    private <T> List<T> copyRecords(RandomAccessFile randomAccessFile, long pageStartAddress, List<Short> recordAddresses, byte startIndex, byte endIndex, int pageNumber, T object) throws InternalException {
         try {
             List<T> records = new ArrayList<>();
             byte numberOfRecords;
@@ -518,13 +490,12 @@ public class StorageManager {
                 }
             }
             return records;
-        } catch (IOException e) {
-            e.printStackTrace();
+        } catch (Exception e) {
+            throw new InternalException(InternalException.GENERIC_EXCEPTION);
         }
-        return null;
     }
 
-    private Page getPage(RandomAccessFile randomAccessFile, DataRecord record, int pageNumber) {
+    private Page getPage(RandomAccessFile randomAccessFile, DataRecord record, int pageNumber) throws InternalException {
         try {
             Page page = readPageHeader(randomAccessFile, pageNumber);
             if (page.getPageType() == Page.LEAF_TABLE_PAGE) {
@@ -534,12 +505,11 @@ public class StorageManager {
             if (pageNumber == -1) return null;
             return getPage(randomAccessFile, record, pageNumber);
         } catch (Exception e) {
-            e.printStackTrace();
-            return null;
+            throw new InternalException(InternalException.GENERIC_EXCEPTION);
         }
     }
 
-    private int getAddress(File file, int rowId, int pageNumber) {
+    private int getAddress(File file, int rowId, int pageNumber) throws Exception {
         int location = -1;
         try {
             RandomAccessFile randomAccessFile = new RandomAccessFile(file, "r");
@@ -548,17 +518,17 @@ public class StorageManager {
                 location = binarySearch(randomAccessFile, rowId, page.getNumberOfCells(), (page.getBaseAddress() + Page.getHeaderFixedLength()), Page.LEAF_TABLE_PAGE);
                 randomAccessFile.close();
             }
-        } catch (IOException e) {
-            e.printStackTrace();
+        } catch (Exception e) {
+            throw new InternalException(InternalException.GENERIC_EXCEPTION);
         }
         return location;
     }
 
-    private int binarySearch(RandomAccessFile randomAccessFile, int key, int numberOfRecords, long seekPosition, byte pageType) {
+    private int binarySearch(RandomAccessFile randomAccessFile, int key, int numberOfRecords, long seekPosition, byte pageType) throws InternalException {
         return binarySearch(randomAccessFile, key, numberOfRecords, seekPosition, pageType, false);
     }
 
-    private int binarySearch(RandomAccessFile randomAccessFile, int key, int numberOfRecords, long seekPosition, byte pageType, boolean literalSearch) {
+    private int binarySearch(RandomAccessFile randomAccessFile, int key, int numberOfRecords, long seekPosition, byte pageType, boolean literalSearch) throws InternalException {
         try {
             int start = 0, end = numberOfRecords;
             int mid;
@@ -600,13 +570,12 @@ public class StorageManager {
                     }
                 }
             }
-        } catch (IOException e) {
-            e.printStackTrace();
-            return -1;
+        } catch (Exception e) {
+            throw new InternalException(InternalException.GENERIC_EXCEPTION);
         }
     }
 
-    private Page readPageHeader(RandomAccessFile randomAccessFile, int pageNumber) {
+    private Page readPageHeader(RandomAccessFile randomAccessFile, int pageNumber) throws InternalException {
         try {
             Page page;
             randomAccessFile.seek(Page.PAGE_SIZE * pageNumber);
@@ -625,13 +594,12 @@ public class StorageManager {
                 page.getRecordAddressList().add(randomAccessFile.readShort());
             }
             return page;
-        } catch (IOException e) {
-            e.printStackTrace();
-            return null;
+        } catch (Exception e) {
+            throw new InternalException(InternalException.GENERIC_EXCEPTION);
         }
     }
 
-    private boolean writePageHeader(RandomAccessFile randomAccessFile, Page page) {
+    private boolean writePageHeader(RandomAccessFile randomAccessFile, Page page) throws InternalException {
         try {
             randomAccessFile.seek(page.getPageNumber() * Page.PAGE_SIZE);
             randomAccessFile.writeByte(page.getPageType());
@@ -642,13 +610,12 @@ public class StorageManager {
                 randomAccessFile.writeShort((short) offset);
             }
             return true;
-        } catch (IOException e) {
-            e.printStackTrace();
-            return false;
+        } catch (Exception e) {
+            throw new InternalException(InternalException.GENERIC_EXCEPTION);
         }
     }
 
-    private boolean writeRecord(RandomAccessFile randomAccessFile, DataRecord record) {
+    private boolean writeRecord(RandomAccessFile randomAccessFile, DataRecord record) throws InternalException {
         try {
             randomAccessFile.seek((record.getPageLocated() * Page.PAGE_SIZE) + record.getOffset());
             randomAccessFile.writeShort(record.getSize());
@@ -698,41 +665,41 @@ public class StorageManager {
                         break;
                 }
             }
-        } catch (IOException e) {
-            e.printStackTrace();
-            return false;
+        } catch (ClassCastException e) {
+            throw new InternalException(InternalException.INVALID_DATATYPE_EXCEPTION);
+        } catch (Exception e) {
+            throw new InternalException(InternalException.GENERIC_EXCEPTION);
         }
         return true;
     }
 
-    private boolean writeRecord(RandomAccessFile randomAccessFile, PointerRecord record) {
+    private boolean writeRecord(RandomAccessFile randomAccessFile, PointerRecord record) throws InternalException {
         try {
             randomAccessFile.seek((record.getPageNumber() * Page.PAGE_SIZE) + record.getOffset());
             randomAccessFile.writeInt(record.getLeftPageNumber());
             randomAccessFile.writeInt(record.getKey());
         } catch (IOException e) {
-            e.printStackTrace();
-            return false;
+            throw new InternalException(InternalException.GENERIC_EXCEPTION);
         }
         return true;
     }
 
-    public List<DataRecord> findRecord(String databaseName, String tableName, InternalCondition condition, boolean getOne) {
+    public List<DataRecord> findRecord(String databaseName, String tableName, InternalCondition condition, boolean getOne) throws InternalException {
         return findRecord(databaseName, tableName, condition,null, getOne);
     }
 
-    public List<DataRecord> findRecord(String databaseName, String tableName, InternalCondition condition, List<Byte> selectionColumnIndexList, boolean getOne) {
+    public List<DataRecord> findRecord(String databaseName, String tableName, InternalCondition condition, List<Byte> selectionColumnIndexList, boolean getOne) throws InternalException {
         List<InternalCondition> conditionList = new ArrayList<>();
         if(condition != null)
             conditionList.add(condition);
         return findRecord(databaseName, tableName, conditionList, selectionColumnIndexList, getOne);
     }
 
-    public List<DataRecord> findRecord(String databaseName, String tableName, List<InternalCondition> conditionList, boolean getOne) {
+    public List<DataRecord> findRecord(String databaseName, String tableName, List<InternalCondition> conditionList, boolean getOne) throws InternalException {
         return findRecord(databaseName, tableName, conditionList, null, getOne);
     }
 
-    public List<DataRecord> findRecord(String databaseName, String tableName, List<InternalCondition> conditionList, List<Byte> selectionColumnIndexList, boolean getOne) {
+    public List<DataRecord> findRecord(String databaseName, String tableName, List<InternalCondition> conditionList, List<Byte> selectionColumnIndexList, boolean getOne) throws InternalException {
         try {
             File file = new File(Utils.getDatabasePath(databaseName) + "/" + tableName + Constants.DEFAULT_FILE_EXTENSION);
             if (file.exists()) {
@@ -774,6 +741,9 @@ public class StorageManager {
                                                 case Constants.BIGINT:
                                                     isMatch = ((DT_TinyInt) object).compare((DT_BigInt) value, condition);
                                                     break;
+
+                                                default:
+                                                    throw new InternalException(InternalException.DATATYPE_MISMATCH_EXCEPTION, "Number");
                                             }
                                             break;
 
@@ -794,6 +764,9 @@ public class StorageManager {
                                                 case Constants.BIGINT:
                                                     isMatch = ((DT_SmallInt) object).compare((DT_BigInt) value, condition);
                                                     break;
+
+                                                default:
+                                                    throw new InternalException(InternalException.DATATYPE_MISMATCH_EXCEPTION, "Number");
                                             }
                                             break;
 
@@ -814,6 +787,9 @@ public class StorageManager {
                                                 case Constants.BIGINT:
                                                     isMatch = ((DT_Int) object).compare((DT_BigInt) value, condition);
                                                     break;
+
+                                                default:
+                                                    throw new InternalException(InternalException.DATATYPE_MISMATCH_EXCEPTION, "Number");
                                             }
                                             break;
 
@@ -834,6 +810,9 @@ public class StorageManager {
                                                 case Constants.BIGINT:
                                                     isMatch = ((DT_BigInt) object).compare((DT_BigInt) value, condition);
                                                     break;
+
+                                                default:
+                                                    throw new InternalException(InternalException.DATATYPE_MISMATCH_EXCEPTION, "Number");
                                             }
                                             break;
 
@@ -846,6 +825,9 @@ public class StorageManager {
                                                 case Constants.DOUBLE:
                                                     isMatch = ((DT_Real) object).compare((DT_Double) value, condition);
                                                     break;
+
+                                                default:
+                                                    throw new InternalException(InternalException.DATATYPE_MISMATCH_EXCEPTION, "Decimal Number");
                                             }
                                             break;
 
@@ -858,20 +840,48 @@ public class StorageManager {
                                                 case Constants.DOUBLE:
                                                     isMatch = ((DT_Double) object).compare((DT_Double) value, condition);
                                                     break;
+
+                                                default:
+                                                    throw new InternalException(InternalException.DATATYPE_MISMATCH_EXCEPTION, "Decimal Number");
                                             }
                                             break;
 
                                         case Constants.DATE:
-                                            isMatch = ((DT_Date) object).compare((DT_Date) value, condition);
+                                            switch (Utils.resolveClass(value)) {
+                                                case Constants.DATE:
+                                                    isMatch = ((DT_Date) object).compare((DT_Date) value, condition);
+                                                    break;
+
+                                                default:
+                                                    throw new InternalException(InternalException.DATATYPE_MISMATCH_EXCEPTION, "Date");
+                                            }
                                             break;
 
                                         case Constants.DATETIME:
-                                            isMatch = ((DT_DateTime) object).compare((DT_DateTime) value, condition);
+                                            switch (Utils.resolveClass(value)) {
+                                                case Constants.DATETIME:
+                                                    isMatch = ((DT_DateTime) object).compare((DT_DateTime) value, condition);
+                                                    break;
+
+                                                default:
+                                                    throw new InternalException(InternalException.DATATYPE_MISMATCH_EXCEPTION, "Datetime");
+                                            }
                                             break;
 
                                         case Constants.TEXT:
-                                            if(((DT_Text) object).getValue() != null)
-                                                isMatch = ((DT_Text) object).getValue().equalsIgnoreCase(((DT_Text) value).getValue());
+                                            switch (Utils.resolveClass(value)) {
+                                                case Constants.TEXT:
+                                                    if (((DT_Text) object).getValue() != null) {
+                                                        if (condition != InternalCondition.EQUALS) {
+                                                            throw new InternalException(InternalException.INVALID_CONDITION_EXCEPTION, "= is");
+                                                        } else
+                                                            isMatch = ((DT_Text) object).getValue().equalsIgnoreCase(((DT_Text) value).getValue());
+                                                    }
+                                                    break;
+
+                                                default:
+                                                    throw new InternalException(InternalException.DATATYPE_MISMATCH_EXCEPTION, "String");
+                                            }
                                             break;
                                     }
                                     if(!isMatch) break;
@@ -904,16 +914,16 @@ public class StorageManager {
                     return matchRecords;
                 }
             } else {
-                ConsoleWriter.displayMessage("Table " + tableName + " does not exist");
+                Utils.printMessage(String.format("Table '%s.%s' doesn't exist.", databaseName, tableName));
                 return null;
             }
-        } catch (IOException e) {
-            e.printStackTrace();
+        } catch (Exception e) {
+            throw new InternalException(InternalException.GENERIC_EXCEPTION);
         }
         return null;
     }
 
-    public int updateRecord(String databaseName, String tableName, List<Byte> searchColumnIndexList, List<Object> searchValueList, List<Short> searchConditionList, List<Byte> updateColumnIndexList, List<Object> updateColumnValueList, boolean isIncrement) {
+    public int updateRecord(String databaseName, String tableName, List<Byte> searchColumnIndexList, List<Object> searchValueList, List<Short> searchConditionList, List<Byte> updateColumnIndexList, List<Object> updateColumnValueList, boolean isIncrement) throws InternalException {
         List<InternalCondition> conditions = new ArrayList<>();
         for (byte i = 0; i < searchColumnIndexList.size(); i++) {
             conditions.add(InternalCondition.CreateCondition(searchColumnIndexList.get(i), searchConditionList.get(i), searchValueList.get(i)));
@@ -921,7 +931,7 @@ public class StorageManager {
         return updateRecord(databaseName, tableName, conditions, updateColumnIndexList, updateColumnValueList, isIncrement);
     }
 
-    public int updateRecord(String databaseName, String tableName, List<InternalCondition> conditions, List<Byte> updateColumnIndexList, List<Object> updateColumnValueList, boolean isIncrement) {
+    public int updateRecord(String databaseName, String tableName, List<InternalCondition> conditions, List<Byte> updateColumnIndexList, List<Object> updateColumnValueList, boolean isIncrement) throws InternalException {
         int updateRecordCount = 0;
         try {
             if (conditions == null || updateColumnIndexList == null
@@ -955,10 +965,10 @@ public class StorageManager {
                     }
                 }
             } else {
-                ConsoleWriter.displayMessage("Table " + tableName + " does not exist!");
+                Utils.printMessage(String.format("Table '%s.%s' doesn't exist.", databaseName, tableName));
             }
-        } catch (IOException e) {
-            e.printStackTrace();
+        } catch (Exception e) {
+            throw new InternalException(InternalException.GENERIC_EXCEPTION);
         }
         return updateRecordCount;
     }
@@ -968,7 +978,7 @@ public class StorageManager {
         return object1;
     }
 
-    public Page<DataRecord> getLastRecordAndPage(String databaseName, String tableName) {
+    public Page<DataRecord> getLastRecordAndPage(String databaseName, String tableName) throws InternalException {
         try {
             File file = new File(Utils.getDatabasePath(databaseName) + "/" + tableName + Constants.DEFAULT_FILE_EXTENSION);
             if (file.exists()) {
@@ -984,16 +994,15 @@ public class StorageManager {
                 randomAccessFile.close();
                 return page;
             } else {
-                ConsoleWriter.displayMessage("File " + tableName + " does not exist");
+                Utils.printMessage(String.format("Table '%s.%s' doesn't exist.", databaseName, tableName));
                 return null;
             }
-        } catch (IOException e) {
-            e.printStackTrace();
-            return null;
+        } catch (Exception e) {
+            throw new InternalException(InternalException.GENERIC_EXCEPTION);
         }
     }
 
-    private Page getLastPage(File file) {
+    private Page getLastPage(File file) throws InternalException {
         try {
             RandomAccessFile randomAccessFile = new RandomAccessFile(file, "r");
             Page page = readPageHeader(randomAccessFile, 0);
@@ -1002,13 +1011,12 @@ public class StorageManager {
             }
             randomAccessFile.close();
             return page;
-        } catch (IOException e) {
-            e.printStackTrace();
-            return null;
+        } catch (Exception e) {
+            throw new InternalException(InternalException.GENERIC_EXCEPTION);
         }
     }
 
-    private Page getFirstPage(File file) {
+    private Page getFirstPage(File file) throws InternalException {
         try {
             RandomAccessFile randomAccessFile = new RandomAccessFile(file, "r");
             Page page = readPageHeader(randomAccessFile, 0);
@@ -1019,13 +1027,12 @@ public class StorageManager {
             }
             randomAccessFile.close();
             return page;
-        } catch (IOException e) {
-            e.printStackTrace();
-            return null;
+        } catch (Exception e) {
+            throw new InternalException(InternalException.GENERIC_EXCEPTION);
         }
     }
 
-    public int deleteRecord(String databaseName, String tableName, List<Byte> columnIndexList, List<Object> valueList, List<Short> conditionList, boolean deleteOne) {
+    public int deleteRecord(String databaseName, String tableName, List<Byte> columnIndexList, List<Object> valueList, List<Short> conditionList, boolean deleteOne) throws InternalException {
         int deletedRecordCount = 0;
         try {
             File file = new File(Utils.getDatabasePath(databaseName) + "/" + tableName + Constants.DEFAULT_FILE_EXTENSION);
@@ -1113,21 +1120,20 @@ public class StorageManager {
                 }
             }
             else {
-                ConsoleWriter.displayMessage("Table " + tableName + " does not exist");
+                Utils.printMessage(String.format("Table '%s.%s' doesn't exist.", databaseName, tableName));
                 return deletedRecordCount;
             }
         }
-        catch (IOException e) {
-            e.printStackTrace();
+        catch (ClassCastException e) {
+            throw new InternalException(InternalException.INVALID_DATATYPE_EXCEPTION);
+        }
+        catch (Exception e) {
+            throw new InternalException(InternalException.GENERIC_EXCEPTION);
         }
         return deletedRecordCount;
     }
 
-    public DataRecord getDataRecord(RandomAccessFile randomAccessFile, int pageNumber, short address) {
-        return getDataRecord(randomAccessFile, pageNumber, address, null);
-    }
-
-    public DataRecord getDataRecord(RandomAccessFile randomAccessFile, int pageNumber, short address, List<Byte> columnList) {
+    public DataRecord getDataRecord(RandomAccessFile randomAccessFile, int pageNumber, short address) throws InternalException {
         try {
             if (pageNumber >= 0 && address >= 0) {
                 DataRecord record = new DataRecord();
@@ -1210,13 +1216,15 @@ public class StorageManager {
                                 object = null;
                             break;
                     }
-                    if (columnList != null && !columnList.contains(i)) continue;
                     record.getColumnValueList().add(object);
                 }
                 return record;
             }
-        } catch (IOException e) {
-            e.printStackTrace();
+        } catch (ClassCastException e) {
+            throw new InternalException(InternalException.INVALID_DATATYPE_EXCEPTION);
+        }
+        catch (Exception e) {
+            throw new InternalException(InternalException.GENERIC_EXCEPTION);
         }
         return null;
     }
@@ -1225,7 +1233,7 @@ public class StorageManager {
     // ====================================================================================
     // Query processing methods
     // ====================================================================================
-    public List<String> fetchAllTableColumns(String databaseName, String tableName) {
+    public List<String> fetchAllTableColumns(String databaseName, String tableName) throws InternalException {
         List<String> columnNames = new ArrayList<>();
         List<InternalCondition> conditions = new ArrayList<>();
         InternalCondition condition = new InternalCondition();
@@ -1250,7 +1258,7 @@ public class StorageManager {
         return columnNames;
     }
 
-    public boolean checkNullConstraint(String databaseName, String tableName, HashMap<String, Integer> columnMap) {
+    public boolean checkNullConstraint(String databaseName, String tableName, HashMap<String, Integer> columnMap) throws InternalException {
 
         List<InternalCondition> conditions = new ArrayList<>();
         InternalCondition condition = new InternalCondition();
@@ -1287,7 +1295,7 @@ public class StorageManager {
         return true;
     }
 
-    public HashMap<String, Integer> fetchAllTableColumnDataTypes(String databaseName, String tableName) {
+    public HashMap<String, Integer> fetchAllTableColumnDataTypes(String databaseName, String tableName) throws InternalException {
         List<InternalCondition> conditions = new ArrayList<>();
         InternalCondition condition = new InternalCondition();
         condition.setIndex(CatalogDB.COLUMNS_TABLE_SCHEMA_DATABASE_NAME);
@@ -1316,7 +1324,7 @@ public class StorageManager {
         return columDataTypeMapping;
     }
 
-    public String getTablePrimaryKey(String databaseName, String tableName) {
+    public String getTablePrimaryKey(String databaseName, String tableName) throws InternalException {
         List<InternalCondition> conditions = new ArrayList<>();
 
         DT_Text tableNameObj = new DT_Text(tableName);
@@ -1339,7 +1347,7 @@ public class StorageManager {
         return columnName;
     }
 
-    public int getTableRecordCount(String databaseName, String tableName) {
+    public int getTableRecordCount(String databaseName, String tableName) throws InternalException {
         List<InternalCondition> conditions = new ArrayList<>();
         InternalCondition condition = new InternalCondition();
         condition.setIndex(CatalogDB.TABLES_TABLE_SCHEMA_DATABASE_NAME);
@@ -1364,7 +1372,7 @@ public class StorageManager {
         return recordCount;
     }
 
-    public boolean checkIfValueForPrimaryKeyExists(String databaseName, String tableName, int value) {
+    public boolean checkIfValueForPrimaryKeyExists(String databaseName, String tableName, int value) throws InternalException {
         StorageManager manager = new StorageManager();
         InternalCondition condition = InternalCondition.CreateCondition(0, InternalCondition.EQUALS, new DT_Int(value));
 

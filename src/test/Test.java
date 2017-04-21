@@ -17,26 +17,29 @@ import java.util.List;
 public class Test {
 
     public void run(int numberOfTestCases) {
-        switch (numberOfTestCases) {
-            case 1:
-                fetchTableColumns(Constants.SYSTEM_COLUMNS_TABLENAME);
+        try {
+            switch (numberOfTestCases) {
+                case 1:
+                    fetchTableColumns(Constants.SYSTEM_COLUMNS_TABLENAME);
 
-            case 2:
-                fetchSelectiveTableColumns(Constants.SYSTEM_COLUMNS_TABLENAME);
+                case 2:
+                    fetchSelectiveTableColumns(Constants.SYSTEM_COLUMNS_TABLENAME);
 
-            case 3:
-                selectAll(Constants.SYSTEM_TABLES_TABLENAME);
-                break;
+                case 3:
+                    selectAll(Constants.SYSTEM_TABLES_TABLENAME);
+                    break;
 
-            case 4:
-                deleteTableName(Constants.SYSTEM_COLUMNS_TABLENAME);
+                case 4:
+                    deleteTableName(Constants.SYSTEM_COLUMNS_TABLENAME);
 
-            case 5:
-                deleteTableColumns(Constants.SYSTEM_COLUMNS_TABLENAME);
+                case 5:
+                    deleteTableColumns(Constants.SYSTEM_COLUMNS_TABLENAME);
+            }
         }
+        catch (Exception e){}
     }
 
-    public void fetchTableColumns(String tableName) {
+    public void fetchTableColumns(String tableName)  throws Exception{
         StorageManager manager = new StorageManager();
         InternalCondition condition = new InternalCondition();
         List<DataRecord> records = manager.findRecord(Constants.DEFAULT_CATALOG_DATABASENAME, Constants.SYSTEM_COLUMNS_TABLENAME, condition, false);
@@ -49,7 +52,7 @@ public class Test {
         }
     }
 
-    public void fetchSelectiveTableColumns(String tableName) {
+    public void fetchSelectiveTableColumns(String tableName) throws Exception {
         StorageManager manager = new StorageManager();
         InternalCondition condition = new InternalCondition();
         List<Byte> selectionIndexList = new ArrayList<>();
@@ -66,7 +69,7 @@ public class Test {
         }
     }
 
-    private void selectAll(String tableName) {
+    private void selectAll(String tableName) throws Exception {
         StorageManager manager = new StorageManager();
         InternalCondition condition = new InternalCondition();
         List<DataRecord> records = manager.findRecord(Constants.DEFAULT_CATALOG_DATABASENAME, Constants.SYSTEM_TABLES_TABLENAME, condition,false);
@@ -79,7 +82,7 @@ public class Test {
         }
     }
 
-    private void deleteTableName(String tableName) {
+    private void deleteTableName(String tableName) throws Exception {
         StorageManager manager = new StorageManager();
         List<Byte> columnIndexList = new ArrayList<>();
         columnIndexList.add((byte) 1);
@@ -90,7 +93,7 @@ public class Test {
         System.out.println(manager.deleteRecord(Constants.DEFAULT_CATALOG_DATABASENAME, Constants.SYSTEM_TABLES_TABLENAME, columnIndexList, valueList, conditionList,true));
     }
 
-    private void deleteTableColumns(String tableName) {
+    private void deleteTableColumns(String tableName) throws Exception {
         StorageManager manager = new StorageManager();
         List<Byte> columnIndexList = new ArrayList<>();
         List<Object> valueList = new ArrayList<>();

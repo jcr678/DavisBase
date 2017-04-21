@@ -7,6 +7,7 @@ import Model.Result;
 import common.Constants;
 import common.Utils;
 import datatypes.base.DT;
+import errors.InternalException;
 import storage.StorageManager;
 
 import java.util.*;
@@ -28,81 +29,92 @@ public class UpdateQuery implements IQuery {
 
     @Override
     public Result ExecuteQuery() {
-        // public boolean updateRecord(String databaseName, String tableName,
-        // List<Byte> searchColumnsIndexList,
-        // List<Object> searchKeysValueList,
-        // List<Short> searchKeysConditionsList,
-        // List<Byte> updateColumnIndexList,
-        // List<Object> updateColumnValueList,
-        // boolean isIncrement)
+        try {
+            // public boolean updateRecord(String databaseName, String tableName,
+            // List<Byte> searchColumnsIndexList,
+            // List<Object> searchKeysValueList,
+            // List<Short> searchKeysConditionsList,
+            // List<Byte> updateColumnIndexList,
+            // List<Object> updateColumnValueList,
+            // boolean isIncrement)
 
-        StorageManager manager = new StorageManager();
+            StorageManager manager = new StorageManager();
 
-        HashMap<String, Integer> columnDataTypeMapping = manager.fetchAllTableColumnDataTypes(this.databaseName, tableName);
-        List<String> retrievedColumns = manager.fetchAllTableColumns(this.databaseName, tableName);
-        List<Byte> searchColumnsIndexList = getSearchColumnsIndexList(retrievedColumns);
-        List<Object> searchKeysValueList = getSearchKeysValueList(columnDataTypeMapping);
-        List<Short> searchKeysConditionsList = getSearchKeysConditionsList(retrievedColumns);
-        List<Byte> updateColumnIndexList = getUpdateColumnIndexList(retrievedColumns);
-        List<Object> updateColumnValueList = getUpdateColumnValueList(columnDataTypeMapping);
+            HashMap<String, Integer> columnDataTypeMapping = manager.fetchAllTableColumnDataTypes(this.databaseName, tableName);
+            List<String> retrievedColumns = manager.fetchAllTableColumns(this.databaseName, tableName);
+            List<Byte> searchColumnsIndexList = getSearchColumnsIndexList(retrievedColumns);
+            List<Object> searchKeysValueList = getSearchKeysValueList(columnDataTypeMapping);
+            List<Short> searchKeysConditionsList = getSearchKeysConditionsList(retrievedColumns);
+            List<Byte> updateColumnIndexList = getUpdateColumnIndexList(retrievedColumns);
+            List<Object> updateColumnValueList = getUpdateColumnValueList(columnDataTypeMapping);
 
-        int rowsAffected = manager.updateRecord(databaseName, tableName, searchColumnsIndexList, searchKeysValueList, searchKeysConditionsList, updateColumnIndexList, updateColumnValueList, false);
+            int rowsAffected = manager.updateRecord(databaseName, tableName, searchColumnsIndexList, searchKeysValueList, searchKeysConditionsList, updateColumnIndexList, updateColumnValueList, false);
 
-        Result result;
-        result = new Result(rowsAffected);
-        return result;
+            Result result;
+            result = new Result(rowsAffected);
+            return result;
+        }
+        catch (InternalException e) {
+            Utils.printMessage(e.getMessage());
+        }
+        return null;
     }
 
     @Override
     public boolean ValidateQuery() {
-        StorageManager manager = new StorageManager();
-        List<String> retrievedColumns = manager.fetchAllTableColumns(this.databaseName, tableName);
-        HashMap<String, Integer> columnDataTypeMapping = manager.fetchAllTableColumnDataTypes(this.databaseName, tableName);
+        try {
+            StorageManager manager = new StorageManager();
+            List<String> retrievedColumns = manager.fetchAllTableColumns(this.databaseName, tableName);
+            HashMap<String, Integer> columnDataTypeMapping = manager.fetchAllTableColumnDataTypes(this.databaseName, tableName);
 
-        if (!manager.checkTableExists(this.databaseName, tableName)) {
-            Utils.printMissingTableError(this.databaseName, tableName);
-            return false;
-        }
-
-        // Validate the columns.
-        if (this.condition == null) {
-            // No condition.
-            // Validate the existence of the column. (Update Column)
-            if(!checkColumnValidity(retrievedColumns, false)) {
+            if (!manager.checkTableExists(this.databaseName, tableName)) {
+                Utils.printMissingTableError(this.databaseName, tableName);
                 return false;
             }
 
-            // Validate update column data type.
-            if(!checkValueDataTypeValidity(columnDataTypeMapping, retrievedColumns, false)) {
-                return false;
+            // Validate the columns.
+            if (this.condition == null) {
+                // No condition.
+                // Validate the existence of the column. (Update Column)
+                if (!checkColumnValidity(retrievedColumns, false)) {
+                    return false;
+                }
+
+                // Validate update column data type.
+                if (!checkValueDataTypeValidity(columnDataTypeMapping, retrievedColumns, false)) {
+                    return false;
+                }
+
+                return true;
+            } else {
+                // Validate the column in the condition.
+                // Validate the existence of the column. (Condition Column)
+                if (!checkColumnValidity(retrievedColumns, true)) {
+                    return false;
+                }
+
+                // Validate the existence of the column. (Update Column)
+                if (!checkColumnValidity(retrievedColumns, false)) {
+                    return false;
+                }
+
+                // Validate condition column data type.
+                if (!checkValueDataTypeValidity(columnDataTypeMapping, retrievedColumns, true)) {
+                    return false;
+                }
+
+                // Validate update column data type.
+                if (!checkValueDataTypeValidity(columnDataTypeMapping, retrievedColumns, false)) {
+                    return false;
+                }
             }
 
             return true;
         }
-        else {
-            // Validate the column in the condition.
-            // Validate the existence of the column. (Condition Column)
-            if(!checkColumnValidity(retrievedColumns, true)) {
-                return false;
-            }
-
-            // Validate the existence of the column. (Update Column)
-            if(!checkColumnValidity(retrievedColumns, false)) {
-                return false;
-            }
-
-            // Validate condition column data type.
-            if(!checkValueDataTypeValidity(columnDataTypeMapping, retrievedColumns, true)) {
-                return false;
-            }
-
-            // Validate update column data type.
-            if(!checkValueDataTypeValidity(columnDataTypeMapping, retrievedColumns, false)) {
-                return false;
-            }
+        catch (InternalException e) {
+            Utils.printMessage(e.getMessage());
         }
-
-        return true;
+        return false;
     }
 
     private boolean checkValueDataTypeValidity(HashMap<String, Integer> columnDataTypeMapping, List<String> columnsList, boolean isConditionCheck) {

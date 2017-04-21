@@ -1,7 +1,6 @@
 package queries;
 
 import Model.*;
-import com.sun.tools.internal.jxc.ap.Const;
 import common.Constants;
 import common.Utils;
 import datatypes.*;

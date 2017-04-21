@@ -771,6 +771,7 @@ public class StorageManager {
                                                         break;
 
                                                     default:
+                                                        randomAccessFile.close();
                                                         throw new InternalException(InternalException.DATATYPE_MISMATCH_EXCEPTION, "Number");
                                                 }
                                                 break;
@@ -794,6 +795,7 @@ public class StorageManager {
                                                         break;
 
                                                     default:
+                                                        randomAccessFile.close();
                                                         throw new InternalException(InternalException.DATATYPE_MISMATCH_EXCEPTION, "Number");
                                                 }
                                                 break;
@@ -817,6 +819,7 @@ public class StorageManager {
                                                         break;
 
                                                     default:
+                                                        randomAccessFile.close();
                                                         throw new InternalException(InternalException.DATATYPE_MISMATCH_EXCEPTION, "Number");
                                                 }
                                                 break;
@@ -840,6 +843,7 @@ public class StorageManager {
                                                         break;
 
                                                     default:
+                                                        randomAccessFile.close();
                                                         throw new InternalException(InternalException.DATATYPE_MISMATCH_EXCEPTION, "Number");
                                                 }
                                                 break;
@@ -855,6 +859,7 @@ public class StorageManager {
                                                         break;
 
                                                     default:
+                                                        randomAccessFile.close();
                                                         throw new InternalException(InternalException.DATATYPE_MISMATCH_EXCEPTION, "Decimal Number");
                                                 }
                                                 break;
@@ -870,6 +875,7 @@ public class StorageManager {
                                                         break;
 
                                                     default:
+                                                        randomAccessFile.close();
                                                         throw new InternalException(InternalException.DATATYPE_MISMATCH_EXCEPTION, "Decimal Number");
                                                 }
                                                 break;
@@ -881,6 +887,7 @@ public class StorageManager {
                                                         break;
 
                                                     default:
+                                                        randomAccessFile.close();
                                                         throw new InternalException(InternalException.DATATYPE_MISMATCH_EXCEPTION, "Date");
                                                 }
                                                 break;
@@ -892,6 +899,7 @@ public class StorageManager {
                                                         break;
 
                                                     default:
+                                                        randomAccessFile.close();
                                                         throw new InternalException(InternalException.DATATYPE_MISMATCH_EXCEPTION, "Datetime");
                                                 }
                                                 break;
@@ -908,6 +916,7 @@ public class StorageManager {
                                                         break;
 
                                                     default:
+                                                        randomAccessFile.close();
                                                         throw new InternalException(InternalException.DATATYPE_MISMATCH_EXCEPTION, "String");
                                                 }
                                                 break;
@@ -1119,6 +1128,7 @@ public class StorageManager {
                                                         break;
 
                                                     default:
+                                                        randomAccessFile.close();
                                                         throw new InternalException(InternalException.DATATYPE_MISMATCH_EXCEPTION, "Number");
                                                 }
                                                 break;
@@ -1142,6 +1152,7 @@ public class StorageManager {
                                                         break;
 
                                                     default:
+                                                        randomAccessFile.close();
                                                         throw new InternalException(InternalException.DATATYPE_MISMATCH_EXCEPTION, "Number");
                                                 }
                                                 break;
@@ -1165,6 +1176,7 @@ public class StorageManager {
                                                         break;
 
                                                     default:
+                                                        randomAccessFile.close();
                                                         throw new InternalException(InternalException.DATATYPE_MISMATCH_EXCEPTION, "Number");
                                                 }
                                                 break;
@@ -1188,6 +1200,7 @@ public class StorageManager {
                                                         break;
 
                                                     default:
+                                                        randomAccessFile.close();
                                                         throw new InternalException(InternalException.DATATYPE_MISMATCH_EXCEPTION, "Number");
                                                 }
                                                 break;
@@ -1203,6 +1216,7 @@ public class StorageManager {
                                                         break;
 
                                                     default:
+                                                        randomAccessFile.close();
                                                         throw new InternalException(InternalException.DATATYPE_MISMATCH_EXCEPTION, "Decimal Number");
                                                 }
                                                 break;
@@ -1218,6 +1232,7 @@ public class StorageManager {
                                                         break;
 
                                                     default:
+                                                        randomAccessFile.close();
                                                         throw new InternalException(InternalException.DATATYPE_MISMATCH_EXCEPTION, "Decimal Number");
                                                 }
                                                 break;
@@ -1229,6 +1244,7 @@ public class StorageManager {
                                                         break;
 
                                                     default:
+                                                        randomAccessFile.close();
                                                         throw new InternalException(InternalException.DATATYPE_MISMATCH_EXCEPTION, "Date");
                                                 }
                                                 break;
@@ -1240,6 +1256,7 @@ public class StorageManager {
                                                         break;
 
                                                     default:
+                                                        randomAccessFile.close();
                                                         throw new InternalException(InternalException.DATATYPE_MISMATCH_EXCEPTION, "Datetime");
                                                 }
                                                 break;
@@ -1256,6 +1273,7 @@ public class StorageManager {
                                                         break;
 
                                                     default:
+                                                        randomAccessFile.close();
                                                         throw new InternalException(InternalException.DATATYPE_MISMATCH_EXCEPTION, "String");
                                                 }
                                                 break;

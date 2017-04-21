@@ -1,8 +1,9 @@
 package storage.model;
 
 /**
- * Created by dakle on 9/4/17.
+ * Created by Mahesh on 9/4/17.
  */
+
 public class PointerRecord {
 
     private int leftPageNumber;

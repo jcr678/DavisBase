@@ -2,6 +2,10 @@ package Model;
 
 import QueryParser.DatabaseHelper;
 
+/**
+ * Created by Mahesh on 15/4/17.
+ */
+
 public class Column {
     public String name;
     public DataType type;

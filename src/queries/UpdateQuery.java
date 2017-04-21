@@ -8,10 +8,13 @@ import common.Utils;
 import datatypes.base.DT;
 import errors.InternalException;
 import storage.StorageManager;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+
+/**
+ * Created by Mahesh on 15/4/17.
+ */
 
 public class UpdateQuery implements IQuery {
     public String databaseName;

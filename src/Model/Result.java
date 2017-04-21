@@ -1,5 +1,9 @@
 package Model;
 
+/**
+ * Created by Mahesh on 15/4/17.
+ */
+
 public class Result {
     public int rowAffected;
     public boolean isInternal = false;

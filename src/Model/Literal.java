@@ -5,6 +5,10 @@ import common.Constants;
 import common.Utils;
 import datatypes.base.DT;
 
+/**
+ * Created by Mahesh on 15/4/17.
+ */
+
 public class Literal {
     public DataType type;
     public String value;

@@ -8,6 +8,10 @@ import queries.*;
 import java.io.File;
 import java.util.ArrayList;
 
+/**
+ * Created by Mahesh on 15/4/17.
+ */
+
 public class DatabaseHelper {
 
     public static final String SELECT_COMMAND = "SELECT";
@@ -33,7 +37,7 @@ public class DatabaseHelper {
     public static String CurrentDatabaseName = "";
     public static String prompt = "davisql> ";
     private static String version = "v1.0b";
-    private static String copyright = "©2017 Parag Pravin Dakle";
+    private static String copyright = "©2017 Mahesh Shanbhag";
 
     public static IQuery ShowTableListQueryHandler() {
         if(DatabaseHelper.CurrentDatabaseName.equals("")){

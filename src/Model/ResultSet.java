@@ -4,6 +4,10 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 
+/**
+ * Created by Mahesh on 15/4/17.
+ */
+
 public class ResultSet extends Result{
     private ArrayList<String> columns;
     private ArrayList<Record> records;

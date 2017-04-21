@@ -77,6 +77,12 @@ public class Literal {
         catch (Exception e){}
 
         try{
+            Long.parseLong(literalString);
+            return new Literal(DataType.BIGINT, literalString);
+        }
+        catch (Exception e){}
+
+        try{
             Double.parseDouble(literalString);
             return new Literal(DataType.REAL, literalString);
         }

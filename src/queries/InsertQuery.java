@@ -357,7 +357,7 @@ public class InsertQuery implements IQuery {
 
     private int findRowID (StorageManager manager, List<String> retrievedList) throws InternalException {
         int rowCount = manager.getTableRecordCount(this.databaseName, tableName);
-        String primaryKeyColumnName = manager.getTablePrimaryKey(tableName, databaseName);
+        String primaryKeyColumnName = manager.getTablePrimaryKey(databaseName, tableName);
         if (primaryKeyColumnName.length() > 0) {
             // The primary key is present.
             // Check if the same primary key with same value is present.

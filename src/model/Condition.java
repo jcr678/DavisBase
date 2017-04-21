@@ -1,6 +1,6 @@
 package model;
 
-import QueryParser.DatabaseHelper;
+import query.parser.QueryParser;
 
 /**
  * Created by Mahesh on 15/4/17.
@@ -14,7 +14,7 @@ public class Condition {
     public static Condition CreateCondition(String conditionString) {
         Operator operator = GetOperator(conditionString);
         if(operator == null) {
-            DatabaseHelper.UnrecognisedCommand(conditionString, "Unrecognised operator. \nValid operators include =, >, <, >=, <=. \nPlease follow <column> <operator> <value>");
+            QueryParser.UnrecognisedCommand(conditionString, "Unrecognised operator. \nValid operators include =, >, <, >=, <=. \nPlease follow <column> <operator> <value>");
             return null;
         }
 
@@ -48,7 +48,7 @@ public class Condition {
         Condition condition;
         parts = conditionString.split(operatorString);
         if(parts.length != 2) {
-            DatabaseHelper.UnrecognisedCommand(conditionString, "Unrecognised condition. Please follow <column> <operator> <value>");
+            QueryParser.UnrecognisedCommand(conditionString, "Unrecognised condition. Please follow <column> <operator> <value>");
             return null;
         }
 

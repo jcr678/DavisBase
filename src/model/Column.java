@@ -1,6 +1,6 @@
 package model;
 
-import QueryParser.DatabaseHelper;
+import query.parser.QueryParser;
 
 /**
  * Created by Mahesh on 15/4/17.
@@ -26,7 +26,7 @@ public class Column {
         String[] parts = columnString.split(" ");
         String name = "";
         if(parts.length > 2){
-            DatabaseHelper.UnrecognisedCommand(columnString, "Expected Column format <name> <datatype> [PRIMARY KEY]/[NOT NULL]");
+            QueryParser.UnrecognisedCommand(columnString, "Expected Column format <name> <datatype> [PRIMARY KEY]/[NOT NULL]");
             return null;
         }
 
@@ -34,7 +34,7 @@ public class Column {
             name = parts[0].trim();
             DataType type = GetDataType(parts[1].trim());
             if(type == null){
-                DatabaseHelper.UnrecognisedCommand(columnString, "Unrecognised Data type " + parts[1]);
+                QueryParser.UnrecognisedCommand(columnString, "Unrecognised Data type " + parts[1]);
                 return null;
             }
 
@@ -42,7 +42,7 @@ public class Column {
             return column;
         }
 
-        DatabaseHelper.UnrecognisedCommand(columnString, "Expected Column format <name> <datatype> [PRIMARY KEY]/[NOT NULL]");
+        QueryParser.UnrecognisedCommand(columnString, "Expected Column format <name> <datatype> [PRIMARY KEY]/[NOT NULL]");
         return null;
     }
 

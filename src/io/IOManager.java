@@ -15,7 +15,6 @@ import io.model.PointerRecord;
 import java.io.File;
 import java.io.RandomAccessFile;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 
 /**
@@ -1072,13 +1071,13 @@ public class IOManager {
         }
     }
 
-    public int deleteRecord(String databaseName, String tableName, List<Byte> columnIndexList, List<Object> valueList, List<Short> conditionList, boolean deleteOne) throws InternalException {
+    public int deleteRecord(String databaseName, String tableName, List<InternalCondition> conditions) throws InternalException {
         int deletedRecordCount = 0;
         try {
             File file = new File(Utils.getDatabasePath(databaseName) + "/" + tableName + Constants.DEFAULT_FILE_EXTENSION);
             if (file.exists()) {
                 RandomAccessFile randomAccessFile = new RandomAccessFile(file, "rw");
-                if(columnIndexList != null) {
+                if(conditions != null) {
                     Page page = getFirstLeafPage(file);
                     DataRecord record;
                     boolean isMatch;
@@ -1089,11 +1088,11 @@ public class IOManager {
                         for (Short offset : new ArrayList<Short>(page.getRecordAddressList())) {
                             isMatch = true;
                             record = getDataRecord(randomAccessFile, page.getPageNumber(), offset);
-                            for(int i = 0; i < columnIndexList.size(); i++) {
+                            for(int i = 0; i < conditions.size(); i++) {
                                 isMatch = false;
-                                columnIndex = columnIndexList.get(i);
-                                value = valueList.get(i);
-                                condition = conditionList.get(i);
+                                columnIndex = conditions.get(i).getIndex();
+                                value = conditions.get(i).getValue();
+                                condition = conditions.get(i).getConditionType();
                                 if (record != null && record.getColumnValueList().size() > columnIndex) {
                                     Object object = record.getColumnValueList().get(columnIndex);
                                     if(((DT) object).isNull()) isMatch = false;
@@ -1282,10 +1281,6 @@ public class IOManager {
                                 this.writePageHeader(randomAccessFile, page);
                                 SystemDatabaseHelper.decrementRowCount(databaseName, tableName);
                                 deletedRecordCount++;
-                                if(deleteOne) {
-                                    randomAccessFile.close();
-                                    return deletedRecordCount;
-                                }
                             }
                         }
                         if(page.getRightNodeAddress() == Page.RIGHTMOST_PAGE)
@@ -1313,7 +1308,7 @@ public class IOManager {
         return deletedRecordCount;
     }
 
-    public DataRecord getDataRecord(RandomAccessFile randomAccessFile, int pageNumber, short address) throws InternalException {
+    private DataRecord getDataRecord(RandomAccessFile randomAccessFile, int pageNumber, short address) throws InternalException {
         try {
             if (pageNumber >= 0 && address >= 0) {
                 DataRecord record = new DataRecord();
@@ -1409,156 +1404,4 @@ public class IOManager {
         return null;
     }
 
-
-    // ====================================================================================
-    // Query processing methods
-    // ====================================================================================
-    public List<String> fetchAllTableColumns(String databaseName, String tableName) throws InternalException {
-        List<String> columnNames = new ArrayList<>();
-        List<InternalCondition> conditions = new ArrayList<>();
-        InternalCondition condition = new InternalCondition();
-        condition.setIndex(SystemDatabaseHelper.COLUMNS_TABLE_SCHEMA_DATABASE_NAME);
-        condition.setValue(new DT_Text(databaseName));
-        condition.setConditionType(InternalCondition.EQUALS);
-        conditions.add(condition);
-        condition = new InternalCondition();
-        condition.setIndex(SystemDatabaseHelper.COLUMNS_TABLE_SCHEMA_TABLE_NAME);
-        condition.setValue(new DT_Text(tableName));
-        condition.setConditionType(InternalCondition.EQUALS);
-        conditions.add(condition);
-
-        List<DataRecord> records = this.findRecord(Constants.DEFAULT_CATALOG_DATABASENAME, Constants.SYSTEM_COLUMNS_TABLENAME, conditions, false);
-
-        for (int i = 0; i < records.size(); i++) {
-            DataRecord record = records.get(i);
-            Object object = record.getColumnValueList().get(SystemDatabaseHelper.COLUMNS_TABLE_SCHEMA_COLUMN_NAME);
-            columnNames.add(((DT) object).getStringValue());
-        }
-
-        return columnNames;
-    }
-
-    public boolean checkNullConstraint(String databaseName, String tableName, HashMap<String, Integer> columnMap) throws InternalException {
-
-        List<InternalCondition> conditions = new ArrayList<>();
-        InternalCondition condition = new InternalCondition();
-        condition.setIndex(SystemDatabaseHelper.COLUMNS_TABLE_SCHEMA_DATABASE_NAME);
-        condition.setValue(new DT_Text(databaseName));
-        condition.setConditionType(InternalCondition.EQUALS);
-        conditions.add(condition);
-        condition = new InternalCondition();
-        condition.setIndex(SystemDatabaseHelper.COLUMNS_TABLE_SCHEMA_TABLE_NAME);
-        condition.setValue(new DT_Text(tableName));
-        condition.setConditionType(InternalCondition.EQUALS);
-        conditions.add(condition);
-
-        List<DataRecord> records = this.findRecord(Constants.DEFAULT_CATALOG_DATABASENAME, Constants.SYSTEM_COLUMNS_TABLENAME, conditions, false);
-
-        for (int i = 0; i < records.size(); i++) {
-            DataRecord record = records.get(i);
-            Object nullValueObject = record.getColumnValueList().get(SystemDatabaseHelper.COLUMNS_TABLE_SCHEMA_IS_NULLABLE);
-            Object object = record.getColumnValueList().get(SystemDatabaseHelper.COLUMNS_TABLE_SCHEMA_COLUMN_NAME);
-
-            String isNullStr = ((DT) nullValueObject).getStringValue().toUpperCase();
-            boolean isNullable = isNullStr.equals("YES");
-
-            if (!columnMap.containsKey(((DT) object).getStringValue()) && !isNullable) {
-                Utils.printMessage("Field '" + ((DT) object).getStringValue() + "' cannot be NULL");
-                return false;
-            }
-
-        }
-
-        return true;
-    }
-
-    public HashMap<String, Integer> fetchAllTableColumnDataTypes(String databaseName, String tableName) throws InternalException {
-        List<InternalCondition> conditions = new ArrayList<>();
-        InternalCondition condition = new InternalCondition();
-        condition.setIndex(SystemDatabaseHelper.COLUMNS_TABLE_SCHEMA_DATABASE_NAME);
-        condition.setValue(new DT_Text(databaseName));
-        condition.setConditionType(InternalCondition.EQUALS);
-        conditions.add(condition);
-        condition = new InternalCondition();
-        condition.setIndex(SystemDatabaseHelper.COLUMNS_TABLE_SCHEMA_TABLE_NAME);
-        condition.setValue(new DT_Text(tableName));
-        condition.setConditionType(InternalCondition.EQUALS);
-        conditions.add(condition);
-
-        List<DataRecord> records = this.findRecord(Constants.DEFAULT_CATALOG_DATABASENAME, Constants.SYSTEM_COLUMNS_TABLENAME, conditions, false);
-        HashMap<String, Integer> columDataTypeMapping = new HashMap<>();
-
-        for (int i = 0; i < records.size(); i++) {
-            DataRecord record = records.get(i);
-            Object object = record.getColumnValueList().get(SystemDatabaseHelper.COLUMNS_TABLE_SCHEMA_COLUMN_NAME);
-            Object dataTypeObject = record.getColumnValueList().get(SystemDatabaseHelper.COLUMNS_TABLE_SCHEMA_DATA_TYPE);
-
-            String columnName = ((DT) object).getStringValue();
-            int columnDataType = Utils.stringToDataType(((DT) dataTypeObject).getStringValue());
-            columDataTypeMapping.put(columnName.toLowerCase(), columnDataType);
-        }
-
-        return columDataTypeMapping;
-    }
-
-    public String getTablePrimaryKey(String databaseName, String tableName) throws InternalException {
-        List<InternalCondition> conditions = new ArrayList<>();
-
-        DT_Text tableNameObj = new DT_Text(tableName);
-        DT_Text primaryKeyObj = new DT_Text(SystemDatabaseHelper.PRIMARY_KEY_IDENTIFIER);
-        DT_Text databaseObj = new DT_Text(databaseName);
-
-
-        conditions.add(InternalCondition.CreateCondition(SystemDatabaseHelper.COLUMNS_TABLE_SCHEMA_DATABASE_NAME, InternalCondition.EQUALS, databaseObj));
-        conditions.add(InternalCondition.CreateCondition(SystemDatabaseHelper.COLUMNS_TABLE_SCHEMA_TABLE_NAME, InternalCondition.EQUALS, tableNameObj));
-        conditions.add(InternalCondition.CreateCondition(SystemDatabaseHelper.COLUMNS_TABLE_SCHEMA_COLUMN_KEY, InternalCondition.EQUALS, primaryKeyObj));
-
-        List<DataRecord> records = this.findRecord(Constants.DEFAULT_CATALOG_DATABASENAME, Constants.SYSTEM_COLUMNS_TABLENAME, conditions, false);
-        String columnName = "";
-        for (DataRecord record : records) {
-            Object object = record.getColumnValueList().get(SystemDatabaseHelper.COLUMNS_TABLE_SCHEMA_COLUMN_NAME);
-            columnName = ((DT) object).getStringValue();
-            break;
-        }
-
-        return columnName;
-    }
-
-    public int getTableRecordCount(String databaseName, String tableName) throws InternalException {
-        List<InternalCondition> conditions = new ArrayList<>();
-        InternalCondition condition = new InternalCondition();
-        condition.setIndex(SystemDatabaseHelper.TABLES_TABLE_SCHEMA_DATABASE_NAME);
-        condition.setValue(new DT_Text(databaseName));
-        condition.setConditionType(InternalCondition.EQUALS);
-        conditions.add(condition);
-        condition = new InternalCondition();
-        condition.setIndex(SystemDatabaseHelper.TABLES_TABLE_SCHEMA_TABLE_NAME);
-        condition.setValue(new DT_Text(tableName));
-        condition.setConditionType(InternalCondition.EQUALS);
-        conditions.add(condition);
-
-        List<DataRecord> records = this.findRecord(Constants.DEFAULT_CATALOG_DATABASENAME, Constants.SYSTEM_TABLES_TABLENAME, conditions, true);
-        int recordCount = 0;
-
-        for (DataRecord record : records) {
-            Object object = record.getColumnValueList().get(SystemDatabaseHelper.TABLES_TABLE_SCHEMA_RECORD_COUNT);
-            recordCount = Integer.valueOf(((DT) object).getStringValue());
-            break;
-        }
-
-        return recordCount;
-    }
-
-    public boolean checkIfValueForPrimaryKeyExists(String databaseName, String tableName, int value) throws InternalException {
-        IOManager manager = new IOManager();
-        InternalCondition condition = InternalCondition.CreateCondition(0, InternalCondition.EQUALS, new DT_Int(value));
-
-        List<DataRecord> records = manager.findRecord(databaseName, tableName, condition, false);
-        if (records.size() > 0) {
-            return true;
-        }
-        else {
-            return false;
-        }
-    }
 }

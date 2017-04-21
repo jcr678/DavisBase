@@ -1,6 +1,6 @@
 package model;
 
-import QueryParser.DatabaseHelper;
+import query.parser.QueryParser;
 import common.Constants;
 import common.Utils;
 import datatypes.base.DT;
@@ -92,7 +92,7 @@ public class Literal {
         }
         catch (Exception e){}
 
-            DatabaseHelper.UnrecognisedCommand(literalString, "Unrecognised Literal Found. Please use integers, real or strings ");
+            QueryParser.UnrecognisedCommand(literalString, "Unrecognised Literal Found. Please use integers, real or strings ");
         return null;
     }
 

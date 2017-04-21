@@ -1,10 +1,10 @@
-package queries;
+package query;
 
 import model.Condition;
-import model.IQuery;
+import query.base.IQuery;
 import model.Result;
 import model.ResultSet;
-import QueryParser.DatabaseHelper;
+import query.parser.QueryParser;
 import common.Constants;
 import common.Utils;
 
@@ -49,7 +49,7 @@ public class DescTableQuery implements IQuery {
 
     @Override
     public boolean ValidateQuery() {
-        boolean tableExists = DatabaseHelper.isTableExists(this.databaseName, this.tableName);
+        boolean tableExists = QueryParser.isTableExists(this.databaseName, this.tableName);
 
         if(!tableExists){
             Utils.printError(String.format("Unknown table '%s.%s'", this.databaseName, this.tableName));

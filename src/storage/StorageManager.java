@@ -1447,7 +1447,8 @@ public class StorageManager {
         return columnNames;
     }
 
-    public boolean checkNullConstraint(String databaseName, String tableName, HashMap<String, Integer> columnMap) throws InternalException {
+    public boolean
+    checkNullConstraint(String databaseName, String tableName, HashMap<String, Integer> columnMap) throws InternalException {
 
         List<InternalCondition> conditions = new ArrayList<>();
         InternalCondition condition = new InternalCondition();
@@ -1468,14 +1469,11 @@ public class StorageManager {
             Object nullValueObject = record.getColumnValueList().get(CatalogDB.COLUMNS_TABLE_SCHEMA_IS_NULLABLE);
             Object object = record.getColumnValueList().get(CatalogDB.COLUMNS_TABLE_SCHEMA_COLUMN_NAME);
 
-            String isNullStr = ((DT) nullValueObject).getStringValue();
-            boolean isNullable = (isNullStr.compareToIgnoreCase("NULL") == 0) ? false : true;
-            if (isNullable) {
-                isNullable = (isNullStr.compareToIgnoreCase("NO") == 0) ? true : false;
-            }
+            String isNullStr = ((DT) nullValueObject).getStringValue().toUpperCase();
+            boolean isNullable = isNullStr.equals("YES");
 
-            if (!columnMap.containsKey(((DT) object).getStringValue()) && isNullable) {
-                Utils.printMessage("Field '" + ((DT) object).getStringValue() + "' doesn't have a default value");
+            if (!columnMap.containsKey(((DT) object).getStringValue()) && !isNullable) {
+                Utils.printMessage("Field '" + ((DT) object).getStringValue() + "' cannot be NULL");
                 return false;
             }
 

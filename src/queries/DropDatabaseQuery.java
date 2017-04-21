@@ -8,6 +8,7 @@ import common.Constants;
 import common.Utils;
 
 import java.io.File;
+import java.util.ArrayList;
 
 /**
  * Created by dhruv on 4/12/2017.
@@ -26,10 +27,13 @@ public class DropDatabaseQuery implements IQuery {
         File database = new File(DEFAULT_DATA_DIRNAME + "/" + this.databaseName);
 
         Condition condition = Condition.CreateCondition(String.format("database_name = '%s'", this.databaseName));
-        IQuery deleteEntryQuery = new DeleteQuery(Constants.DEFAULT_CATALOG_DATABASENAME, Constants.SYSTEM_TABLES_TABLENAME, condition, true);
+        ArrayList<Condition> conditions = new ArrayList<>();
+        conditions.add(condition);
+
+        IQuery deleteEntryQuery = new DeleteQuery(Constants.DEFAULT_CATALOG_DATABASENAME, Constants.SYSTEM_TABLES_TABLENAME, conditions, true);
         deleteEntryQuery.ExecuteQuery();
 
-        deleteEntryQuery = new DeleteQuery(Constants.DEFAULT_CATALOG_DATABASENAME, Constants.SYSTEM_COLUMNS_TABLENAME, condition, true);
+        deleteEntryQuery = new DeleteQuery(Constants.DEFAULT_CATALOG_DATABASENAME, Constants.SYSTEM_COLUMNS_TABLENAME, conditions, true);
         deleteEntryQuery.ExecuteQuery();
 
         boolean isDeleted = RecursivelyDelete(database);

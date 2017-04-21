@@ -4,9 +4,11 @@ import Model.Condition;
 import Model.IQuery;
 import Model.Result;
 import QueryParser.DatabaseHelper;
+import common.Constants;
 import common.Utils;
 
 import java.io.File;
+import java.util.ArrayList;
 
 /**
  * Created by dhruv on 4/12/2017.
@@ -22,22 +24,21 @@ public class DropTableQuery implements IQuery {
 
     @Override
     public Result ExecuteQuery() {
-        /*TODO : Replace using constants file*/
-        String DEFAULT_DATA_DIRNAME = "data";
-        String CATALOG_TABLE = "davisbase_tables";
-        String CATALOG_COLUMNS = "davisbase_columns";
-        String CATALOG_DATABASE = "catalog";
-        String TABLE_FILE_EXTENSION = "tbl";
 
-        Condition condition = Condition.CreateCondition(String.format("table_name = '%s'", this.tableName));
-        IQuery deleteEntryQuery = new DeleteQuery(CATALOG_DATABASE, CATALOG_TABLE, condition, true);
-        deleteEntryQuery.ExecuteQuery();
+        ArrayList<Condition> conditionList = new ArrayList<>();
+        Condition condition = Condition.CreateCondition(String.format("database_name = '%s'", this.databaseName));
+        conditionList.add(condition);
 
         condition = Condition.CreateCondition(String.format("table_name = '%s'", this.tableName));
-        deleteEntryQuery  = new DeleteQuery(CATALOG_DATABASE, CATALOG_COLUMNS, condition, true);
+        conditionList.add(condition);
+
+        IQuery deleteEntryQuery = new DeleteQuery(Constants.DEFAULT_CATALOG_DATABASENAME, Constants.SYSTEM_TABLES_TABLENAME, conditionList, true);
         deleteEntryQuery.ExecuteQuery();
 
-        File table = new File(String.format("%s/%s/%s.%s", DEFAULT_DATA_DIRNAME, this.databaseName, this.tableName, TABLE_FILE_EXTENSION));
+        deleteEntryQuery  = new DeleteQuery(Constants.DEFAULT_CATALOG_DATABASENAME, Constants.SYSTEM_COLUMNS_TABLENAME, conditionList, true);
+        deleteEntryQuery.ExecuteQuery();
+
+        File table = new File(String.format("%s/%s/%s%s", Constants.DEFAULT_DATA_DIRNAME, this.databaseName, this.tableName, Constants.DEFAULT_FILE_EXTENSION));
         boolean isDeleted = RecursivelyDelete(table);
 
         if(!isDeleted){

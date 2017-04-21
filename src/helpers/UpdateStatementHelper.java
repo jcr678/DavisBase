@@ -65,15 +65,7 @@ public class UpdateStatementHelper {
                     record.getColumnValueList().add(new DT_Int(returnValue + columnCount));
                 }
                 record.populateSize();
-                if (manager.writeRecord(Constants.DEFAULT_CATALOG_DATABASENAME, Constants.SYSTEM_TABLES_TABLENAME, record)) {
-                    conditions.clear();
-                    conditions.add(InternalCondition.CreateCondition(CatalogDB.TABLES_TABLE_SCHEMA_TABLE_NAME, InternalCondition.EQUALS, new DT_Text(Constants.SYSTEM_TABLES_TABLENAME)));
-                    List<Byte> updateColumnsIndexList = new ArrayList<>();
-                    updateColumnsIndexList.add(CatalogDB.TABLES_TABLE_SCHEMA_RECORD_COUNT);
-                    List<Object> updateValueList = new ArrayList<>();
-                    updateValueList.add(new DT_Int(1));
-                    manager.updateRecord(Constants.DEFAULT_CATALOG_DATABASENAME, Constants.SYSTEM_TABLES_TABLENAME, conditions, updateColumnsIndexList, updateValueList, true);
-                }
+                manager.writeRecord(Constants.DEFAULT_CATALOG_DATABASENAME, Constants.SYSTEM_TABLES_TABLENAME, record);
                 return returnValue;
             } else {
                 Utils.printMessage(String.format("Table '%s.%s' already exists.", databaseName, tableName));
@@ -118,16 +110,6 @@ public class UpdateStatementHelper {
                 if (!manager.writeRecord(Constants.DEFAULT_CATALOG_DATABASENAME, Constants.SYSTEM_COLUMNS_TABLENAME, record)) {
                     break;
                 }
-            }
-            if (i > 0) {
-                List<InternalCondition> conditions = new ArrayList<>();
-                conditions.add(InternalCondition.CreateCondition(CatalogDB.TABLES_TABLE_SCHEMA_DATABASE_NAME, InternalCondition.EQUALS, new DT_Text(databaseName)));
-                conditions.add(InternalCondition.CreateCondition(CatalogDB.TABLES_TABLE_SCHEMA_TABLE_NAME, InternalCondition.EQUALS, new DT_Text(Constants.SYSTEM_COLUMNS_TABLENAME)));
-                List<Byte> updateColumnsIndexList = new ArrayList<>();
-                updateColumnsIndexList.add(CatalogDB.TABLES_TABLE_SCHEMA_RECORD_COUNT);
-                List<Object> updateValueList = new ArrayList<>();
-                updateValueList.add(new DT_Int(i));
-                manager.updateRecord(Constants.DEFAULT_CATALOG_DATABASENAME, Constants.SYSTEM_TABLES_TABLENAME, conditions, updateColumnsIndexList, updateValueList, true);
             }
             return true;
         }

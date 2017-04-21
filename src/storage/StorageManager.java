@@ -130,6 +130,7 @@ public class StorageManager {
                 record.setOffset((short) (page.getStartingAddress() + 1));
                 this.writePageHeader(randomAccessFile, page);
                 this.writeRecord(randomAccessFile, record);
+                UpdateStatementHelper.incrementRowCount(databaseName, tableName);
                 randomAccessFile.close();
             } else {
                 Utils.printMessage(String.format("Table '%s.%s' doesn't exist.", databaseName, tableName));

@@ -1,7 +1,7 @@
 package errors;
 
 /**
- * Created by dakle on 20/4/17.
+ * Created by Mahesh on 20/4/17.
  */
 public class InternalException extends Exception {
 

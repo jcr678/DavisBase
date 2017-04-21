@@ -20,69 +20,6 @@ nName TEXT,
 address TEXT,
 );
 
-======================
-create database sample;
-use sample;
-
-CREATE TABLE table1 (
-hello INT,
-);
-
-CREATE TABLE tbl (
-hello INT PRIMARY KEY,
-hi TEXT,
-bye BIGINT
-);
-
-CREATE TABLE table2 (
-hello INT PRIMARY KEY,
-hi TEXT primary key,
-bye BIGINT
-);
-
-CREATE TABLE table3 (
-hello INT PRIMARY KEY NOT NULL,
-hi TEXT primary key NOT NULL,
-bye BIGINT NULL
-);
-
-CREATE TABLE whateveryoulike (
-hello INT,
-hi TEXT,
-hello INT
-);
-
-CREATE TABLE 123 (
-somecolumn INT
-);
-
-CREATE TABLE abc (
-somecolumn INT
-);
-
-CREATE TABLE table4 (
-);
-
-CREATE TABLE table5 (
-a INT , 
-bI INT, 
-c INT,
-PALO ALTO INT
-);
-
-CREATE TABLE table6 (
-hello INT PRIMARY KEY,
-hi TEXT PRIMARY KEY,
-bye BIGINT
-);
-
-
-// TO DO:
-1. Check for multiple columns.
-2. Primary key ignorance should be avoided.
-3. Numeric table name not allowed;
-======================
-
 CREATE TABLE sample_table1 ( 
 ssn INT PRIMARY KEY,
 );

@@ -15,6 +15,10 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
+/**
+ * Created by Mahesh on 15/4/17.
+ */
+
 public class SelectQuery implements IQuery {
     public String databaseName;
     public String tableName;

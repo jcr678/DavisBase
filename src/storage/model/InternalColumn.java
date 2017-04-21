@@ -1,8 +1,9 @@
 package storage.model;
 
 /**
- * Created by dakle on 17/4/17.
+ * Created by Mahesh on 17/4/17.
  */
+
 public class InternalColumn {
 
     private int index;

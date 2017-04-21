@@ -11,7 +11,7 @@ import common.Utils;
 import java.util.ArrayList;
 
 /**
- * Created by dakle on 18/4/17.
+ * Created by Mahesh on 18/4/17.
  */
 public class DescTableQuery implements IQuery {
 

@@ -7,6 +7,10 @@ import common.Utils;
 
 import java.io.File;
 
+/**
+ * Created by Mahesh on 15/4/17.
+ */
+
 public class CreateDatabaseQuery implements IQuery {
     public String databaseName;
 

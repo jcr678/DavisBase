@@ -16,7 +16,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Created by dakle on 15/4/17.
+ * Created by Mahesh on 15/4/17.
  */
 public class UpdateStatementHelper {
 

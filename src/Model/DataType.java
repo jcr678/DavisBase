@@ -1,5 +1,9 @@
 package Model;
 
+/**
+ * Created by Mahesh on 15/4/17.
+ */
+
 public enum DataType {
     TINY_INT_NULL,
     SMALL_INT_NULL,

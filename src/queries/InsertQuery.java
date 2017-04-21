@@ -1,8 +1,6 @@
 package queries;
 
-import Model.IQuery;
-import Model.Literal;
-import Model.Result;
+import Model.*;
 import common.Constants;
 import common.Utils;
 import datatypes.*;
@@ -207,8 +205,12 @@ public class InsertQuery implements IQuery {
             Literal literal = values.get(idx);
 
             // Check if the data type is a integer type.
-            // Check if the data type is a integer type.
             if (literal.type != Utils.internalDataTypeToModelDataType((byte)dataTypeIndex)) {
+                // Check if the data type can be updated in the literal.
+                if (Utils.canUpdateLiteralDataType(literal, dataTypeIndex)) {
+                    continue;
+                }
+
                 // The data is type of integer, real or double.
                 invalidColumn = columnName;
                 break;
@@ -219,7 +221,7 @@ public class InsertQuery implements IQuery {
         boolean valid = (invalidColumn.length() > 0) ? false : true;
 
         if (!valid) {
-            Utils.printError("Incorrect value for column '" + invalidColumn  + "' at row 1");
+            Utils.printError("Incorrect value for column '" + invalidColumn  + "'");
             return false;
         }
 

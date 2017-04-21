@@ -1,8 +1,9 @@
 package storage.model;
 
 /**
- * Created by dakle on 16/4/17.
+ * Created by Mahesh on 16/4/17.
  */
+
 public class InternalCondition {
 
     public static final short EQUALS = 0;

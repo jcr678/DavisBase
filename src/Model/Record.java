@@ -2,6 +2,10 @@ package Model;
 
 import java.util.HashMap;
 
+/**
+ * Created by Mahesh on 15/4/17.
+ */
+
 public class Record {
     HashMap<String, Literal> valueMap;
 

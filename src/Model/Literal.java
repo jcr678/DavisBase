@@ -5,6 +5,10 @@ import common.Constants;
 import common.Utils;
 import datatypes.base.DT;
 
+/**
+ * Created by Mahesh on 15/4/17.
+ */
+
 public class Literal {
     public DataType type;
     public String value;
@@ -45,12 +49,12 @@ public class Literal {
         if(literalString.startsWith("'") && literalString.endsWith("'")){
             literalString = literalString.substring(1, literalString.length()-1);
 
-            if (Utils.isvalidDateFormat(literalString)) {
-                return new Literal(DataType.DATE, literalString);
-            }
-
             if (Utils.isvalidDateTimeFormat(literalString)) {
                 return new Literal(DataType.DATETIME, literalString);
+            }
+
+            if (Utils.isvalidDateFormat(literalString)) {
+                return new Literal(DataType.DATE, literalString);
             }
 
             return new Literal(DataType.TEXT, literalString);
@@ -59,12 +63,12 @@ public class Literal {
         if(literalString.startsWith("\"") && literalString.endsWith("\"")){
             literalString = literalString.substring(1, literalString.length()-1);
 
-            if (Utils.isvalidDateFormat(literalString)) {
-                return new Literal(DataType.DATE, literalString);
-            }
-
             if (Utils.isvalidDateTimeFormat(literalString)) {
                 return new Literal(DataType.DATETIME, literalString);
+            }
+
+            if (Utils.isvalidDateFormat(literalString)) {
+                return new Literal(DataType.DATE, literalString);
             }
 
             return new Literal(DataType.TEXT, literalString);

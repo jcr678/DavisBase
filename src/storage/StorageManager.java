@@ -20,8 +20,9 @@ import java.util.HashMap;
 import java.util.List;
 
 /**
- * Created by dakle on 9/4/17.
+ * Created by Mahesh on 9/4/17.
  */
+
 public class StorageManager {
 
     public boolean databaseExists(String databaseName) {

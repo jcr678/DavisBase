@@ -8,8 +8,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Created by dakle on 9/4/17.
+ * Created by Mahesh on 9/4/17.
  */
+
 public class DataRecord {
 
     private List<Object> columnValueList;

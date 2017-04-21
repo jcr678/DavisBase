@@ -8,10 +8,13 @@ import common.Utils;
 import datatypes.base.DT;
 import errors.InternalException;
 import storage.StorageManager;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+
+/**
+ * Created by Mahesh on 15/4/17.
+ */
 
 public class UpdateQuery implements IQuery {
     public String databaseName;
@@ -131,6 +134,11 @@ public class UpdateQuery implements IQuery {
 
             // Check if the data type is a integer type.
             if (literal.type != Utils.internalDataTypeToModelDataType((byte)dataTypeIndex)) {
+                // Check if the data type can be updated in the literal.
+                if (Utils.canUpdateLiteralDataType(literal, dataTypeIndex)) {
+                    return true;
+                }
+
                 // The data is type of integer, real or double.
                 invalidColumn = column;
             }

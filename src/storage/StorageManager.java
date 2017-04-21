@@ -14,7 +14,6 @@ import storage.model.Page;
 import storage.model.PointerRecord;
 
 import java.io.File;
-import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -285,27 +284,14 @@ public class StorageManager {
                     this.writeRecord(randomAccessFile, pointerRecord);
                     return new PointerRecord();
                 } else {
-                    int newPageNumber;
-                    try {
-                        newPageNumber = (int) (randomAccessFile.length() / Page.PAGE_SIZE);
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                        return null;
-                    }
+                    int newPageNumber = (int) (randomAccessFile.length() / Page.PAGE_SIZE);
                     page.setRightNodeAddress(pointerRecord.getPageNumber());
                     this.writePageHeader(randomAccessFile, page);
-                    PointerRecord pointerRecord1;
-                    pointerRecord1 = splitPage(randomAccessFile, page, pointerRecord, page.getPageNumber(), newPageNumber);
+                    PointerRecord pointerRecord1 = splitPage(randomAccessFile, page, pointerRecord, page.getPageNumber(), newPageNumber);
                     return pointerRecord1;
                 }
             } else if (page.getPageType() == Page.LEAF_TABLE_PAGE) {
-                int newPageNumber;
-                try {
-                    newPageNumber = (int) (randomAccessFile.length() / Page.PAGE_SIZE);
-                } catch (IOException e) {
-                    e.printStackTrace();
-                    return null;
-                }
+                int newPageNumber = (int) (randomAccessFile.length() / Page.PAGE_SIZE);
                 PointerRecord pointerRecord = splitPage(randomAccessFile, page, record, page.getPageNumber(), newPageNumber);
                 if (pointerRecord != null)
                     pointerRecord.setPageNumber(newPageNumber);
@@ -731,7 +717,7 @@ public class StorageManager {
             if (file.exists()) {
                 RandomAccessFile randomAccessFile = new RandomAccessFile(file, "r");
                 if (conditionList != null) {
-                    Page page = getFirstPage(file);
+                    Page page = getFirstLeafPage(file);
                     DataRecord record;
                     List<DataRecord> matchRecords = new ArrayList<>();
                     boolean isMatch = false;
@@ -909,6 +895,7 @@ public class StorageManager {
                                                     case Constants.TEXT:
                                                         if (((DT_Text) object).getValue() != null) {
                                                             if (condition != InternalCondition.EQUALS) {
+                                                                randomAccessFile.close();
                                                                 throw new InternalException(InternalException.INVALID_CONDITION_EXCEPTION, "= is");
                                                             } else
                                                                 isMatch = ((DT_Text) object).getValue().equalsIgnoreCase(((DT_Text) value).getValue());
@@ -1029,7 +1016,7 @@ public class StorageManager {
             File file = new File(Utils.getDatabasePath(databaseName) + "/" + tableName + Constants.DEFAULT_FILE_EXTENSION);
             if (file.exists()) {
                 RandomAccessFile randomAccessFile = new RandomAccessFile(file, "r");
-                Page<DataRecord> page = getLastPage(file);
+                Page<DataRecord> page = getRightmostLeafPage(file);
                 if (page.getNumberOfCells() > 0) {
                     randomAccessFile.seek((Page.PAGE_SIZE * page.getPageNumber()) + Page.getHeaderFixedLength() + ((page.getNumberOfCells() - 1) * Short.BYTES));
                     short address = randomAccessFile.readShort();
@@ -1052,7 +1039,7 @@ public class StorageManager {
         }
     }
 
-    private Page getLastPage(File file) throws InternalException {
+    private Page getRightmostLeafPage(File file) throws InternalException {
         try {
             RandomAccessFile randomAccessFile = new RandomAccessFile(file, "r");
             Page page = readPageHeader(randomAccessFile, 0);
@@ -1066,7 +1053,7 @@ public class StorageManager {
         }
     }
 
-    private Page getFirstPage(File file) throws InternalException {
+    private Page getFirstLeafPage(File file) throws InternalException {
         try {
             RandomAccessFile randomAccessFile = new RandomAccessFile(file, "r");
             Page page = readPageHeader(randomAccessFile, 0);
@@ -1089,7 +1076,7 @@ public class StorageManager {
             if (file.exists()) {
                 RandomAccessFile randomAccessFile = new RandomAccessFile(file, "rw");
                 if(columnIndexList != null) {
-                    Page page = getFirstPage(file);
+                    Page page = getFirstLeafPage(file);
                     DataRecord record;
                     boolean isMatch;
                     byte columnIndex;
@@ -1266,6 +1253,7 @@ public class StorageManager {
                                                     case Constants.TEXT:
                                                         if (((DT_Text) object).getValue() != null) {
                                                             if (condition != InternalCondition.EQUALS) {
+                                                                randomAccessFile.close();
                                                                 throw new InternalException(InternalException.INVALID_CONDITION_EXCEPTION, "= is");
                                                             } else
                                                                 isMatch = ((DT_Text) object).getValue().equalsIgnoreCase(((DT_Text) value).getValue());
@@ -1447,8 +1435,7 @@ public class StorageManager {
         return columnNames;
     }
 
-    public boolean
-    checkNullConstraint(String databaseName, String tableName, HashMap<String, Integer> columnMap) throws InternalException {
+    public boolean checkNullConstraint(String databaseName, String tableName, HashMap<String, Integer> columnMap) throws InternalException {
 
         List<InternalCondition> conditions = new ArrayList<>();
         InternalCondition condition = new InternalCondition();

@@ -3,7 +3,7 @@ package datatypes.base;
 /**
  * Created by dakle on 13/4/17.
  */
-public abstract class DT_Numeric<T> extends DT<T>{
+public abstract class DT_Numeric<T> extends DT<T> {
 
     //Comparison keywords;
     public static final short EQUALS = 0;

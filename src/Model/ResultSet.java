@@ -60,6 +60,7 @@ public class ResultSet extends Result{
             columnSizeMap.put(column, maxLength);
         }
 
+        System.out.println();
         String line = DisplayLine(columns, columnSizeMap);
         System.out.println(line);
         String columns = DisplayColumns(columnSizeMap);

@@ -134,6 +134,11 @@ public class UpdateQuery implements IQuery {
 
             // Check if the data type is a integer type.
             if (literal.type != Utils.internalDataTypeToModelDataType((byte)dataTypeIndex)) {
+                // Check if the data type can be updated in the literal.
+                if (Utils.canUpdateLiteralDataType(literal, dataTypeIndex)) {
+                    return true;
+                }
+
                 // The data is type of integer, real or double.
                 invalidColumn = column;
             }

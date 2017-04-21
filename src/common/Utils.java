@@ -199,18 +199,10 @@ public class Utils {
             literal = condition.value;
 
             // Check if the data type is a integer type.
-            if (dataTypeIndex != Constants.INVALID_CLASS && dataTypeIndex <= Constants.DOUBLE) {
-                // The data is type of integer, real or double.
-                if (!Utils.canConvertStringToDouble(literal.value)) {
-                    invalidColumn = condition.column;
-                }
-            } else if (dataTypeIndex == Constants.DATE) {
-                if (!Utils.isvalidDateFormat(literal.value)) {
-                    invalidColumn = condition.column;
-                }
-            } else if (dataTypeIndex == Constants.DATETIME) {
-                if (!Utils.isvalidDateTimeFormat(literal.value)) {
-                    invalidColumn = condition.column;
+            if (literal.type != Utils.internalDataTypeToModelDataType((byte)dataTypeIndex)) {
+                // Check if the data type can be updated in the literal.
+                if (Utils.canUpdateLiteralDataType(literal, dataTypeIndex)) {
+                    return true;
                 }
             }
         }
@@ -280,7 +272,6 @@ public class Utils {
         String invalidColumn = "";
         Literal invalidLiteral = null;
 
-
         for (int i =0; i < values.size(); i++) {
             String columnName = columnsList.get(i);
 
@@ -292,6 +283,18 @@ public class Utils {
             int idx = columnsList.indexOf(columnName);
             Literal literal = values.get(idx);
             invalidLiteral = literal;
+
+            // Check if the data type is a integer type.
+            if (literal.type != Utils.internalDataTypeToModelDataType((byte)dataTypeId)) {
+                // Check if the data type can be updated in the literal.
+                if (Utils.canUpdateLiteralDataType(literal, dataTypeId)) {
+                    continue;
+                }
+
+                // The data is type of integer, real or double.
+                invalidColumn = columnName;
+                break;
+            }
 
             // Check if the data type is a integer type.
             // If the data type any of the Integer's, Real's or Doubles, then these values, can be represented as a double.
@@ -331,5 +334,38 @@ public class Utils {
         }
 
         return file.delete();
+    }
+
+    public static boolean canUpdateLiteralDataType(Literal literal, int columnType) {
+        // There is a mismatch, check if the value is of the type integers.
+        if (columnType == Constants.TINYINT) {
+            if (literal.type == DataType.INT) {
+                if (Integer.parseInt(literal.value) <= Byte.MAX_VALUE) {
+                    literal.type = DataType.TINYINT;
+                    return true;
+                }
+            }
+        } else if (columnType == Constants.SMALLINT) {
+            if (literal.type == DataType.INT) {
+                if (Integer.parseInt(literal.value) <= Short.MAX_VALUE) {
+                    literal.type = DataType.SMALLINT;
+                    return true;
+                }
+            }
+        } else if (columnType == Constants.BIGINT) {
+            if (literal.type == DataType.INT) {
+                if (Integer.parseInt(literal.value) <= Long.MAX_VALUE) {
+                    literal.type = DataType.BIGINT;
+                    return true;
+                }
+            }
+        } else if (columnType == Constants.DOUBLE) {
+            if (literal.type == DataType.REAL) {
+                literal.type = DataType.DOUBLE;
+                return true;
+            }
+        }
+
+        return false;
     }
 }

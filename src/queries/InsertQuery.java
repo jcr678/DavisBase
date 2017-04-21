@@ -9,7 +9,6 @@ import datatypes.*;
 import datatypes.base.DT;
 import storage.StorageManager;
 import storage.model.DataRecord;
-
 import java.util.*;
 
 public class InsertQuery implements IQuery {
@@ -117,6 +116,7 @@ public class InsertQuery implements IQuery {
         if (!isPrimaryKeyConstraintValid) {
             return false;
         }
+
 
         return true;
     }

@@ -12,7 +12,6 @@ import storage.model.DataRecord;
 import storage.model.InternalCondition;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 
@@ -110,6 +109,7 @@ public class SelectQuery implements IQuery {
         List<DataRecord> internalRecords;
         StorageManager manager = new StorageManager();
 
+        List<InternalCondition> conditions = new ArrayList<>();
         InternalCondition internalCondition = null;
 
         if(this.conditions != null){
@@ -124,12 +124,13 @@ public class SelectQuery implements IQuery {
 
                 Short operatorShort = Utils.ConvertFromOperator(condition.operator);
                 internalCondition.setConditionType(operatorShort);
+                conditions.add(internalCondition);
             }
         }
 
         if(this.columns == null) {
             internalRecords = manager.findRecord(this.databaseName,
-                    this.tableName, internalCondition, false);
+                    this.tableName, conditions, false);
 
             HashMap<Integer, String> idToColumnMap = maps.getValue();
             this.columns = new ArrayList<>();

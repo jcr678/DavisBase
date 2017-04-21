@@ -50,7 +50,10 @@ public class StorageManager {
                 return isTableCreated;
             }
             return false;
-        } catch (Exception e) {
+        } catch (InternalException e) {
+            throw e;
+        }
+        catch (Exception e) {
             throw new InternalException(InternalException.GENERIC_EXCEPTION);
         }
     }
@@ -132,7 +135,10 @@ public class StorageManager {
                 Utils.printMessage(String.format("Table '%s.%s' doesn't exist.", databaseName, tableName));
             }
             return true;
-        } catch (Exception e) {
+        } catch (InternalException e) {
+            throw e;
+        }
+        catch (Exception e) {
             throw new InternalException(InternalException.GENERIC_EXCEPTION);
         }
     }
@@ -249,7 +255,10 @@ public class StorageManager {
                 pointerRecord.setLeftPageNumber(pageNumber1);
                 return pointerRecord;
             }
-        } catch (Exception e) {
+        } catch (InternalException e) {
+            throw e;
+        }
+        catch (Exception e) {
             throw new InternalException(InternalException.GENERIC_EXCEPTION);
         }
         return null;
@@ -303,12 +312,15 @@ public class StorageManager {
             }
             return null;
         }
+        catch (InternalException e) {
+            throw e;
+        }
         catch (Exception e) {
             throw new InternalException(InternalException.GENERIC_EXCEPTION);
         }
     }
 
-    private PointerRecord splitPage(RandomAccessFile randomAccessFile, Page page, PointerRecord record, int pageNumber1, int pageNumber2) {
+    private PointerRecord splitPage(RandomAccessFile randomAccessFile, Page page, PointerRecord record, int pageNumber1, int pageNumber2) throws InternalException {
         try {
             if (page != null && record != null) {
                 int location;
@@ -386,8 +398,11 @@ public class StorageManager {
                 pointerRecord.setLeftPageNumber(pageNumber1);
                 return pointerRecord;
             }
-        } catch (Exception e) {
-            e.printStackTrace();
+        } catch (InternalException e) {
+            throw e;
+        }
+        catch (Exception e) {
+            throw new InternalException(InternalException.GENERIC_EXCEPTION);
         }
         return null;
     }
@@ -490,7 +505,8 @@ public class StorageManager {
                 }
             }
             return records;
-        } catch (Exception e) {
+        }
+        catch (Exception e) {
             throw new InternalException(InternalException.GENERIC_EXCEPTION);
         }
     }
@@ -504,12 +520,16 @@ public class StorageManager {
             pageNumber = binarySearch(randomAccessFile, record.getRowId(), page.getNumberOfCells(), (page.getBaseAddress() + Page.getHeaderFixedLength()), Page.INTERIOR_TABLE_PAGE);
             if (pageNumber == -1) return null;
             return getPage(randomAccessFile, record, pageNumber);
-        } catch (Exception e) {
+        }
+        catch (InternalException e) {
+            throw e;
+        }
+        catch (Exception e) {
             throw new InternalException(InternalException.GENERIC_EXCEPTION);
         }
     }
 
-    private int getAddress(File file, int rowId, int pageNumber) throws Exception {
+    private int getAddress(File file, int rowId, int pageNumber) throws InternalException {
         int location = -1;
         try {
             RandomAccessFile randomAccessFile = new RandomAccessFile(file, "r");
@@ -518,7 +538,11 @@ public class StorageManager {
                 location = binarySearch(randomAccessFile, rowId, page.getNumberOfCells(), (page.getBaseAddress() + Page.getHeaderFixedLength()), Page.LEAF_TABLE_PAGE);
                 randomAccessFile.close();
             }
-        } catch (Exception e) {
+        }
+        catch (InternalException e) {
+            throw e;
+        }
+        catch (Exception e) {
             throw new InternalException(InternalException.GENERIC_EXCEPTION);
         }
         return location;
@@ -570,7 +594,8 @@ public class StorageManager {
                     }
                 }
             }
-        } catch (Exception e) {
+        }
+        catch (Exception e) {
             throw new InternalException(InternalException.GENERIC_EXCEPTION);
         }
     }
@@ -678,7 +703,7 @@ public class StorageManager {
             randomAccessFile.seek((record.getPageNumber() * Page.PAGE_SIZE) + record.getOffset());
             randomAccessFile.writeInt(record.getLeftPageNumber());
             randomAccessFile.writeInt(record.getKey());
-        } catch (IOException e) {
+        } catch (Exception e) {
             throw new InternalException(InternalException.GENERIC_EXCEPTION);
         }
         return true;
@@ -917,7 +942,11 @@ public class StorageManager {
                 Utils.printMessage(String.format("Table '%s.%s' doesn't exist.", databaseName, tableName));
                 return null;
             }
-        } catch (Exception e) {
+        }
+        catch (InternalException e) {
+            throw e;
+        }
+        catch (Exception e) {
             throw new InternalException(InternalException.GENERIC_EXCEPTION);
         }
         return null;
@@ -967,7 +996,11 @@ public class StorageManager {
             } else {
                 Utils.printMessage(String.format("Table '%s.%s' doesn't exist.", databaseName, tableName));
             }
-        } catch (Exception e) {
+        }
+        catch (InternalException e) {
+            throw e;
+        }
+        catch (Exception e) {
             throw new InternalException(InternalException.GENERIC_EXCEPTION);
         }
         return updateRecordCount;
@@ -997,7 +1030,11 @@ public class StorageManager {
                 Utils.printMessage(String.format("Table '%s.%s' doesn't exist.", databaseName, tableName));
                 return null;
             }
-        } catch (Exception e) {
+        }
+        catch (InternalException e) {
+            throw e;
+        }
+        catch (Exception e) {
             throw new InternalException(InternalException.GENERIC_EXCEPTION);
         }
     }
@@ -1123,6 +1160,9 @@ public class StorageManager {
                 Utils.printMessage(String.format("Table '%s.%s' doesn't exist.", databaseName, tableName));
                 return deletedRecordCount;
             }
+        }
+        catch (InternalException e) {
+            throw e;
         }
         catch (ClassCastException e) {
             throw new InternalException(InternalException.INVALID_DATATYPE_EXCEPTION);

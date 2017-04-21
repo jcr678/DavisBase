@@ -4,13 +4,14 @@ import Model.Condition;
 import Model.IQuery;
 import Model.Literal;
 import Model.Result;
-import common.Constants;
 import common.Utils;
 import datatypes.base.DT;
 import errors.InternalException;
 import storage.StorageManager;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
 
 public class UpdateQuery implements IQuery {
     public String databaseName;
@@ -64,13 +65,14 @@ public class UpdateQuery implements IQuery {
     public boolean ValidateQuery() {
         try {
             StorageManager manager = new StorageManager();
-            List<String> retrievedColumns = manager.fetchAllTableColumns(this.databaseName, tableName);
-            HashMap<String, Integer> columnDataTypeMapping = manager.fetchAllTableColumnDataTypes(this.databaseName, tableName);
 
             if (!manager.checkTableExists(this.databaseName, tableName)) {
                 Utils.printMissingTableError(this.databaseName, tableName);
                 return false;
             }
+
+            List<String> retrievedColumns = manager.fetchAllTableColumns(this.databaseName, tableName);
+            HashMap<String, Integer> columnDataTypeMapping = manager.fetchAllTableColumnDataTypes(this.databaseName, tableName);
 
             // Validate the columns.
             if (this.condition == null) {

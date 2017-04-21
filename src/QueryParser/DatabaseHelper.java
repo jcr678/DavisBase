@@ -1,6 +1,8 @@
 package QueryParser;
 
 import Model.*;
+import common.Constants;
+import common.Utils;
 import queries.*;
 
 import java.io.File;
@@ -285,8 +287,7 @@ public class DatabaseHelper {
             return false;
         }
 
-        String DEFAULT_DATA_DIRNAME = "data";
-        File dirFile = new File(DEFAULT_DATA_DIRNAME+ "/" + databaseName);
+        File dirFile = new File(Utils.getDatabasePath(databaseName));
         return dirFile.exists();
     }
 
@@ -296,10 +297,7 @@ public class DatabaseHelper {
             return false;
         }
 
-        String DEFAULT_DATA_DIRNAME = "data";
-        String DEFAULT_TABLE_EXTENSION = "tbl";
-
-        File tableFile = new File(String.format("%s/%s/%s.%s", DEFAULT_DATA_DIRNAME, databaseName, tableName, DEFAULT_TABLE_EXTENSION));
+        File tableFile = new File(String.format("%s/%s/%s%s", Constants.DEFAULT_CATALOG_DATABASENAME, databaseName, tableName, Constants.DEFAULT_FILE_EXTENSION));
         return tableFile.exists();
     }
 

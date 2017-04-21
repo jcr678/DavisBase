@@ -1,6 +1,7 @@
 package queries;
 
 import Model.*;
+import common.Constants;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -15,7 +16,7 @@ public class ShowDatabaseQuery implements IQuery {
         columns.add("Database");
         ResultSet resultSet = ResultSet.CreateResultSet();
         resultSet.setColumns(columns);
-        ArrayList<Record> records = DummyData();
+        ArrayList<Record> records = GetDatabases();
 
         for(Record record : records){
             resultSet.addRecord(record);
@@ -26,15 +27,13 @@ public class ShowDatabaseQuery implements IQuery {
 
     @Override
     public boolean ValidateQuery() {
-        /*TODO : replace with actual logic*/
         return true;
     }
 
-    private ArrayList<Record> DummyData(){
+    private ArrayList<Record> GetDatabases(){
         ArrayList<Record> records = new ArrayList<>();
 
-        String DEFAULT_DATA_DIRNAME = "data";
-        File baseData = new File(DEFAULT_DATA_DIRNAME);
+        File baseData = new File(Constants.DEFAULT_DATA_DIRNAME);
 
         for(File data : baseData.listFiles()){
             if(!data.isDirectory()) continue;

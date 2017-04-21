@@ -59,7 +59,7 @@ public class SelectQuery implements IQuery {
 
             // Check if the table exists.
             if (!manager.checkTableExists(this.databaseName, tableName)) {
-                Utils.printMissingTableError(tableName);
+                Utils.printMissingTableError(this.databaseName, tableName);
                 return false;
             }
 
@@ -159,7 +159,6 @@ public class SelectQuery implements IQuery {
         }
 
         HashMap<Integer, String> idToColumnMap = maps.getValue();
-        Arrays.sort(columnIds);
         for(DataRecord internalRecord : internalRecords){
             Object[] dataTypes = new DT[internalRecord.getColumnValueList().size()];
             k=0;

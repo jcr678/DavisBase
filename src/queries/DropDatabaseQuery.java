@@ -52,7 +52,7 @@ public class DropDatabaseQuery implements IQuery {
         boolean databaseExists = DatabaseHelper.IsDatabaseExists(this.databaseName);
 
         if(!databaseExists){
-            Utils.printError(String.format("Database '%s' dosent exist", this.databaseName));
+            Utils.printError(String.format("Database '%s' doesn't exist", this.databaseName));
             return false;
         }
 

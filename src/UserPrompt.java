@@ -10,7 +10,6 @@ public class UserPrompt {
 
   private static boolean isExit = false;
   private static Scanner scanner = new Scanner(System.in).useDelimiter(";");
-  private static final String USE_HELP_MESSAGE = "Please use 'HELP' to see a list of commands";
 
     public static void main(String[] args) {
 
@@ -55,7 +54,7 @@ public class UserPrompt {
         }
         else if(userCommand.toLowerCase().startsWith(DatabaseHelper.USE_DATABASE_COMMAND.toLowerCase())){
             if(!PartsEqual(userCommand, DatabaseHelper.USE_DATABASE_COMMAND)){
-                DatabaseHelper.UnrecognisedCommand(userCommand, USE_HELP_MESSAGE);
+                DatabaseHelper.UnrecognisedCommand(userCommand, DatabaseHelper.USE_HELP_MESSAGE);
                 return;
             }
 
@@ -65,7 +64,7 @@ public class UserPrompt {
         }
         else if(userCommand.toLowerCase().startsWith(DatabaseHelper.DESC_TABLE_COMMAND.toLowerCase())){
             if(!PartsEqual(userCommand, DatabaseHelper.DESC_TABLE_COMMAND) && !PartsEqual(userCommand, DatabaseHelper.DESCRIBE_TABLE_COMMAND)) {
-                DatabaseHelper.UnrecognisedCommand(userCommand, USE_HELP_MESSAGE);
+                DatabaseHelper.UnrecognisedCommand(userCommand, DatabaseHelper.USE_HELP_MESSAGE);
                 return;
             }
 
@@ -79,7 +78,7 @@ public class UserPrompt {
         }
         else if(userCommand.toLowerCase().startsWith(DatabaseHelper.DROP_TABLE_COMMAND.toLowerCase())){
             if(!PartsEqual(userCommand, DatabaseHelper.DROP_TABLE_COMMAND)){
-                DatabaseHelper.UnrecognisedCommand(userCommand, USE_HELP_MESSAGE);
+                DatabaseHelper.UnrecognisedCommand(userCommand, DatabaseHelper.USE_HELP_MESSAGE);
                 return;
             }
 
@@ -89,7 +88,7 @@ public class UserPrompt {
         }
         else if(userCommand.toLowerCase().startsWith(DatabaseHelper.DROP_DATABASE_COMMAND.toLowerCase())){
             if(!PartsEqual(userCommand, DatabaseHelper.DROP_DATABASE_COMMAND)){
-                DatabaseHelper.UnrecognisedCommand(userCommand, USE_HELP_MESSAGE);
+                DatabaseHelper.UnrecognisedCommand(userCommand, DatabaseHelper.USE_HELP_MESSAGE);
                 return;
             }
 
@@ -99,7 +98,7 @@ public class UserPrompt {
         }
         else if(userCommand.toLowerCase().startsWith(DatabaseHelper.SELECT_COMMAND.toLowerCase())){
             if(!PartsEqual(userCommand, DatabaseHelper.SELECT_COMMAND)){
-                DatabaseHelper.UnrecognisedCommand(userCommand, USE_HELP_MESSAGE);
+                DatabaseHelper.UnrecognisedCommand(userCommand, DatabaseHelper.USE_HELP_MESSAGE);
                 return;
             }
 
@@ -127,7 +126,7 @@ public class UserPrompt {
         }
         else if(userCommand.toLowerCase().startsWith(DatabaseHelper.INSERT_COMMAND.toLowerCase())){
             if(!PartsEqual(userCommand, DatabaseHelper.INSERT_COMMAND)){
-                DatabaseHelper.UnrecognisedCommand(userCommand, USE_HELP_MESSAGE);
+                DatabaseHelper.UnrecognisedCommand(userCommand, DatabaseHelper.USE_HELP_MESSAGE);
                 return;
             }
 
@@ -175,7 +174,7 @@ public class UserPrompt {
         }
         else if(userCommand.toLowerCase().startsWith(DatabaseHelper.DELETE_COMMAND.toLowerCase())){
             if(!PartsEqual(userCommand, DatabaseHelper.DELETE_COMMAND)){
-                DatabaseHelper.UnrecognisedCommand(userCommand, USE_HELP_MESSAGE);
+                DatabaseHelper.UnrecognisedCommand(userCommand, DatabaseHelper.USE_HELP_MESSAGE);
                 return;
             }
 
@@ -199,7 +198,7 @@ public class UserPrompt {
         }
         else if(userCommand.toLowerCase().startsWith(DatabaseHelper.UPDATE_COMMAND.toLowerCase())){
             if(!PartsEqual(userCommand, DatabaseHelper.UPDATE_COMMAND)){
-                DatabaseHelper.UnrecognisedCommand(userCommand, USE_HELP_MESSAGE);
+                DatabaseHelper.UnrecognisedCommand(userCommand, DatabaseHelper.USE_HELP_MESSAGE);
                 return;
             }
 
@@ -226,7 +225,7 @@ public class UserPrompt {
         }
         else if(userCommand.toLowerCase().startsWith(DatabaseHelper.CREATE_DATABASE_COMMAND.toLowerCase())){
             if(!PartsEqual(userCommand, DatabaseHelper.CREATE_DATABASE_COMMAND)){
-                DatabaseHelper.UnrecognisedCommand(userCommand, USE_HELP_MESSAGE);
+                DatabaseHelper.UnrecognisedCommand(userCommand, DatabaseHelper.USE_HELP_MESSAGE);
                 return;
             }
 
@@ -236,7 +235,7 @@ public class UserPrompt {
         }
         else if(userCommand.toLowerCase().startsWith(DatabaseHelper.CREATE_TABLE_COMMAND.toLowerCase())){
             if(!PartsEqual(userCommand, DatabaseHelper.CREATE_TABLE_COMMAND)){
-                DatabaseHelper.UnrecognisedCommand(userCommand, USE_HELP_MESSAGE);
+                DatabaseHelper.UnrecognisedCommand(userCommand, DatabaseHelper.USE_HELP_MESSAGE);
                 return;
             }
 
@@ -257,7 +256,7 @@ public class UserPrompt {
             DatabaseHelper.ExecuteQuery(query);
         }
         else{
-            DatabaseHelper.UnrecognisedCommand(userCommand, USE_HELP_MESSAGE);
+            DatabaseHelper.UnrecognisedCommand(userCommand, DatabaseHelper.USE_HELP_MESSAGE);
         }
     }
 

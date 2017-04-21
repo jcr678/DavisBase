@@ -44,11 +44,29 @@ public class Literal {
     public static Literal CreateLiteral(String literalString){
         if(literalString.startsWith("'") && literalString.endsWith("'")){
             literalString = literalString.substring(1, literalString.length()-1);
+
+            if (Utils.isvalidDateFormat(literalString)) {
+                return new Literal(DataType.DATE, literalString);
+            }
+
+            if (Utils.isvalidDateTimeFormat(literalString)) {
+                return new Literal(DataType.DATETIME, literalString);
+            }
+
             return new Literal(DataType.TEXT, literalString);
         }
 
         if(literalString.startsWith("\"") && literalString.endsWith("\"")){
             literalString = literalString.substring(1, literalString.length()-1);
+
+            if (Utils.isvalidDateFormat(literalString)) {
+                return new Literal(DataType.DATE, literalString);
+            }
+
+            if (Utils.isvalidDateTimeFormat(literalString)) {
+                return new Literal(DataType.DATETIME, literalString);
+            }
+
             return new Literal(DataType.TEXT, literalString);
         }
 

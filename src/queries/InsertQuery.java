@@ -10,7 +10,6 @@ import datatypes.base.DT;
 import errors.InternalException;
 import storage.StorageManager;
 import storage.model.DataRecord;
-
 import java.util.*;
 
 public class InsertQuery implements IQuery {
@@ -63,7 +62,7 @@ public class InsertQuery implements IQuery {
             // validate if the table and the columns of the table.
             StorageManager manager = new StorageManager();
             if (!manager.checkTableExists(this.databaseName, tableName)) {
-                Utils.printMissingTableError(tableName);
+                Utils.printMissingTableError(this.databaseName, tableName);
                 return false;
             }
 
@@ -74,7 +73,7 @@ public class InsertQuery implements IQuery {
             if (columns == null) {
                 // No columns are provided.
                 // Check values size.
-                if (values.size() < retrievedColumns.size() || values.size() > retrievedColumns.size()) {
+                if (values.size() > retrievedColumns.size()) {
                     Utils.printError("Column count doesn't match value count at row 1");
                     return false;
                 }
@@ -128,6 +127,7 @@ public class InsertQuery implements IQuery {
             Utils.printMessage(e.getMessage());
             return false;
         }
+
         return true;
     }
 
@@ -181,7 +181,8 @@ public class InsertQuery implements IQuery {
     }
 
     private boolean checkPrimaryKeyConstraint(StorageManager manager, List<String> retrievedColumnNames) throws InternalException {
-        String primaryKeyColumnName = manager.getTablePrimaryKey(tableName, databaseName);
+
+        String primaryKeyColumnName = manager.getTablePrimaryKey(databaseName, tableName);
         List<String> columnList = (columns != null) ? columns : retrievedColumnNames;
 
         if (primaryKeyColumnName.length() > 0) {
@@ -245,7 +246,9 @@ public class InsertQuery implements IQuery {
     }
 
     public void generateRecords(List<Object> columnList, HashMap<String, Integer> columnDataTypeMapping, List<String> retrievedColumns) {
-        for (String column : retrievedColumns) {
+        for (int i=0; i < retrievedColumns.size(); i++) {
+            String column = retrievedColumns.get(i);
+
             if (columns != null) {
                 if (columns.contains(column)) {
                     Byte dataType = (byte)columnDataTypeMapping.get(column).intValue();
@@ -265,14 +268,23 @@ public class InsertQuery implements IQuery {
                 }
             }
             else {
-                Byte dataType = (byte)columnDataTypeMapping.get(column).intValue();
 
-                int columnIndex = retrievedColumns.indexOf(column);
-                DT obj = getDataTypeObject(dataType);
-                String val = values.get(columnIndex).toString();
+                if (i < values.size()) {
+                    Byte dataType = (byte) columnDataTypeMapping.get(column).intValue();
 
-                obj.setValue(getDataTypeValue(dataType, val));
-                columnList.add(obj);
+                    int columnIndex = retrievedColumns.indexOf(column);
+                    DT obj = getDataTypeObject(dataType);
+                    String val = values.get(columnIndex).toString();
+
+                    obj.setValue(getDataTypeValue(dataType, val));
+                    columnList.add(obj);
+                }
+                else {
+                    Byte dataType = (byte)columnDataTypeMapping.get(column).intValue();
+                    DT obj = getDataTypeObject(dataType);
+                    obj.setNull(true);
+                    columnList.add(obj);
+                }
             }
         }
     }

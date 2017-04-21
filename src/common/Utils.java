@@ -1,6 +1,7 @@
 package common;
 
 import Model.Condition;
+import Model.DataType;
 import Model.Literal;
 import Model.Operator;
 import datatypes.*;
@@ -33,24 +34,20 @@ public class Utils {
         printError("The database '" + databaseName + "' does not exist");
     }
 
-    public static void printMissingTableError(String tableName) {
-        printError("Table '" + tableName + "' doesn't exist.");
+    public static void printMissingTableError(String database, String tableName) {
+        printError("Table '" + database + "." + tableName + "' doesn't exist.");
     }
 
-    public static void printDuplicateTableError(String tableName) {
-        printError("Table '" + tableName + "' already exist.");
+    public static void printDuplicateTableError(String database, String tableName) {
+        printError("Table '" + database + "." + tableName + "' already exist.");
     }
 
     public static void printMessage(String str) {
         System.out.println(str);
     }
 
-    public static void printUnknownColumnValueError(String value) {
-        printMessage("Unknown column value '" + value + "' in 'value list'");
-    }
-
-    public static void printUnknownConditionValueError(String value) {
-        printMessage("Unknown column value '" + value + "' in 'value list'");
+    public static void printUnknownColumnValueError(String columnName, String value) {
+        printMessage(String.format("Incorrect value: '%s' for column '%s'", value, columnName));
     }
 
     public static byte resolveClass(Object object) {
@@ -116,6 +113,31 @@ public class Utils {
         }
         else {
             return Constants.INVALID_CLASS;
+        }
+    }
+
+    public static DataType internalDataTypeToModelDataType(byte type) {
+        switch (type) {
+            case Constants.TINYINT:
+                return DataType.TINYINT;
+            case Constants.SMALLINT:
+                return DataType.SMALLINT;
+            case Constants.INT:
+                return DataType.INT;
+            case Constants.BIGINT:
+                return DataType.BIGINT;
+            case Constants.REAL:
+                return DataType.REAL;
+            case Constants.DOUBLE:
+                return DataType.DOUBLE;
+            case Constants.DATE:
+                return DataType.DATE;
+            case Constants.DATETIME:
+                return DataType.DATETIME;
+            case Constants.TEXT:
+                return DataType.TEXT;
+            default:
+                return null;
         }
     }
 
@@ -194,7 +216,7 @@ public class Utils {
 
         boolean valid = (invalidColumn.length() > 0) ? false : true;
         if (!valid) {
-            Utils.printUnknownConditionValueError(literal.value);
+            Utils.printUnknownColumnValueError(invalidColumn, literal.value);
         }
 
         return valid;
@@ -257,7 +279,9 @@ public class Utils {
         String invalidColumn = "";
         Literal invalidLiteral = null;
 
-        for (String columnName : columnsList) {
+
+        for (int i =0; i < values.size(); i++) {
+            String columnName = columnsList.get(i);
 
             // Get the data type for the column with name 'columnName'.
             // Retrieve literal for the corresponding column from the user input.
@@ -271,25 +295,9 @@ public class Utils {
             // Check if the data type is a integer type.
             // If the data type any of the Integer's, Real's or Doubles, then these values, can be represented as a double.
             // Check if the value can be parsed as a Double, if YES then the data type is valid else returns false.
-            if (dataTypeId != Constants.INVALID_CLASS && dataTypeId <= Constants.DOUBLE) {
-                boolean isValid = Utils.canConvertStringToDouble(literal.value);
-                if (!isValid) {
-                    invalidColumn = columnName;
-                    break;
-                }
-            }
-            else if (dataTypeId == Constants.DATE) {
-                // Checks if the date field has the format 'yyyy-MM-dd'.
-                if (!Utils.isvalidDateFormat(literal.value)) {
-                    invalidColumn = columnName;
-                    break;
-                }
-            } else if (dataTypeId == Constants.DATETIME) {
-                // Checks if the date time field has the format 'yyyy-MM-dd HH:mm:ss'.
-                if (!Utils.isvalidDateTimeFormat(literal.value)) {
-                    invalidColumn = columnName;
-                    break;
-                }
+            if (literal.type != Utils.internalDataTypeToModelDataType((byte)dataTypeId)) {
+                invalidColumn = columnName;
+                break;
             }
 
             // NOTE: If the data type is of type text, any text is accepted, hence no check is explicitly added for the TEXT field.
@@ -298,7 +306,7 @@ public class Utils {
         // Check if any data type violation has occurred.
         boolean valid = (invalidColumn.length() > 0) ? false : true;
         if (!valid) {
-            Utils.printUnknownColumnValueError(invalidLiteral.value);
+            Utils.printUnknownColumnValueError(invalidColumn, invalidLiteral.value);
             return false;
         }
 

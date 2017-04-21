@@ -149,7 +149,7 @@ public class SelectQuery implements IQuery {
             }
 
             internalRecords = manager.findRecord(this.databaseName,
-                    this.tableName, internalCondition, columnsList, false);
+                    this.tableName, conditions, columnsList, false);
         }
 
         Byte[] columnIds = new Byte[columnsList.size()];

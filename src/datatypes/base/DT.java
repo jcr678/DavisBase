@@ -60,7 +60,7 @@ public abstract class DT<T> {
             case Constants.DATETIME:
                 return new DT_DateTime(Utils.getDateEpoc(value, false));
             case Constants.DATE:
-                return new DT_DateTime(Utils.getDateEpoc(value, true));
+                return new DT_Date(Utils.getDateEpoc(value, true));
             case Constants.TEXT:
                 return new DT_Text(value);
         }

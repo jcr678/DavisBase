@@ -748,166 +748,169 @@ public class StorageManager {
                                 condition = conditionList.get(i).getConditionType();
                                 if (record != null && record.getColumnValueList().size() > columnIndex) {
                                     Object object = record.getColumnValueList().get(columnIndex);
-                                    switch (Utils.resolveClass(object)) {
-                                        case Constants.TINYINT:
-                                            switch (Utils.resolveClass(value)) {
-                                                case Constants.TINYINT:
-                                                    isMatch = ((DT_TinyInt) object).compare((DT_TinyInt) value, condition);
-                                                    break;
+                                    if(((DT) object).isNull()) isMatch = false;
+                                    else {
+                                        switch (Utils.resolveClass(object)) {
+                                            case Constants.TINYINT:
+                                                switch (Utils.resolveClass(value)) {
+                                                    case Constants.TINYINT:
+                                                        isMatch = ((DT_TinyInt) object).compare((DT_TinyInt) value, condition);
+                                                        break;
 
-                                                case Constants.SMALLINT:
-                                                    isMatch = ((DT_TinyInt) object).compare((DT_SmallInt) value, condition);
-                                                    break;
+                                                    case Constants.SMALLINT:
+                                                        isMatch = ((DT_TinyInt) object).compare((DT_SmallInt) value, condition);
+                                                        break;
 
-                                                case Constants.INT:
-                                                    isMatch = ((DT_TinyInt) object).compare((DT_Int) value, condition);
-                                                    break;
+                                                    case Constants.INT:
+                                                        isMatch = ((DT_TinyInt) object).compare((DT_Int) value, condition);
+                                                        break;
 
-                                                case Constants.BIGINT:
-                                                    isMatch = ((DT_TinyInt) object).compare((DT_BigInt) value, condition);
-                                                    break;
+                                                    case Constants.BIGINT:
+                                                        isMatch = ((DT_TinyInt) object).compare((DT_BigInt) value, condition);
+                                                        break;
 
-                                                default:
-                                                    throw new InternalException(InternalException.DATATYPE_MISMATCH_EXCEPTION, "Number");
-                                            }
-                                            break;
+                                                    default:
+                                                        throw new InternalException(InternalException.DATATYPE_MISMATCH_EXCEPTION, "Number");
+                                                }
+                                                break;
 
-                                        case Constants.SMALLINT:
-                                            switch (Utils.resolveClass(value)) {
-                                                case Constants.TINYINT:
-                                                    isMatch = ((DT_SmallInt) object).compare((DT_TinyInt) value, condition);
-                                                    break;
+                                            case Constants.SMALLINT:
+                                                switch (Utils.resolveClass(value)) {
+                                                    case Constants.TINYINT:
+                                                        isMatch = ((DT_SmallInt) object).compare((DT_TinyInt) value, condition);
+                                                        break;
 
-                                                case Constants.SMALLINT:
-                                                    isMatch = ((DT_SmallInt) object).compare((DT_SmallInt) value, condition);
-                                                    break;
+                                                    case Constants.SMALLINT:
+                                                        isMatch = ((DT_SmallInt) object).compare((DT_SmallInt) value, condition);
+                                                        break;
 
-                                                case Constants.INT:
-                                                    isMatch = ((DT_SmallInt) object).compare((DT_Int) value, condition);
-                                                    break;
+                                                    case Constants.INT:
+                                                        isMatch = ((DT_SmallInt) object).compare((DT_Int) value, condition);
+                                                        break;
 
-                                                case Constants.BIGINT:
-                                                    isMatch = ((DT_SmallInt) object).compare((DT_BigInt) value, condition);
-                                                    break;
+                                                    case Constants.BIGINT:
+                                                        isMatch = ((DT_SmallInt) object).compare((DT_BigInt) value, condition);
+                                                        break;
 
-                                                default:
-                                                    throw new InternalException(InternalException.DATATYPE_MISMATCH_EXCEPTION, "Number");
-                                            }
-                                            break;
+                                                    default:
+                                                        throw new InternalException(InternalException.DATATYPE_MISMATCH_EXCEPTION, "Number");
+                                                }
+                                                break;
 
-                                        case Constants.INT:
-                                            switch (Utils.resolveClass(value)) {
-                                                case Constants.TINYINT:
-                                                    isMatch = ((DT_Int) object).compare((DT_TinyInt) value, condition);
-                                                    break;
+                                            case Constants.INT:
+                                                switch (Utils.resolveClass(value)) {
+                                                    case Constants.TINYINT:
+                                                        isMatch = ((DT_Int) object).compare((DT_TinyInt) value, condition);
+                                                        break;
 
-                                                case Constants.SMALLINT:
-                                                    isMatch = ((DT_Int) object).compare((DT_SmallInt) value, condition);
-                                                    break;
+                                                    case Constants.SMALLINT:
+                                                        isMatch = ((DT_Int) object).compare((DT_SmallInt) value, condition);
+                                                        break;
 
-                                                case Constants.INT:
-                                                    isMatch = ((DT_Int) object).compare((DT_Int) value, condition);
-                                                    break;
+                                                    case Constants.INT:
+                                                        isMatch = ((DT_Int) object).compare((DT_Int) value, condition);
+                                                        break;
 
-                                                case Constants.BIGINT:
-                                                    isMatch = ((DT_Int) object).compare((DT_BigInt) value, condition);
-                                                    break;
+                                                    case Constants.BIGINT:
+                                                        isMatch = ((DT_Int) object).compare((DT_BigInt) value, condition);
+                                                        break;
 
-                                                default:
-                                                    throw new InternalException(InternalException.DATATYPE_MISMATCH_EXCEPTION, "Number");
-                                            }
-                                            break;
+                                                    default:
+                                                        throw new InternalException(InternalException.DATATYPE_MISMATCH_EXCEPTION, "Number");
+                                                }
+                                                break;
 
-                                        case Constants.BIGINT:
-                                            switch (Utils.resolveClass(value)) {
-                                                case Constants.TINYINT:
-                                                    isMatch = ((DT_BigInt) object).compare((DT_TinyInt) value, condition);
-                                                    break;
+                                            case Constants.BIGINT:
+                                                switch (Utils.resolveClass(value)) {
+                                                    case Constants.TINYINT:
+                                                        isMatch = ((DT_BigInt) object).compare((DT_TinyInt) value, condition);
+                                                        break;
 
-                                                case Constants.SMALLINT:
-                                                    isMatch = ((DT_BigInt) object).compare((DT_SmallInt) value, condition);
-                                                    break;
+                                                    case Constants.SMALLINT:
+                                                        isMatch = ((DT_BigInt) object).compare((DT_SmallInt) value, condition);
+                                                        break;
 
-                                                case Constants.INT:
-                                                    isMatch = ((DT_BigInt) object).compare((DT_Int) value, condition);
-                                                    break;
+                                                    case Constants.INT:
+                                                        isMatch = ((DT_BigInt) object).compare((DT_Int) value, condition);
+                                                        break;
 
-                                                case Constants.BIGINT:
-                                                    isMatch = ((DT_BigInt) object).compare((DT_BigInt) value, condition);
-                                                    break;
+                                                    case Constants.BIGINT:
+                                                        isMatch = ((DT_BigInt) object).compare((DT_BigInt) value, condition);
+                                                        break;
 
-                                                default:
-                                                    throw new InternalException(InternalException.DATATYPE_MISMATCH_EXCEPTION, "Number");
-                                            }
-                                            break;
+                                                    default:
+                                                        throw new InternalException(InternalException.DATATYPE_MISMATCH_EXCEPTION, "Number");
+                                                }
+                                                break;
 
-                                        case Constants.REAL:
-                                            switch (Utils.resolveClass(value)) {
-                                                case Constants.REAL:
-                                                    isMatch = ((DT_Real) object).compare((DT_Real) value, condition);
-                                                    break;
+                                            case Constants.REAL:
+                                                switch (Utils.resolveClass(value)) {
+                                                    case Constants.REAL:
+                                                        isMatch = ((DT_Real) object).compare((DT_Real) value, condition);
+                                                        break;
 
-                                                case Constants.DOUBLE:
-                                                    isMatch = ((DT_Real) object).compare((DT_Double) value, condition);
-                                                    break;
+                                                    case Constants.DOUBLE:
+                                                        isMatch = ((DT_Real) object).compare((DT_Double) value, condition);
+                                                        break;
 
-                                                default:
-                                                    throw new InternalException(InternalException.DATATYPE_MISMATCH_EXCEPTION, "Decimal Number");
-                                            }
-                                            break;
+                                                    default:
+                                                        throw new InternalException(InternalException.DATATYPE_MISMATCH_EXCEPTION, "Decimal Number");
+                                                }
+                                                break;
 
-                                        case Constants.DOUBLE:
-                                            switch (Utils.resolveClass(value)) {
-                                                case Constants.REAL:
-                                                    isMatch = ((DT_Double) object).compare((DT_Real) value, condition);
-                                                    break;
+                                            case Constants.DOUBLE:
+                                                switch (Utils.resolveClass(value)) {
+                                                    case Constants.REAL:
+                                                        isMatch = ((DT_Double) object).compare((DT_Real) value, condition);
+                                                        break;
 
-                                                case Constants.DOUBLE:
-                                                    isMatch = ((DT_Double) object).compare((DT_Double) value, condition);
-                                                    break;
+                                                    case Constants.DOUBLE:
+                                                        isMatch = ((DT_Double) object).compare((DT_Double) value, condition);
+                                                        break;
 
-                                                default:
-                                                    throw new InternalException(InternalException.DATATYPE_MISMATCH_EXCEPTION, "Decimal Number");
-                                            }
-                                            break;
+                                                    default:
+                                                        throw new InternalException(InternalException.DATATYPE_MISMATCH_EXCEPTION, "Decimal Number");
+                                                }
+                                                break;
 
-                                        case Constants.DATE:
-                                            switch (Utils.resolveClass(value)) {
-                                                case Constants.DATE:
-                                                    isMatch = ((DT_Date) object).compare((DT_Date) value, condition);
-                                                    break;
+                                            case Constants.DATE:
+                                                switch (Utils.resolveClass(value)) {
+                                                    case Constants.DATE:
+                                                        isMatch = ((DT_Date) object).compare((DT_Date) value, condition);
+                                                        break;
 
-                                                default:
-                                                    throw new InternalException(InternalException.DATATYPE_MISMATCH_EXCEPTION, "Date");
-                                            }
-                                            break;
+                                                    default:
+                                                        throw new InternalException(InternalException.DATATYPE_MISMATCH_EXCEPTION, "Date");
+                                                }
+                                                break;
 
-                                        case Constants.DATETIME:
-                                            switch (Utils.resolveClass(value)) {
-                                                case Constants.DATETIME:
-                                                    isMatch = ((DT_DateTime) object).compare((DT_DateTime) value, condition);
-                                                    break;
+                                            case Constants.DATETIME:
+                                                switch (Utils.resolveClass(value)) {
+                                                    case Constants.DATETIME:
+                                                        isMatch = ((DT_DateTime) object).compare((DT_DateTime) value, condition);
+                                                        break;
 
-                                                default:
-                                                    throw new InternalException(InternalException.DATATYPE_MISMATCH_EXCEPTION, "Datetime");
-                                            }
-                                            break;
+                                                    default:
+                                                        throw new InternalException(InternalException.DATATYPE_MISMATCH_EXCEPTION, "Datetime");
+                                                }
+                                                break;
 
-                                        case Constants.TEXT:
-                                            switch (Utils.resolveClass(value)) {
-                                                case Constants.TEXT:
-                                                    if (((DT_Text) object).getValue() != null) {
-                                                        if (condition != InternalCondition.EQUALS) {
-                                                            throw new InternalException(InternalException.INVALID_CONDITION_EXCEPTION, "= is");
-                                                        } else
-                                                            isMatch = ((DT_Text) object).getValue().equalsIgnoreCase(((DT_Text) value).getValue());
-                                                    }
-                                                    break;
+                                            case Constants.TEXT:
+                                                switch (Utils.resolveClass(value)) {
+                                                    case Constants.TEXT:
+                                                        if (((DT_Text) object).getValue() != null) {
+                                                            if (condition != InternalCondition.EQUALS) {
+                                                                throw new InternalException(InternalException.INVALID_CONDITION_EXCEPTION, "= is");
+                                                            } else
+                                                                isMatch = ((DT_Text) object).getValue().equalsIgnoreCase(((DT_Text) value).getValue());
+                                                        }
+                                                        break;
 
-                                                default:
-                                                    throw new InternalException(InternalException.DATATYPE_MISMATCH_EXCEPTION, "String");
-                                            }
-                                            break;
+                                                    default:
+                                                        throw new InternalException(InternalException.DATATYPE_MISMATCH_EXCEPTION, "String");
+                                                }
+                                                break;
+                                        }
                                     }
                                     if(!isMatch) break;
                                 }
@@ -1093,166 +1096,169 @@ public class StorageManager {
                                 condition = conditionList.get(i);
                                 if (record != null && record.getColumnValueList().size() > columnIndex) {
                                     Object object = record.getColumnValueList().get(columnIndex);
-                                    switch (Utils.resolveClass(object)) {
-                                        case Constants.TINYINT:
-                                            switch (Utils.resolveClass(value)) {
-                                                case Constants.TINYINT:
-                                                    isMatch = ((DT_TinyInt) object).compare((DT_TinyInt) value, condition);
-                                                    break;
+                                    if(((DT) object).isNull()) isMatch = false;
+                                    else {
+                                        switch (Utils.resolveClass(object)) {
+                                            case Constants.TINYINT:
+                                                switch (Utils.resolveClass(value)) {
+                                                    case Constants.TINYINT:
+                                                        isMatch = ((DT_TinyInt) object).compare((DT_TinyInt) value, condition);
+                                                        break;
 
-                                                case Constants.SMALLINT:
-                                                    isMatch = ((DT_TinyInt) object).compare((DT_SmallInt) value, condition);
-                                                    break;
+                                                    case Constants.SMALLINT:
+                                                        isMatch = ((DT_TinyInt) object).compare((DT_SmallInt) value, condition);
+                                                        break;
 
-                                                case Constants.INT:
-                                                    isMatch = ((DT_TinyInt) object).compare((DT_Int) value, condition);
-                                                    break;
+                                                    case Constants.INT:
+                                                        isMatch = ((DT_TinyInt) object).compare((DT_Int) value, condition);
+                                                        break;
 
-                                                case Constants.BIGINT:
-                                                    isMatch = ((DT_TinyInt) object).compare((DT_BigInt) value, condition);
-                                                    break;
+                                                    case Constants.BIGINT:
+                                                        isMatch = ((DT_TinyInt) object).compare((DT_BigInt) value, condition);
+                                                        break;
 
-                                                default:
-                                                    throw new InternalException(InternalException.DATATYPE_MISMATCH_EXCEPTION, "Number");
-                                            }
-                                            break;
+                                                    default:
+                                                        throw new InternalException(InternalException.DATATYPE_MISMATCH_EXCEPTION, "Number");
+                                                }
+                                                break;
 
-                                        case Constants.SMALLINT:
-                                            switch (Utils.resolveClass(value)) {
-                                                case Constants.TINYINT:
-                                                    isMatch = ((DT_SmallInt) object).compare((DT_TinyInt) value, condition);
-                                                    break;
+                                            case Constants.SMALLINT:
+                                                switch (Utils.resolveClass(value)) {
+                                                    case Constants.TINYINT:
+                                                        isMatch = ((DT_SmallInt) object).compare((DT_TinyInt) value, condition);
+                                                        break;
 
-                                                case Constants.SMALLINT:
-                                                    isMatch = ((DT_SmallInt) object).compare((DT_SmallInt) value, condition);
-                                                    break;
+                                                    case Constants.SMALLINT:
+                                                        isMatch = ((DT_SmallInt) object).compare((DT_SmallInt) value, condition);
+                                                        break;
 
-                                                case Constants.INT:
-                                                    isMatch = ((DT_SmallInt) object).compare((DT_Int) value, condition);
-                                                    break;
+                                                    case Constants.INT:
+                                                        isMatch = ((DT_SmallInt) object).compare((DT_Int) value, condition);
+                                                        break;
 
-                                                case Constants.BIGINT:
-                                                    isMatch = ((DT_SmallInt) object).compare((DT_BigInt) value, condition);
-                                                    break;
+                                                    case Constants.BIGINT:
+                                                        isMatch = ((DT_SmallInt) object).compare((DT_BigInt) value, condition);
+                                                        break;
 
-                                                default:
-                                                    throw new InternalException(InternalException.DATATYPE_MISMATCH_EXCEPTION, "Number");
-                                            }
-                                            break;
+                                                    default:
+                                                        throw new InternalException(InternalException.DATATYPE_MISMATCH_EXCEPTION, "Number");
+                                                }
+                                                break;
 
-                                        case Constants.INT:
-                                            switch (Utils.resolveClass(value)) {
-                                                case Constants.TINYINT:
-                                                    isMatch = ((DT_Int) object).compare((DT_TinyInt) value, condition);
-                                                    break;
+                                            case Constants.INT:
+                                                switch (Utils.resolveClass(value)) {
+                                                    case Constants.TINYINT:
+                                                        isMatch = ((DT_Int) object).compare((DT_TinyInt) value, condition);
+                                                        break;
 
-                                                case Constants.SMALLINT:
-                                                    isMatch = ((DT_Int) object).compare((DT_SmallInt) value, condition);
-                                                    break;
+                                                    case Constants.SMALLINT:
+                                                        isMatch = ((DT_Int) object).compare((DT_SmallInt) value, condition);
+                                                        break;
 
-                                                case Constants.INT:
-                                                    isMatch = ((DT_Int) object).compare((DT_Int) value, condition);
-                                                    break;
+                                                    case Constants.INT:
+                                                        isMatch = ((DT_Int) object).compare((DT_Int) value, condition);
+                                                        break;
 
-                                                case Constants.BIGINT:
-                                                    isMatch = ((DT_Int) object).compare((DT_BigInt) value, condition);
-                                                    break;
+                                                    case Constants.BIGINT:
+                                                        isMatch = ((DT_Int) object).compare((DT_BigInt) value, condition);
+                                                        break;
 
-                                                default:
-                                                    throw new InternalException(InternalException.DATATYPE_MISMATCH_EXCEPTION, "Number");
-                                            }
-                                            break;
+                                                    default:
+                                                        throw new InternalException(InternalException.DATATYPE_MISMATCH_EXCEPTION, "Number");
+                                                }
+                                                break;
 
-                                        case Constants.BIGINT:
-                                            switch (Utils.resolveClass(value)) {
-                                                case Constants.TINYINT:
-                                                    isMatch = ((DT_BigInt) object).compare((DT_TinyInt) value, condition);
-                                                    break;
+                                            case Constants.BIGINT:
+                                                switch (Utils.resolveClass(value)) {
+                                                    case Constants.TINYINT:
+                                                        isMatch = ((DT_BigInt) object).compare((DT_TinyInt) value, condition);
+                                                        break;
 
-                                                case Constants.SMALLINT:
-                                                    isMatch = ((DT_BigInt) object).compare((DT_SmallInt) value, condition);
-                                                    break;
+                                                    case Constants.SMALLINT:
+                                                        isMatch = ((DT_BigInt) object).compare((DT_SmallInt) value, condition);
+                                                        break;
 
-                                                case Constants.INT:
-                                                    isMatch = ((DT_BigInt) object).compare((DT_Int) value, condition);
-                                                    break;
+                                                    case Constants.INT:
+                                                        isMatch = ((DT_BigInt) object).compare((DT_Int) value, condition);
+                                                        break;
 
-                                                case Constants.BIGINT:
-                                                    isMatch = ((DT_BigInt) object).compare((DT_BigInt) value, condition);
-                                                    break;
+                                                    case Constants.BIGINT:
+                                                        isMatch = ((DT_BigInt) object).compare((DT_BigInt) value, condition);
+                                                        break;
 
-                                                default:
-                                                    throw new InternalException(InternalException.DATATYPE_MISMATCH_EXCEPTION, "Number");
-                                            }
-                                            break;
+                                                    default:
+                                                        throw new InternalException(InternalException.DATATYPE_MISMATCH_EXCEPTION, "Number");
+                                                }
+                                                break;
 
-                                        case Constants.REAL:
-                                            switch (Utils.resolveClass(value)) {
-                                                case Constants.REAL:
-                                                    isMatch = ((DT_Real) object).compare((DT_Real) value, condition);
-                                                    break;
+                                            case Constants.REAL:
+                                                switch (Utils.resolveClass(value)) {
+                                                    case Constants.REAL:
+                                                        isMatch = ((DT_Real) object).compare((DT_Real) value, condition);
+                                                        break;
 
-                                                case Constants.DOUBLE:
-                                                    isMatch = ((DT_Real) object).compare((DT_Double) value, condition);
-                                                    break;
+                                                    case Constants.DOUBLE:
+                                                        isMatch = ((DT_Real) object).compare((DT_Double) value, condition);
+                                                        break;
 
-                                                default:
-                                                    throw new InternalException(InternalException.DATATYPE_MISMATCH_EXCEPTION, "Decimal Number");
-                                            }
-                                            break;
+                                                    default:
+                                                        throw new InternalException(InternalException.DATATYPE_MISMATCH_EXCEPTION, "Decimal Number");
+                                                }
+                                                break;
 
-                                        case Constants.DOUBLE:
-                                            switch (Utils.resolveClass(value)) {
-                                                case Constants.REAL:
-                                                    isMatch = ((DT_Double) object).compare((DT_Real) value, condition);
-                                                    break;
+                                            case Constants.DOUBLE:
+                                                switch (Utils.resolveClass(value)) {
+                                                    case Constants.REAL:
+                                                        isMatch = ((DT_Double) object).compare((DT_Real) value, condition);
+                                                        break;
 
-                                                case Constants.DOUBLE:
-                                                    isMatch = ((DT_Double) object).compare((DT_Double) value, condition);
-                                                    break;
+                                                    case Constants.DOUBLE:
+                                                        isMatch = ((DT_Double) object).compare((DT_Double) value, condition);
+                                                        break;
 
-                                                default:
-                                                    throw new InternalException(InternalException.DATATYPE_MISMATCH_EXCEPTION, "Decimal Number");
-                                            }
-                                            break;
+                                                    default:
+                                                        throw new InternalException(InternalException.DATATYPE_MISMATCH_EXCEPTION, "Decimal Number");
+                                                }
+                                                break;
 
-                                        case Constants.DATE:
-                                            switch (Utils.resolveClass(value)) {
-                                                case Constants.DATE:
-                                                    isMatch = ((DT_Date) object).compare((DT_Date) value, condition);
-                                                    break;
+                                            case Constants.DATE:
+                                                switch (Utils.resolveClass(value)) {
+                                                    case Constants.DATE:
+                                                        isMatch = ((DT_Date) object).compare((DT_Date) value, condition);
+                                                        break;
 
-                                                default:
-                                                    throw new InternalException(InternalException.DATATYPE_MISMATCH_EXCEPTION, "Date");
-                                            }
-                                            break;
+                                                    default:
+                                                        throw new InternalException(InternalException.DATATYPE_MISMATCH_EXCEPTION, "Date");
+                                                }
+                                                break;
 
-                                        case Constants.DATETIME:
-                                            switch (Utils.resolveClass(value)) {
-                                                case Constants.DATETIME:
-                                                    isMatch = ((DT_DateTime) object).compare((DT_DateTime) value, condition);
-                                                    break;
+                                            case Constants.DATETIME:
+                                                switch (Utils.resolveClass(value)) {
+                                                    case Constants.DATETIME:
+                                                        isMatch = ((DT_DateTime) object).compare((DT_DateTime) value, condition);
+                                                        break;
 
-                                                default:
-                                                    throw new InternalException(InternalException.DATATYPE_MISMATCH_EXCEPTION, "Datetime");
-                                            }
-                                            break;
+                                                    default:
+                                                        throw new InternalException(InternalException.DATATYPE_MISMATCH_EXCEPTION, "Datetime");
+                                                }
+                                                break;
 
-                                        case Constants.TEXT:
-                                            switch (Utils.resolveClass(value)) {
-                                                case Constants.TEXT:
-                                                    if (((DT_Text) object).getValue() != null) {
-                                                        if (condition != InternalCondition.EQUALS) {
-                                                            throw new InternalException(InternalException.INVALID_CONDITION_EXCEPTION, "= is");
-                                                        } else
-                                                            isMatch = ((DT_Text) object).getValue().equalsIgnoreCase(((DT_Text) value).getValue());
-                                                    }
-                                                    break;
+                                            case Constants.TEXT:
+                                                switch (Utils.resolveClass(value)) {
+                                                    case Constants.TEXT:
+                                                        if (((DT_Text) object).getValue() != null) {
+                                                            if (condition != InternalCondition.EQUALS) {
+                                                                throw new InternalException(InternalException.INVALID_CONDITION_EXCEPTION, "= is");
+                                                            } else
+                                                                isMatch = ((DT_Text) object).getValue().equalsIgnoreCase(((DT_Text) value).getValue());
+                                                        }
+                                                        break;
 
-                                                default:
-                                                    throw new InternalException(InternalException.DATATYPE_MISMATCH_EXCEPTION, "String");
-                                            }
-                                            break;
+                                                    default:
+                                                        throw new InternalException(InternalException.DATATYPE_MISMATCH_EXCEPTION, "String");
+                                                }
+                                                break;
+                                        }
                                     }
                                     if(!isMatch) break;
                                 }

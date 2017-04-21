@@ -211,26 +211,11 @@ public class InsertQuery implements IQuery {
             Literal literal = values.get(idx);
 
             // Check if the data type is a integer type.
-            if (dataTypeIndex != Constants.INVALID_CLASS && dataTypeIndex <= Constants.DOUBLE) {
+            // Check if the data type is a integer type.
+            if (literal.type != Utils.internalDataTypeToModelDataType((byte)dataTypeIndex)) {
                 // The data is type of integer, real or double.
-
-                boolean isValid = Utils.canConvertStringToDouble(literal.value);
-                if (!isValid) {
-                    invalidColumn = columnName;
-                    break;
-                }
-            }
-            else if (dataTypeIndex == Constants.DATE) {
-                if (!Utils.isvalidDateFormat(literal.value)) {
-                    invalidColumn = columnName;
-                    break;
-                }
-            }
-            else if (dataTypeIndex == Constants.DATETIME) {
-                if (!Utils.isvalidDateTimeFormat(literal.value)) {
-                    invalidColumn = columnName;
-                    break;
-                }
+                invalidColumn = columnName;
+                break;
             }
         }
 

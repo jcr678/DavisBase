@@ -128,21 +128,9 @@ public class UpdateQuery implements IQuery {
             Literal literal = columnValue;
 
             // Check if the data type is a integer type.
-            if (dataTypeIndex != Constants.INVALID_CLASS && dataTypeIndex <= Constants.DOUBLE) {
+            if (literal.type != Utils.internalDataTypeToModelDataType((byte)dataTypeIndex)) {
                 // The data is type of integer, real or double.
-                if (!Utils.canConvertStringToDouble(literal.value)) {
-                    invalidColumn = column;
-                }
-            }
-            else if (dataTypeIndex == Constants.DATE) {
-                if (!Utils.isvalidDateFormat(literal.value)) {
-                    invalidColumn = column;
-                }
-            }
-            else if (dataTypeIndex == Constants.DATETIME) {
-                if (!Utils.isvalidDateTimeFormat(literal.value)) {
-                    invalidColumn = column;
-                }
+                invalidColumn = column;
             }
         }
 

@@ -168,7 +168,7 @@ public class InsertQuery implements IQuery {
             }
         }
         else {
-            for (int i = 0; i < retrievedColumnNames.size(); i++) {
+            for (int i = 0; i < values.size(); i++) {
                 columnsList.put(retrievedColumnNames.get(i), i);
             }
         }

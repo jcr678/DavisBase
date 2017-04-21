@@ -45,7 +45,7 @@ public class InsertQuery implements IQuery {
             if (status) {
                 result = new Result(1);
             } else {
-                result = new Result(0);
+                Utils.printMessage("Unable to insert record.");
             }
 
             return result;
@@ -111,10 +111,6 @@ public class InsertQuery implements IQuery {
             if (!isNullConstraintValid) {
                 return false;
             }
-
-            // Valid columns.
-        /*Test test = new Test();
-        test.fetchTableColumns(tableName);*/
 
 
             // PRIMARY KEY CONSTRAINT

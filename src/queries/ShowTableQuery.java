@@ -4,8 +4,9 @@ import Model.Condition;
 import Model.IQuery;
 import Model.Result;
 import Model.ResultSet;
-import common.CatalogDB;
+import QueryParser.DatabaseHelper;
 import common.Constants;
+import common.Utils;
 
 import java.util.ArrayList;
 
@@ -40,6 +41,10 @@ public class ShowTableQuery implements IQuery {
 
     @Override
     public boolean ValidateQuery() {
-        return true;
+        boolean databaseExists = DatabaseHelper.IsDatabaseExists(this.databaseName);
+        if(!databaseExists){
+            Utils.printError(String.format("Unknown database '%s'", this.databaseName));
+        }
+        return databaseExists;
     }
 }

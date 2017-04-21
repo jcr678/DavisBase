@@ -5,8 +5,6 @@ import Model.Result;
 import QueryParser.DatabaseHelper;
 import common.Utils;
 
-import java.io.File;
-
 /**
  * Created by dhruv on 4/12/2017.
  */
@@ -20,7 +18,7 @@ public class UseDatabaseQuery implements IQuery {
     @Override
     public Result ExecuteQuery() {
         DatabaseHelper.CurrentDatabaseName = this.databaseName;
-        System.out.println("Database changed");
+        Utils.printMessage("Database changed");
         return null;
     }
 
@@ -28,7 +26,7 @@ public class UseDatabaseQuery implements IQuery {
     public boolean ValidateQuery() {
         boolean databaseExists = DatabaseHelper.IsDatabaseExists(this.databaseName);
         if(!databaseExists){
-            Utils.printError(String.format("Unknown database '%s'", this.databaseName));
+            Utils.printMessage(String.format("Unknown database '%s'", this.databaseName));
         }
 
         return databaseExists;

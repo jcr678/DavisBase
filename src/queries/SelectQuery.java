@@ -52,8 +52,6 @@ public class SelectQuery implements IQuery {
     @Override
     public boolean ValidateQuery() {
         try {
-            Pair<HashMap<String, Integer>, HashMap<Integer, String>> maps = mapOrdinalIdToColumnName(this.tableName);
-            HashMap<String, Integer> columnToIdMap = maps.getKey();
             StorageManager manager = new StorageManager();
 
             // Check if the table exists.
@@ -62,6 +60,8 @@ public class SelectQuery implements IQuery {
                 return false;
             }
 
+            Pair<HashMap<String, Integer>, HashMap<Integer, String>> maps = mapOrdinalIdToColumnName(this.tableName);
+            HashMap<String, Integer> columnToIdMap = maps.getKey();
             HashMap<String, Integer> columnDataTypeMapping = manager.fetchAllTableColumnDataTypes(this.databaseName, tableName);
 
             // Validate column data type.

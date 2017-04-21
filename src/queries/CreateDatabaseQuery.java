@@ -3,7 +3,7 @@ package queries;
 import Model.IQuery;
 import Model.Result;
 import QueryParser.DatabaseHelper;
-import common.Constants;
+import common.Utils;
 
 import java.io.File;
 
@@ -16,7 +16,7 @@ public class CreateDatabaseQuery implements IQuery {
 
     @Override
     public Result ExecuteQuery() {
-        File database = new File(Constants.DEFAULT_DATA_DIRNAME + "/" + this.databaseName);
+        File database = new File(Utils.getDatabasePath(this.databaseName));
         boolean isCreated = database.mkdir();
 
         if(!isCreated){

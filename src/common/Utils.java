@@ -7,6 +7,7 @@ import Model.Operator;
 import datatypes.*;
 import datatypes.base.DT_Numeric;
 
+import java.io.File;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -311,5 +312,24 @@ public class Utils {
         }
 
         return true;
+    }
+
+    public static boolean RecursivelyDelete(File file){
+        if(file == null) return true;
+        boolean isDeleted = false;
+
+        if(file.isDirectory()) {
+            for (File childFile : file.listFiles()) {
+                if (childFile.isFile()) {
+                    isDeleted = childFile.delete();
+                    if (!isDeleted) return false;
+                } else {
+                    isDeleted = RecursivelyDelete(childFile);
+                    if (!isDeleted) return false;
+                }
+            }
+        }
+
+        return file.delete();
     }
 }

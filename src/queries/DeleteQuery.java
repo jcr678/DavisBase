@@ -45,7 +45,6 @@ public class DeleteQuery implements IQuery {
                 List<Byte> columnIndexList = new ArrayList<>();
                 List<Object> valueList = new ArrayList<>();
                 List<Short> conditionList = new ArrayList<>();
-                rowCount = 1;
 
                 for (Condition condition : this.conditions) {
                     List<String> retrievedColumns = manager.fetchAllTableColumns(this.databaseName, tableName);

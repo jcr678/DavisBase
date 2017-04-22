@@ -1,19 +1,22 @@
 package common;
 
-import datatypes.DT_Int;
-import datatypes.DT_Text;
-import datatypes.base.DT;
+import datatypes.DataType_Int;
+import datatypes.DataType_Text;
+import datatypes.base.DataType;
 import exceptions.InternalException;
 import io.IOManager;
 import io.model.DataRecord;
 import io.model.InternalCondition;
+import query.QueryHandler;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
+import static query.QueryHandler.USE_HELP_MESSAGE;
+
 /**
- * Created by dakle on 21/4/17.
+ * Created by dakle on 19/4/17.
  */
 public class DatabaseHelper {
 
@@ -32,26 +35,36 @@ public class DatabaseHelper {
         manager = new IOManager();
     }
 
+    public boolean databaseExists(String databaseName) {
+
+        if (databaseName == null || databaseName.length() == 0) {
+            QueryHandler.UnrecognisedCommand("", USE_HELP_MESSAGE);
+            return false;
+        }
+
+        return new IOManager().databaseExists(databaseName);
+    }
+
+    public boolean tableExists(String databaseName, String tableName) {
+        if (tableName == null || databaseName == null || tableName.length() == 0 || databaseName.length() == 0) {
+            QueryHandler.UnrecognisedCommand("", USE_HELP_MESSAGE);
+            return false;
+        }
+
+        return new IOManager().checkTableExists(databaseName, tableName);
+    }
+
     public List<String> fetchAllTableColumns(String databaseName, String tableName) throws InternalException {
         List<String> columnNames = new ArrayList<>();
         List<InternalCondition> conditions = new ArrayList<>();
-        InternalCondition condition = new InternalCondition();
-        condition.setIndex(SystemDatabaseHelper.COLUMNS_TABLE_SCHEMA_DATABASE_NAME);
-        condition.setValue(new DT_Text(databaseName));
-        condition.setConditionType(InternalCondition.EQUALS);
-        conditions.add(condition);
-        condition = new InternalCondition();
-        condition.setIndex(SystemDatabaseHelper.COLUMNS_TABLE_SCHEMA_TABLE_NAME);
-        condition.setValue(new DT_Text(tableName));
-        condition.setConditionType(InternalCondition.EQUALS);
-        conditions.add(condition);
+        conditions.add(InternalCondition.CreateCondition(CatalogDatabaseHelper.COLUMNS_TABLE_SCHEMA_DATABASE_NAME, InternalCondition.EQUALS, new DataType_Text(databaseName)));
+        conditions.add(InternalCondition.CreateCondition(CatalogDatabaseHelper.COLUMNS_TABLE_SCHEMA_TABLE_NAME, InternalCondition.EQUALS, new DataType_Text(tableName)));
 
-        List<DataRecord> records = manager.findRecord(Constants.DEFAULT_CATALOG_DATABASENAME, Constants.SYSTEM_COLUMNS_TABLENAME, conditions, false);
+        List<DataRecord> records = manager.findRecord(DatabaseConstants.DEFAULT_CATALOG_DATABASENAME, DatabaseConstants.SYSTEM_COLUMNS_TABLENAME, conditions, false);
 
-        for (int i = 0; i < records.size(); i++) {
-            DataRecord record = records.get(i);
-            Object object = record.getColumnValueList().get(SystemDatabaseHelper.COLUMNS_TABLE_SCHEMA_COLUMN_NAME);
-            columnNames.add(((DT) object).getStringValue());
+        for (DataRecord record : records) {
+            Object object = record.getColumnValueList().get(CatalogDatabaseHelper.COLUMNS_TABLE_SCHEMA_COLUMN_NAME);
+            columnNames.add(((DataType) object).getStringValue());
         }
 
         return columnNames;
@@ -60,29 +73,20 @@ public class DatabaseHelper {
     public boolean checkNullConstraint(String databaseName, String tableName, HashMap<String, Integer> columnMap) throws InternalException {
 
         List<InternalCondition> conditions = new ArrayList<>();
-        InternalCondition condition = new InternalCondition();
-        condition.setIndex(SystemDatabaseHelper.COLUMNS_TABLE_SCHEMA_DATABASE_NAME);
-        condition.setValue(new DT_Text(databaseName));
-        condition.setConditionType(InternalCondition.EQUALS);
-        conditions.add(condition);
-        condition = new InternalCondition();
-        condition.setIndex(SystemDatabaseHelper.COLUMNS_TABLE_SCHEMA_TABLE_NAME);
-        condition.setValue(new DT_Text(tableName));
-        condition.setConditionType(InternalCondition.EQUALS);
-        conditions.add(condition);
+        conditions.add(InternalCondition.CreateCondition(CatalogDatabaseHelper.COLUMNS_TABLE_SCHEMA_DATABASE_NAME, InternalCondition.EQUALS, new DataType_Text(databaseName)));
+        conditions.add(InternalCondition.CreateCondition(CatalogDatabaseHelper.COLUMNS_TABLE_SCHEMA_TABLE_NAME, InternalCondition.EQUALS, new DataType_Text(tableName)));
 
-        List<DataRecord> records = manager.findRecord(Constants.DEFAULT_CATALOG_DATABASENAME, Constants.SYSTEM_COLUMNS_TABLENAME, conditions, false);
+        List<DataRecord> records = manager.findRecord(DatabaseConstants.DEFAULT_CATALOG_DATABASENAME, DatabaseConstants.SYSTEM_COLUMNS_TABLENAME, conditions, false);
 
-        for (int i = 0; i < records.size(); i++) {
-            DataRecord record = records.get(i);
-            Object nullValueObject = record.getColumnValueList().get(SystemDatabaseHelper.COLUMNS_TABLE_SCHEMA_IS_NULLABLE);
-            Object object = record.getColumnValueList().get(SystemDatabaseHelper.COLUMNS_TABLE_SCHEMA_COLUMN_NAME);
+        for (DataRecord record : records) {
+            Object nullValueObject = record.getColumnValueList().get(CatalogDatabaseHelper.COLUMNS_TABLE_SCHEMA_IS_NULLABLE);
+            Object object = record.getColumnValueList().get(CatalogDatabaseHelper.COLUMNS_TABLE_SCHEMA_COLUMN_NAME);
 
-            String isNullStr = ((DT) nullValueObject).getStringValue().toUpperCase();
+            String isNullStr = ((DataType) nullValueObject).getStringValue().toUpperCase();
             boolean isNullable = isNullStr.equals("YES");
 
-            if (!columnMap.containsKey(((DT) object).getStringValue()) && !isNullable) {
-                Utils.printMessage("Field '" + ((DT) object).getStringValue() + "' cannot be NULL");
+            if (!columnMap.containsKey(((DataType) object).getStringValue()) && !isNullable) {
+                Utils.printMessage("ERROR(100N): Field '" + ((DataType) object).getStringValue() + "' cannot be NULL");
                 return false;
             }
 
@@ -93,27 +97,18 @@ public class DatabaseHelper {
 
     public HashMap<String, Integer> fetchAllTableColumnDataTypes(String databaseName, String tableName) throws InternalException {
         List<InternalCondition> conditions = new ArrayList<>();
-        InternalCondition condition = new InternalCondition();
-        condition.setIndex(SystemDatabaseHelper.COLUMNS_TABLE_SCHEMA_DATABASE_NAME);
-        condition.setValue(new DT_Text(databaseName));
-        condition.setConditionType(InternalCondition.EQUALS);
-        conditions.add(condition);
-        condition = new InternalCondition();
-        condition.setIndex(SystemDatabaseHelper.COLUMNS_TABLE_SCHEMA_TABLE_NAME);
-        condition.setValue(new DT_Text(tableName));
-        condition.setConditionType(InternalCondition.EQUALS);
-        conditions.add(condition);
+        conditions.add(InternalCondition.CreateCondition(CatalogDatabaseHelper.COLUMNS_TABLE_SCHEMA_DATABASE_NAME, InternalCondition.EQUALS, new DataType_Text(databaseName)));
+        conditions.add(InternalCondition.CreateCondition(CatalogDatabaseHelper.COLUMNS_TABLE_SCHEMA_TABLE_NAME, InternalCondition.EQUALS, new DataType_Text(tableName)));
 
-        List<DataRecord> records = manager.findRecord(Constants.DEFAULT_CATALOG_DATABASENAME, Constants.SYSTEM_COLUMNS_TABLENAME, conditions, false);
+        List<DataRecord> records = manager.findRecord(DatabaseConstants.DEFAULT_CATALOG_DATABASENAME, DatabaseConstants.SYSTEM_COLUMNS_TABLENAME, conditions, false);
         HashMap<String, Integer> columDataTypeMapping = new HashMap<>();
 
-        for (int i = 0; i < records.size(); i++) {
-            DataRecord record = records.get(i);
-            Object object = record.getColumnValueList().get(SystemDatabaseHelper.COLUMNS_TABLE_SCHEMA_COLUMN_NAME);
-            Object dataTypeObject = record.getColumnValueList().get(SystemDatabaseHelper.COLUMNS_TABLE_SCHEMA_DATA_TYPE);
+        for (DataRecord record : records) {
+            Object object = record.getColumnValueList().get(CatalogDatabaseHelper.COLUMNS_TABLE_SCHEMA_COLUMN_NAME);
+            Object dataTypeObject = record.getColumnValueList().get(CatalogDatabaseHelper.COLUMNS_TABLE_SCHEMA_DATA_TYPE);
 
-            String columnName = ((DT) object).getStringValue();
-            int columnDataType = Utils.stringToDataType(((DT) dataTypeObject).getStringValue());
+            String columnName = ((DataType) object).getStringValue();
+            int columnDataType = Utils.stringToDataType(((DataType) dataTypeObject).getStringValue());
             columDataTypeMapping.put(columnName.toLowerCase(), columnDataType);
         }
 
@@ -122,22 +117,16 @@ public class DatabaseHelper {
 
     public String getTablePrimaryKey(String databaseName, String tableName) throws InternalException {
         List<InternalCondition> conditions = new ArrayList<>();
+        conditions.add(InternalCondition.CreateCondition(CatalogDatabaseHelper.COLUMNS_TABLE_SCHEMA_DATABASE_NAME, InternalCondition.EQUALS, new DataType_Text(databaseName)));
+        conditions.add(InternalCondition.CreateCondition(CatalogDatabaseHelper.COLUMNS_TABLE_SCHEMA_TABLE_NAME, InternalCondition.EQUALS, new DataType_Text(tableName)));
+        conditions.add(InternalCondition.CreateCondition(CatalogDatabaseHelper.COLUMNS_TABLE_SCHEMA_COLUMN_KEY, InternalCondition.EQUALS, new DataType_Text(CatalogDatabaseHelper.PRIMARY_KEY_IDENTIFIER)));
 
-        DT_Text tableNameObj = new DT_Text(tableName);
-        DT_Text primaryKeyObj = new DT_Text(SystemDatabaseHelper.PRIMARY_KEY_IDENTIFIER);
-        DT_Text databaseObj = new DT_Text(databaseName);
-
-
-        conditions.add(InternalCondition.CreateCondition(SystemDatabaseHelper.COLUMNS_TABLE_SCHEMA_DATABASE_NAME, InternalCondition.EQUALS, databaseObj));
-        conditions.add(InternalCondition.CreateCondition(SystemDatabaseHelper.COLUMNS_TABLE_SCHEMA_TABLE_NAME, InternalCondition.EQUALS, tableNameObj));
-        conditions.add(InternalCondition.CreateCondition(SystemDatabaseHelper.COLUMNS_TABLE_SCHEMA_COLUMN_KEY, InternalCondition.EQUALS, primaryKeyObj));
-
-        List<DataRecord> records = manager.findRecord(Constants.DEFAULT_CATALOG_DATABASENAME, Constants.SYSTEM_COLUMNS_TABLENAME, conditions, false);
+        List<DataRecord> records = manager.findRecord(DatabaseConstants.DEFAULT_CATALOG_DATABASENAME, DatabaseConstants.SYSTEM_COLUMNS_TABLENAME, conditions, true);
         String columnName = "";
-        for (DataRecord record : records) {
-            Object object = record.getColumnValueList().get(SystemDatabaseHelper.COLUMNS_TABLE_SCHEMA_COLUMN_NAME);
-            columnName = ((DT) object).getStringValue();
-            break;
+        if(records.size() > 0) {
+            DataRecord record = records.get(0);
+            Object object = record.getColumnValueList().get(CatalogDatabaseHelper.COLUMNS_TABLE_SCHEMA_COLUMN_NAME);
+            columnName = ((DataType) object).getStringValue();
         }
 
         return columnName;
@@ -145,24 +134,16 @@ public class DatabaseHelper {
 
     public int getTableRecordCount(String databaseName, String tableName) throws InternalException {
         List<InternalCondition> conditions = new ArrayList<>();
-        InternalCondition condition = new InternalCondition();
-        condition.setIndex(SystemDatabaseHelper.TABLES_TABLE_SCHEMA_DATABASE_NAME);
-        condition.setValue(new DT_Text(databaseName));
-        condition.setConditionType(InternalCondition.EQUALS);
-        conditions.add(condition);
-        condition = new InternalCondition();
-        condition.setIndex(SystemDatabaseHelper.TABLES_TABLE_SCHEMA_TABLE_NAME);
-        condition.setValue(new DT_Text(tableName));
-        condition.setConditionType(InternalCondition.EQUALS);
-        conditions.add(condition);
+        conditions.add(InternalCondition.CreateCondition(CatalogDatabaseHelper.TABLES_TABLE_SCHEMA_DATABASE_NAME, InternalCondition.EQUALS, new DataType_Text(databaseName)));
+        conditions.add(InternalCondition.CreateCondition(CatalogDatabaseHelper.TABLES_TABLE_SCHEMA_TABLE_NAME, InternalCondition.EQUALS, new DataType_Text(tableName)));
 
-        List<DataRecord> records = manager.findRecord(Constants.DEFAULT_CATALOG_DATABASENAME, Constants.SYSTEM_TABLES_TABLENAME, conditions, true);
+        List<DataRecord> records = manager.findRecord(DatabaseConstants.DEFAULT_CATALOG_DATABASENAME, DatabaseConstants.SYSTEM_TABLES_TABLENAME, conditions, true);
         int recordCount = 0;
 
-        for (DataRecord record : records) {
-            Object object = record.getColumnValueList().get(SystemDatabaseHelper.TABLES_TABLE_SCHEMA_RECORD_COUNT);
-            recordCount = Integer.valueOf(((DT) object).getStringValue());
-            break;
+        if(records.size() > 0) {
+            DataRecord record = records.get(0);
+            Object object = record.getColumnValueList().get(CatalogDatabaseHelper.TABLES_TABLE_SCHEMA_RECORD_COUNT);
+            recordCount = Integer.valueOf(((DataType) object).getStringValue());
         }
 
         return recordCount;
@@ -170,14 +151,9 @@ public class DatabaseHelper {
 
     public boolean checkIfValueForPrimaryKeyExists(String databaseName, String tableName, int value) throws InternalException {
         IOManager manager = new IOManager();
-        InternalCondition condition = InternalCondition.CreateCondition(0, InternalCondition.EQUALS, new DT_Int(value));
+        InternalCondition condition = InternalCondition.CreateCondition(0, InternalCondition.EQUALS, new DataType_Int(value));
 
         List<DataRecord> records = manager.findRecord(databaseName, tableName, condition, false);
-        if (records.size() > 0) {
-            return true;
-        }
-        else {
-            return false;
-        }
+        return records.size() > 0;
     }
 }

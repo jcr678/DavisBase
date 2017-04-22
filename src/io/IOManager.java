@@ -1,11 +1,11 @@
 package io;
 
-import common.Constants;
-import common.SystemDatabaseHelper;
+import common.DatabaseConstants;
+import common.CatalogDatabaseHelper;
 import common.Utils;
 import datatypes.*;
-import datatypes.base.DT;
-import datatypes.base.DT_Numeric;
+import datatypes.base.DataType;
+import datatypes.base.DataType_Numeric;
 import exceptions.InternalException;
 import io.model.DataRecord;
 import io.model.InternalCondition;
@@ -17,8 +17,10 @@ import java.io.RandomAccessFile;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Created by Mahesh on 9/4/17.
+/*
+ * Created by Parag Pravin Dakle on 9/4/17.
+ *
+ * Class is carries out all interaction with files stored on disks.
  */
 
 public class IOManager {
@@ -56,15 +58,9 @@ public class IOManager {
         }
     }
 
-    /***
-     * Checks if the table exists in the database.
-     * @param databaseName
-     * @param tableName
-     * @return True if the table exists else False.
-     */
     public boolean checkTableExists(String databaseName, String tableName) {
         boolean databaseExists = this.databaseExists(databaseName);
-        boolean fileExists = new File(Utils.getDatabasePath(databaseName) + "/" + tableName + Constants.DEFAULT_FILE_EXTENSION).exists();
+        boolean fileExists = new File(Utils.getDatabasePath(databaseName) + "/" + tableName + DatabaseConstants.DEFAULT_FILE_EXTENSION).exists();
 
         return (databaseExists && fileExists);
     }
@@ -72,7 +68,7 @@ public class IOManager {
     public boolean writeRecord(String databaseName, String tableName, DataRecord record) throws InternalException {
         RandomAccessFile randomAccessFile;
         try {
-            File file = new File(Utils.getDatabasePath(databaseName) + "/" + tableName + Constants.DEFAULT_FILE_EXTENSION);
+            File file = new File(Utils.getDatabasePath(databaseName) + "/" + tableName + DatabaseConstants.DEFAULT_FILE_EXTENSION);
             if (file.exists()) {
                 randomAccessFile = new RandomAccessFile(file, "rw");
                 Page page = getPage(randomAccessFile, record, 0);
@@ -113,7 +109,7 @@ public class IOManager {
                             }
                             break;
                     }
-                    SystemDatabaseHelper.incrementRowCount(databaseName, tableName);
+                    CatalogDatabaseHelper.incrementRowCount(databaseName, tableName);
                     randomAccessFile.close();
                     return true;
                 }
@@ -128,7 +124,7 @@ public class IOManager {
                 record.setOffset((short) (page.getStartingAddress() + 1));
                 this.writePageHeader(randomAccessFile, page);
                 this.writeRecord(randomAccessFile, record);
-                SystemDatabaseHelper.incrementRowCount(databaseName, tableName);
+                CatalogDatabaseHelper.incrementRowCount(databaseName, tableName);
                 randomAccessFile.close();
             } else {
                 Utils.printMessage(String.format("Table '%s.%s' doesn't exist.", databaseName, tableName));
@@ -423,68 +419,68 @@ public class IOManager {
                     }
                     for (byte j = 0; j < numberOfRecords; j++) {
                         switch (serialTypeCodes[j]) {
-                            //case DT_TinyInt.nullSerialCode is overridden with DT_Text
+                            //case DataType_TinyInt.nullSerialCode is overridden with DataType_Text
 
-                            case Constants.ONE_BYTE_NULL_SERIAL_TYPE_CODE:
-                                record.getColumnValueList().add(new DT_Text(null));
+                            case DatabaseConstants.ONE_BYTE_NULL_SERIAL_TYPE_CODE:
+                                record.getColumnValueList().add(new DataType_Text(null));
                                 break;
 
-                            case Constants.TWO_BYTE_NULL_SERIAL_TYPE_CODE:
-                                record.getColumnValueList().add(new DT_SmallInt(randomAccessFile.readShort(), true));
+                            case DatabaseConstants.TWO_BYTE_NULL_SERIAL_TYPE_CODE:
+                                record.getColumnValueList().add(new DataType_SmallInt(randomAccessFile.readShort(), true));
                                 break;
 
-                            case Constants.FOUR_BYTE_NULL_SERIAL_TYPE_CODE:
-                                record.getColumnValueList().add(new DT_Real(randomAccessFile.readFloat(), true));
+                            case DatabaseConstants.FOUR_BYTE_NULL_SERIAL_TYPE_CODE:
+                                record.getColumnValueList().add(new DataType_Real(randomAccessFile.readFloat(), true));
                                 break;
 
-                            case Constants.EIGHT_BYTE_NULL_SERIAL_TYPE_CODE:
-                                record.getColumnValueList().add(new DT_Double(randomAccessFile.readDouble(), true));
+                            case DatabaseConstants.EIGHT_BYTE_NULL_SERIAL_TYPE_CODE:
+                                record.getColumnValueList().add(new DataType_Double(randomAccessFile.readDouble(), true));
                                 break;
 
-                            case Constants.TINY_INT_SERIAL_TYPE_CODE:
-                                record.getColumnValueList().add(new DT_TinyInt(randomAccessFile.readByte()));
+                            case DatabaseConstants.TINY_INT_SERIAL_TYPE_CODE:
+                                record.getColumnValueList().add(new DataType_TinyInt(randomAccessFile.readByte()));
                                 break;
 
-                            case Constants.SMALL_INT_SERIAL_TYPE_CODE:
-                                record.getColumnValueList().add(new DT_SmallInt(randomAccessFile.readShort()));
+                            case DatabaseConstants.SMALL_INT_SERIAL_TYPE_CODE:
+                                record.getColumnValueList().add(new DataType_SmallInt(randomAccessFile.readShort()));
                                 break;
 
-                            case Constants.INT_SERIAL_TYPE_CODE:
-                                record.getColumnValueList().add(new DT_Int(randomAccessFile.readInt()));
+                            case DatabaseConstants.INT_SERIAL_TYPE_CODE:
+                                record.getColumnValueList().add(new DataType_Int(randomAccessFile.readInt()));
                                 break;
 
-                            case Constants.BIG_INT_SERIAL_TYPE_CODE:
-                                record.getColumnValueList().add(new DT_BigInt(randomAccessFile.readLong()));
+                            case DatabaseConstants.BIG_INT_SERIAL_TYPE_CODE:
+                                record.getColumnValueList().add(new DataType_BigInt(randomAccessFile.readLong()));
                                 break;
 
-                            case Constants.REAL_SERIAL_TYPE_CODE:
-                                record.getColumnValueList().add(new DT_Real(randomAccessFile.readFloat()));
+                            case DatabaseConstants.REAL_SERIAL_TYPE_CODE:
+                                record.getColumnValueList().add(new DataType_Real(randomAccessFile.readFloat()));
                                 break;
 
-                            case Constants.DOUBLE_SERIAL_TYPE_CODE:
-                                record.getColumnValueList().add(new DT_Double(randomAccessFile.readDouble()));
+                            case DatabaseConstants.DOUBLE_SERIAL_TYPE_CODE:
+                                record.getColumnValueList().add(new DataType_Double(randomAccessFile.readDouble()));
                                 break;
 
-                            case Constants.DATE_SERIAL_TYPE_CODE:
-                                record.getColumnValueList().add(new DT_Date(randomAccessFile.readLong()));
+                            case DatabaseConstants.DATE_SERIAL_TYPE_CODE:
+                                record.getColumnValueList().add(new DataType_Date(randomAccessFile.readLong()));
                                 break;
 
-                            case Constants.DATE_TIME_SERIAL_TYPE_CODE:
-                                record.getColumnValueList().add(new DT_DateTime(randomAccessFile.readLong()));
+                            case DatabaseConstants.DATE_TIME_SERIAL_TYPE_CODE:
+                                record.getColumnValueList().add(new DataType_DateTime(randomAccessFile.readLong()));
                                 break;
 
-                            case Constants.TEXT_SERIAL_TYPE_CODE:
-                                record.getColumnValueList().add(new DT_Text(""));
+                            case DatabaseConstants.TEXT_SERIAL_TYPE_CODE:
+                                record.getColumnValueList().add(new DataType_Text(""));
                                 break;
 
                             default:
-                                if (serialTypeCodes[j] > Constants.TEXT_SERIAL_TYPE_CODE) {
-                                    byte length = (byte) (serialTypeCodes[j] - Constants.TEXT_SERIAL_TYPE_CODE);
+                                if (serialTypeCodes[j] > DatabaseConstants.TEXT_SERIAL_TYPE_CODE) {
+                                    byte length = (byte) (serialTypeCodes[j] - DatabaseConstants.TEXT_SERIAL_TYPE_CODE);
                                     char[] text = new char[length];
                                     for (byte k = 0; k < length; k++) {
                                         text[k] = (char) randomAccessFile.readByte();
                                     }
-                                    record.getColumnValueList().add(new DT_Text(new String(text)));
+                                    record.getColumnValueList().add(new DataType_Text(new String(text)));
                                 }
                                 break;
 
@@ -638,41 +634,41 @@ public class IOManager {
             randomAccessFile.write(record.getSerialTypeCodes());
             for (Object object : record.getColumnValueList()) {
                 switch (Utils.resolveClass(object)) {
-                    case Constants.TINYINT:
-                        randomAccessFile.writeByte(((DT_TinyInt) object).getValue());
+                    case DatabaseConstants.TINYINT:
+                        randomAccessFile.writeByte(((DataType_TinyInt) object).getValue());
                         break;
 
-                    case Constants.SMALLINT:
-                        randomAccessFile.writeShort(((DT_SmallInt) object).getValue());
+                    case DatabaseConstants.SMALLINT:
+                        randomAccessFile.writeShort(((DataType_SmallInt) object).getValue());
                         break;
 
-                    case Constants.INT:
-                        randomAccessFile.writeInt(((DT_Int) object).getValue());
+                    case DatabaseConstants.INT:
+                        randomAccessFile.writeInt(((DataType_Int) object).getValue());
                         break;
 
-                    case Constants.BIGINT:
-                        randomAccessFile.writeLong(((DT_BigInt) object).getValue());
+                    case DatabaseConstants.BIGINT:
+                        randomAccessFile.writeLong(((DataType_BigInt) object).getValue());
                         break;
 
-                    case Constants.REAL:
-                        randomAccessFile.writeFloat(((DT_Real) object).getValue());
+                    case DatabaseConstants.REAL:
+                        randomAccessFile.writeFloat(((DataType_Real) object).getValue());
                         break;
 
-                    case Constants.DOUBLE:
-                        randomAccessFile.writeDouble(((DT_Double) object).getValue());
+                    case DatabaseConstants.DOUBLE:
+                        randomAccessFile.writeDouble(((DataType_Double) object).getValue());
                         break;
 
-                    case Constants.DATE:
-                        randomAccessFile.writeLong(((DT_Date) object).getValue());
+                    case DatabaseConstants.DATE:
+                        randomAccessFile.writeLong(((DataType_Date) object).getValue());
                         break;
 
-                    case Constants.DATETIME:
-                        randomAccessFile.writeLong(((DT_DateTime) object).getValue());
+                    case DatabaseConstants.DATETIME:
+                        randomAccessFile.writeLong(((DataType_DateTime) object).getValue());
                         break;
 
-                    case Constants.TEXT:
-                        if (((DT_Text) object).getValue() != null)
-                            randomAccessFile.writeBytes(((DT_Text) object).getValue());
+                    case DatabaseConstants.TEXT:
+                        if (((DataType_Text) object).getValue() != null)
+                            randomAccessFile.writeBytes(((DataType_Text) object).getValue());
                         break;
 
                     default:
@@ -715,7 +711,7 @@ public class IOManager {
 
     public List<DataRecord> findRecord(String databaseName, String tableName, List<InternalCondition> conditionList, List<Byte> selectionColumnIndexList, boolean getOne) throws InternalException {
         try {
-            File file = new File(Utils.getDatabasePath(databaseName) + "/" + tableName + Constants.DEFAULT_FILE_EXTENSION);
+            File file = new File(Utils.getDatabasePath(databaseName) + "/" + tableName + DatabaseConstants.DEFAULT_FILE_EXTENSION);
             if (file.exists()) {
                 RandomAccessFile randomAccessFile = new RandomAccessFile(file, "r");
                 if (conditionList != null) {
@@ -729,7 +725,7 @@ public class IOManager {
                     while (page != null) {
                         for (Object offset : page.getRecordAddressList()) {
                             isMatch = true;
-                            record = getDataRecord(randomAccessFile, page.getPageNumber(), (short) offset);
+                            record = readDataRecord(randomAccessFile, page.getPageNumber(), (short) offset);
                             for(int i = 0; i < conditionList.size(); i++) {
                                 isMatch = false;
                                 columnIndex = conditionList.get(i).getIndex();
@@ -737,179 +733,16 @@ public class IOManager {
                                 condition = conditionList.get(i).getConditionType();
                                 if (record != null && record.getColumnValueList().size() > columnIndex) {
                                     Object object = record.getColumnValueList().get(columnIndex);
-                                    if(((DT) object).isNull()) isMatch = false;
-                                    else {
-                                        switch (Utils.resolveClass(object)) {
-                                            case Constants.TINYINT:
-                                                switch (Utils.resolveClass(value)) {
-                                                    case Constants.TINYINT:
-                                                        isMatch = ((DT_TinyInt) object).compare((DT_TinyInt) value, condition);
-                                                        break;
-
-                                                    case Constants.SMALLINT:
-                                                        isMatch = ((DT_TinyInt) object).compare((DT_SmallInt) value, condition);
-                                                        break;
-
-                                                    case Constants.INT:
-                                                        isMatch = ((DT_TinyInt) object).compare((DT_Int) value, condition);
-                                                        break;
-
-                                                    case Constants.BIGINT:
-                                                        isMatch = ((DT_TinyInt) object).compare((DT_BigInt) value, condition);
-                                                        break;
-
-                                                    default:
-                                                        randomAccessFile.close();
-                                                        throw new InternalException(InternalException.DATATYPE_MISMATCH_EXCEPTION, "Number");
-                                                }
-                                                break;
-
-                                            case Constants.SMALLINT:
-                                                switch (Utils.resolveClass(value)) {
-                                                    case Constants.TINYINT:
-                                                        isMatch = ((DT_SmallInt) object).compare((DT_TinyInt) value, condition);
-                                                        break;
-
-                                                    case Constants.SMALLINT:
-                                                        isMatch = ((DT_SmallInt) object).compare((DT_SmallInt) value, condition);
-                                                        break;
-
-                                                    case Constants.INT:
-                                                        isMatch = ((DT_SmallInt) object).compare((DT_Int) value, condition);
-                                                        break;
-
-                                                    case Constants.BIGINT:
-                                                        isMatch = ((DT_SmallInt) object).compare((DT_BigInt) value, condition);
-                                                        break;
-
-                                                    default:
-                                                        randomAccessFile.close();
-                                                        throw new InternalException(InternalException.DATATYPE_MISMATCH_EXCEPTION, "Number");
-                                                }
-                                                break;
-
-                                            case Constants.INT:
-                                                switch (Utils.resolveClass(value)) {
-                                                    case Constants.TINYINT:
-                                                        isMatch = ((DT_Int) object).compare((DT_TinyInt) value, condition);
-                                                        break;
-
-                                                    case Constants.SMALLINT:
-                                                        isMatch = ((DT_Int) object).compare((DT_SmallInt) value, condition);
-                                                        break;
-
-                                                    case Constants.INT:
-                                                        isMatch = ((DT_Int) object).compare((DT_Int) value, condition);
-                                                        break;
-
-                                                    case Constants.BIGINT:
-                                                        isMatch = ((DT_Int) object).compare((DT_BigInt) value, condition);
-                                                        break;
-
-                                                    default:
-                                                        randomAccessFile.close();
-                                                        throw new InternalException(InternalException.DATATYPE_MISMATCH_EXCEPTION, "Number");
-                                                }
-                                                break;
-
-                                            case Constants.BIGINT:
-                                                switch (Utils.resolveClass(value)) {
-                                                    case Constants.TINYINT:
-                                                        isMatch = ((DT_BigInt) object).compare((DT_TinyInt) value, condition);
-                                                        break;
-
-                                                    case Constants.SMALLINT:
-                                                        isMatch = ((DT_BigInt) object).compare((DT_SmallInt) value, condition);
-                                                        break;
-
-                                                    case Constants.INT:
-                                                        isMatch = ((DT_BigInt) object).compare((DT_Int) value, condition);
-                                                        break;
-
-                                                    case Constants.BIGINT:
-                                                        isMatch = ((DT_BigInt) object).compare((DT_BigInt) value, condition);
-                                                        break;
-
-                                                    default:
-                                                        randomAccessFile.close();
-                                                        throw new InternalException(InternalException.DATATYPE_MISMATCH_EXCEPTION, "Number");
-                                                }
-                                                break;
-
-                                            case Constants.REAL:
-                                                switch (Utils.resolveClass(value)) {
-                                                    case Constants.REAL:
-                                                        isMatch = ((DT_Real) object).compare((DT_Real) value, condition);
-                                                        break;
-
-                                                    case Constants.DOUBLE:
-                                                        isMatch = ((DT_Real) object).compare((DT_Double) value, condition);
-                                                        break;
-
-                                                    default:
-                                                        randomAccessFile.close();
-                                                        throw new InternalException(InternalException.DATATYPE_MISMATCH_EXCEPTION, "Decimal Number");
-                                                }
-                                                break;
-
-                                            case Constants.DOUBLE:
-                                                switch (Utils.resolveClass(value)) {
-                                                    case Constants.REAL:
-                                                        isMatch = ((DT_Double) object).compare((DT_Real) value, condition);
-                                                        break;
-
-                                                    case Constants.DOUBLE:
-                                                        isMatch = ((DT_Double) object).compare((DT_Double) value, condition);
-                                                        break;
-
-                                                    default:
-                                                        randomAccessFile.close();
-                                                        throw new InternalException(InternalException.DATATYPE_MISMATCH_EXCEPTION, "Decimal Number");
-                                                }
-                                                break;
-
-                                            case Constants.DATE:
-                                                switch (Utils.resolveClass(value)) {
-                                                    case Constants.DATE:
-                                                        isMatch = ((DT_Date) object).compare((DT_Date) value, condition);
-                                                        break;
-
-                                                    default:
-                                                        randomAccessFile.close();
-                                                        throw new InternalException(InternalException.DATATYPE_MISMATCH_EXCEPTION, "Date");
-                                                }
-                                                break;
-
-                                            case Constants.DATETIME:
-                                                switch (Utils.resolveClass(value)) {
-                                                    case Constants.DATETIME:
-                                                        isMatch = ((DT_DateTime) object).compare((DT_DateTime) value, condition);
-                                                        break;
-
-                                                    default:
-                                                        randomAccessFile.close();
-                                                        throw new InternalException(InternalException.DATATYPE_MISMATCH_EXCEPTION, "Datetime");
-                                                }
-                                                break;
-
-                                            case Constants.TEXT:
-                                                switch (Utils.resolveClass(value)) {
-                                                    case Constants.TEXT:
-                                                        if (((DT_Text) object).getValue() != null) {
-                                                            if (condition != InternalCondition.EQUALS) {
-                                                                randomAccessFile.close();
-                                                                throw new InternalException(InternalException.INVALID_CONDITION_EXCEPTION, "= is");
-                                                            } else
-                                                                isMatch = ((DT_Text) object).getValue().equalsIgnoreCase(((DT_Text) value).getValue());
-                                                        }
-                                                        break;
-
-                                                    default:
-                                                        randomAccessFile.close();
-                                                        throw new InternalException(InternalException.DATATYPE_MISMATCH_EXCEPTION, "String");
-                                                }
-                                                break;
-                                        }
+                                    try {
+                                        isMatch = compare(object, value, condition);
+                                    }
+                                    catch (InternalException e) {
+                                        randomAccessFile.close();
+                                        throw e;
+                                    }
+                                    catch (Exception e) {
+                                        randomAccessFile.close();
+                                        throw new InternalException(InternalException.GENERIC_EXCEPTION);
                                     }
                                     if(!isMatch) break;
                                 }
@@ -954,11 +787,9 @@ public class IOManager {
         return null;
     }
 
-    public int updateRecord(String databaseName, String tableName, List<Byte> searchColumnIndexList, List<Object> searchValueList, List<Short> searchConditionList, List<Byte> updateColumnIndexList, List<Object> updateColumnValueList, boolean isIncrement) throws InternalException {
+    public int updateRecord(String databaseName, String tableName, InternalCondition condition, List<Byte> updateColumnIndexList, List<Object> updateColumnValueList, boolean isIncrement) throws InternalException {
         List<InternalCondition> conditions = new ArrayList<>();
-        for (byte i = 0; i < searchColumnIndexList.size(); i++) {
-            conditions.add(InternalCondition.CreateCondition(searchColumnIndexList.get(i), searchConditionList.get(i), searchValueList.get(i)));
-        }
+        conditions.add(condition);
         return updateRecord(databaseName, tableName, conditions, updateColumnIndexList, updateColumnValueList, isIncrement);
     }
 
@@ -970,7 +801,7 @@ public class IOManager {
                 return updateRecordCount;
             if (updateColumnIndexList.size() != updateColumnValueList.size())
                 return updateRecordCount;
-            File file = new File(Utils.getDatabasePath(databaseName) + "/" + tableName + Constants.DEFAULT_FILE_EXTENSION);
+            File file = new File(Utils.getDatabasePath(databaseName) + "/" + tableName + DatabaseConstants.DEFAULT_FILE_EXTENSION);
             if (file.exists()) {
                 List<DataRecord> records = findRecord(databaseName, tableName, conditions, false);
                 if (records != null) {
@@ -983,7 +814,7 @@ public class IOManager {
                                 index = updateColumnIndexList.get(i);
                                 object = updateColumnValueList.get(i);
                                 if (isIncrement) {
-                                    record.getColumnValueList().set(index, increment((DT_Numeric) record.getColumnValueList().get(index), (DT_Numeric) object));
+                                    record.getColumnValueList().set(index, increment((DataType_Numeric) record.getColumnValueList().get(index), (DataType_Numeric) object));
                                 } else {
                                     record.getColumnValueList().set(index, object);
                                 }
@@ -1008,21 +839,21 @@ public class IOManager {
         return updateRecordCount;
     }
 
-    private <T> DT_Numeric<T> increment(DT_Numeric<T> object1, DT_Numeric<T> object2) {
+    private <T> DataType_Numeric<T> increment(DataType_Numeric<T> object1, DataType_Numeric<T> object2) {
         object1.increment(object2.getValue());
         return object1;
     }
 
     public Page<DataRecord> getLastRecordAndPage(String databaseName, String tableName) throws InternalException {
         try {
-            File file = new File(Utils.getDatabasePath(databaseName) + "/" + tableName + Constants.DEFAULT_FILE_EXTENSION);
+            File file = new File(Utils.getDatabasePath(databaseName) + "/" + tableName + DatabaseConstants.DEFAULT_FILE_EXTENSION);
             if (file.exists()) {
                 RandomAccessFile randomAccessFile = new RandomAccessFile(file, "r");
                 Page<DataRecord> page = getRightmostLeafPage(file);
                 if (page.getNumberOfCells() > 0) {
                     randomAccessFile.seek((Page.PAGE_SIZE * page.getPageNumber()) + Page.getHeaderFixedLength() + ((page.getNumberOfCells() - 1) * Short.BYTES));
                     short address = randomAccessFile.readShort();
-                    DataRecord record = getDataRecord(randomAccessFile, page.getPageNumber(), address);
+                    DataRecord record = readDataRecord(randomAccessFile, page.getPageNumber(), address);
                     if (record != null)
                         page.getPageRecords().add(record);
                 }
@@ -1074,7 +905,7 @@ public class IOManager {
     public int deleteRecord(String databaseName, String tableName, List<InternalCondition> conditions) throws InternalException {
         int deletedRecordCount = 0;
         try {
-            File file = new File(Utils.getDatabasePath(databaseName) + "/" + tableName + Constants.DEFAULT_FILE_EXTENSION);
+            File file = new File(Utils.getDatabasePath(databaseName) + "/" + tableName + DatabaseConstants.DEFAULT_FILE_EXTENSION);
             if (file.exists()) {
                 RandomAccessFile randomAccessFile = new RandomAccessFile(file, "rw");
                 if(conditions != null) {
@@ -1087,7 +918,7 @@ public class IOManager {
                     while (page != null) {
                         for (Short offset : new ArrayList<Short>(page.getRecordAddressList())) {
                             isMatch = true;
-                            record = getDataRecord(randomAccessFile, page.getPageNumber(), offset);
+                            record = readDataRecord(randomAccessFile, page.getPageNumber(), offset);
                             for(int i = 0; i < conditions.size(); i++) {
                                 isMatch = false;
                                 columnIndex = conditions.get(i).getIndex();
@@ -1095,180 +926,18 @@ public class IOManager {
                                 condition = conditions.get(i).getConditionType();
                                 if (record != null && record.getColumnValueList().size() > columnIndex) {
                                     Object object = record.getColumnValueList().get(columnIndex);
-                                    if(((DT) object).isNull()) isMatch = false;
-                                    else {
-                                        switch (Utils.resolveClass(object)) {
-                                            case Constants.TINYINT:
-                                                switch (Utils.resolveClass(value)) {
-                                                    case Constants.TINYINT:
-                                                        isMatch = ((DT_TinyInt) object).compare((DT_TinyInt) value, condition);
-                                                        break;
-
-                                                    case Constants.SMALLINT:
-                                                        isMatch = ((DT_TinyInt) object).compare((DT_SmallInt) value, condition);
-                                                        break;
-
-                                                    case Constants.INT:
-                                                        isMatch = ((DT_TinyInt) object).compare((DT_Int) value, condition);
-                                                        break;
-
-                                                    case Constants.BIGINT:
-                                                        isMatch = ((DT_TinyInt) object).compare((DT_BigInt) value, condition);
-                                                        break;
-
-                                                    default:
-                                                        randomAccessFile.close();
-                                                        throw new InternalException(InternalException.DATATYPE_MISMATCH_EXCEPTION, "Number");
-                                                }
-                                                break;
-
-                                            case Constants.SMALLINT:
-                                                switch (Utils.resolveClass(value)) {
-                                                    case Constants.TINYINT:
-                                                        isMatch = ((DT_SmallInt) object).compare((DT_TinyInt) value, condition);
-                                                        break;
-
-                                                    case Constants.SMALLINT:
-                                                        isMatch = ((DT_SmallInt) object).compare((DT_SmallInt) value, condition);
-                                                        break;
-
-                                                    case Constants.INT:
-                                                        isMatch = ((DT_SmallInt) object).compare((DT_Int) value, condition);
-                                                        break;
-
-                                                    case Constants.BIGINT:
-                                                        isMatch = ((DT_SmallInt) object).compare((DT_BigInt) value, condition);
-                                                        break;
-
-                                                    default:
-                                                        randomAccessFile.close();
-                                                        throw new InternalException(InternalException.DATATYPE_MISMATCH_EXCEPTION, "Number");
-                                                }
-                                                break;
-
-                                            case Constants.INT:
-                                                switch (Utils.resolveClass(value)) {
-                                                    case Constants.TINYINT:
-                                                        isMatch = ((DT_Int) object).compare((DT_TinyInt) value, condition);
-                                                        break;
-
-                                                    case Constants.SMALLINT:
-                                                        isMatch = ((DT_Int) object).compare((DT_SmallInt) value, condition);
-                                                        break;
-
-                                                    case Constants.INT:
-                                                        isMatch = ((DT_Int) object).compare((DT_Int) value, condition);
-                                                        break;
-
-                                                    case Constants.BIGINT:
-                                                        isMatch = ((DT_Int) object).compare((DT_BigInt) value, condition);
-                                                        break;
-
-                                                    default:
-                                                        randomAccessFile.close();
-                                                        throw new InternalException(InternalException.DATATYPE_MISMATCH_EXCEPTION, "Number");
-                                                }
-                                                break;
-
-                                            case Constants.BIGINT:
-                                                switch (Utils.resolveClass(value)) {
-                                                    case Constants.TINYINT:
-                                                        isMatch = ((DT_BigInt) object).compare((DT_TinyInt) value, condition);
-                                                        break;
-
-                                                    case Constants.SMALLINT:
-                                                        isMatch = ((DT_BigInt) object).compare((DT_SmallInt) value, condition);
-                                                        break;
-
-                                                    case Constants.INT:
-                                                        isMatch = ((DT_BigInt) object).compare((DT_Int) value, condition);
-                                                        break;
-
-                                                    case Constants.BIGINT:
-                                                        isMatch = ((DT_BigInt) object).compare((DT_BigInt) value, condition);
-                                                        break;
-
-                                                    default:
-                                                        randomAccessFile.close();
-                                                        throw new InternalException(InternalException.DATATYPE_MISMATCH_EXCEPTION, "Number");
-                                                }
-                                                break;
-
-                                            case Constants.REAL:
-                                                switch (Utils.resolveClass(value)) {
-                                                    case Constants.REAL:
-                                                        isMatch = ((DT_Real) object).compare((DT_Real) value, condition);
-                                                        break;
-
-                                                    case Constants.DOUBLE:
-                                                        isMatch = ((DT_Real) object).compare((DT_Double) value, condition);
-                                                        break;
-
-                                                    default:
-                                                        randomAccessFile.close();
-                                                        throw new InternalException(InternalException.DATATYPE_MISMATCH_EXCEPTION, "Decimal Number");
-                                                }
-                                                break;
-
-                                            case Constants.DOUBLE:
-                                                switch (Utils.resolveClass(value)) {
-                                                    case Constants.REAL:
-                                                        isMatch = ((DT_Double) object).compare((DT_Real) value, condition);
-                                                        break;
-
-                                                    case Constants.DOUBLE:
-                                                        isMatch = ((DT_Double) object).compare((DT_Double) value, condition);
-                                                        break;
-
-                                                    default:
-                                                        randomAccessFile.close();
-                                                        throw new InternalException(InternalException.DATATYPE_MISMATCH_EXCEPTION, "Decimal Number");
-                                                }
-                                                break;
-
-                                            case Constants.DATE:
-                                                switch (Utils.resolveClass(value)) {
-                                                    case Constants.DATE:
-                                                        isMatch = ((DT_Date) object).compare((DT_Date) value, condition);
-                                                        break;
-
-                                                    default:
-                                                        randomAccessFile.close();
-                                                        throw new InternalException(InternalException.DATATYPE_MISMATCH_EXCEPTION, "Date");
-                                                }
-                                                break;
-
-                                            case Constants.DATETIME:
-                                                switch (Utils.resolveClass(value)) {
-                                                    case Constants.DATETIME:
-                                                        isMatch = ((DT_DateTime) object).compare((DT_DateTime) value, condition);
-                                                        break;
-
-                                                    default:
-                                                        randomAccessFile.close();
-                                                        throw new InternalException(InternalException.DATATYPE_MISMATCH_EXCEPTION, "Datetime");
-                                                }
-                                                break;
-
-                                            case Constants.TEXT:
-                                                switch (Utils.resolveClass(value)) {
-                                                    case Constants.TEXT:
-                                                        if (((DT_Text) object).getValue() != null) {
-                                                            if (condition != InternalCondition.EQUALS) {
-                                                                randomAccessFile.close();
-                                                                throw new InternalException(InternalException.INVALID_CONDITION_EXCEPTION, "= is");
-                                                            } else
-                                                                isMatch = ((DT_Text) object).getValue().equalsIgnoreCase(((DT_Text) value).getValue());
-                                                        }
-                                                        break;
-
-                                                    default:
-                                                        randomAccessFile.close();
-                                                        throw new InternalException(InternalException.DATATYPE_MISMATCH_EXCEPTION, "String");
-                                                }
-                                                break;
-                                        }
+                                    try {
+                                        isMatch = compare(object, value, condition);
                                     }
+                                    catch (InternalException e) {
+                                        randomAccessFile.close();
+                                        throw e;
+                                    }
+                                    catch (Exception e) {
+                                        randomAccessFile.close();
+                                        throw new InternalException(InternalException.GENERIC_EXCEPTION);
+                                    }
+
                                     if(!isMatch) break;
                                 }
                             }
@@ -1279,7 +948,7 @@ public class IOManager {
                                     page.setStartingAddress((short) (page.getBaseAddress() + Page.PAGE_SIZE - 1));
                                 }
                                 this.writePageHeader(randomAccessFile, page);
-                                SystemDatabaseHelper.decrementRowCount(databaseName, tableName);
+                                CatalogDatabaseHelper.decrementRowCount(databaseName, tableName);
                                 deletedRecordCount++;
                             }
                         }
@@ -1308,7 +977,176 @@ public class IOManager {
         return deletedRecordCount;
     }
 
-    private DataRecord getDataRecord(RandomAccessFile randomAccessFile, int pageNumber, short address) throws InternalException {
+    private boolean compare(Object object1, Object object2, short condition) throws InternalException {
+        boolean isMatch = false;
+        if(((DataType) object1).isNull()) isMatch = false;
+        else {
+            switch (Utils.resolveClass(object1)) {
+                case DatabaseConstants.TINYINT:
+                    switch (Utils.resolveClass(object2)) {
+                        case DatabaseConstants.TINYINT:
+                            isMatch = ((DataType_TinyInt) object1).compare((DataType_TinyInt) object2, condition);
+                            break;
+
+                        case DatabaseConstants.SMALLINT:
+                            isMatch = ((DataType_TinyInt) object1).compare((DataType_SmallInt) object2, condition);
+                            break;
+
+                        case DatabaseConstants.INT:
+                            isMatch = ((DataType_TinyInt) object1).compare((DataType_Int) object2, condition);
+                            break;
+
+                        case DatabaseConstants.BIGINT:
+                            isMatch = ((DataType_TinyInt) object1).compare((DataType_BigInt) object2, condition);
+                            break;
+
+                        default:
+                            throw new InternalException(InternalException.DATATYPE_MISMATCH_EXCEPTION, "Number");
+                    }
+                    break;
+
+                case DatabaseConstants.SMALLINT:
+                    switch (Utils.resolveClass(object2)) {
+                        case DatabaseConstants.TINYINT:
+                            isMatch = ((DataType_SmallInt) object1).compare((DataType_TinyInt) object2, condition);
+                            break;
+
+                        case DatabaseConstants.SMALLINT:
+                            isMatch = ((DataType_SmallInt) object1).compare((DataType_SmallInt) object2, condition);
+                            break;
+
+                        case DatabaseConstants.INT:
+                            isMatch = ((DataType_SmallInt) object1).compare((DataType_Int) object2, condition);
+                            break;
+
+                        case DatabaseConstants.BIGINT:
+                            isMatch = ((DataType_SmallInt) object1).compare((DataType_BigInt) object2, condition);
+                            break;
+
+                        default:
+                            throw new InternalException(InternalException.DATATYPE_MISMATCH_EXCEPTION, "Number");
+                    }
+                    break;
+
+                case DatabaseConstants.INT:
+                    switch (Utils.resolveClass(object2)) {
+                        case DatabaseConstants.TINYINT:
+                            isMatch = ((DataType_Int) object1).compare((DataType_TinyInt) object2, condition);
+                            break;
+
+                        case DatabaseConstants.SMALLINT:
+                            isMatch = ((DataType_Int) object1).compare((DataType_SmallInt) object2, condition);
+                            break;
+
+                        case DatabaseConstants.INT:
+                            isMatch = ((DataType_Int) object1).compare((DataType_Int) object2, condition);
+                            break;
+
+                        case DatabaseConstants.BIGINT:
+                            isMatch = ((DataType_Int) object1).compare((DataType_BigInt) object2, condition);
+                            break;
+
+                        default:
+                            throw new InternalException(InternalException.DATATYPE_MISMATCH_EXCEPTION, "Number");
+                    }
+                    break;
+
+                case DatabaseConstants.BIGINT:
+                    switch (Utils.resolveClass(object2)) {
+                        case DatabaseConstants.TINYINT:
+                            isMatch = ((DataType_BigInt) object1).compare((DataType_TinyInt) object2, condition);
+                            break;
+
+                        case DatabaseConstants.SMALLINT:
+                            isMatch = ((DataType_BigInt) object1).compare((DataType_SmallInt) object2, condition);
+                            break;
+
+                        case DatabaseConstants.INT:
+                            isMatch = ((DataType_BigInt) object1).compare((DataType_Int) object2, condition);
+                            break;
+
+                        case DatabaseConstants.BIGINT:
+                            isMatch = ((DataType_BigInt) object1).compare((DataType_BigInt) object2, condition);
+                            break;
+
+                        default:
+                            throw new InternalException(InternalException.DATATYPE_MISMATCH_EXCEPTION, "Number");
+                    }
+                    break;
+
+                case DatabaseConstants.REAL:
+                    switch (Utils.resolveClass(object2)) {
+                        case DatabaseConstants.REAL:
+                            isMatch = ((DataType_Real) object1).compare((DataType_Real) object2, condition);
+                            break;
+
+                        case DatabaseConstants.DOUBLE:
+                            isMatch = ((DataType_Real) object1).compare((DataType_Double) object2, condition);
+                            break;
+
+                        default:
+                            throw new InternalException(InternalException.DATATYPE_MISMATCH_EXCEPTION, "Decimal Number");
+                    }
+                    break;
+
+                case DatabaseConstants.DOUBLE:
+                    switch (Utils.resolveClass(object2)) {
+                        case DatabaseConstants.REAL:
+                            isMatch = ((DataType_Double) object1).compare((DataType_Real) object2, condition);
+                            break;
+
+                        case DatabaseConstants.DOUBLE:
+                            isMatch = ((DataType_Double) object1).compare((DataType_Double) object2, condition);
+                            break;
+
+                        default:
+                            throw new InternalException(InternalException.DATATYPE_MISMATCH_EXCEPTION, "Decimal Number");
+                    }
+                    break;
+
+                case DatabaseConstants.DATE:
+                    switch (Utils.resolveClass(object2)) {
+                        case DatabaseConstants.DATE:
+                            isMatch = ((DataType_Date) object1).compare((DataType_Date) object2, condition);
+                            break;
+
+                        default:
+                            throw new InternalException(InternalException.DATATYPE_MISMATCH_EXCEPTION, "Date");
+                    }
+                    break;
+
+                case DatabaseConstants.DATETIME:
+                    switch (Utils.resolveClass(object2)) {
+                        case DatabaseConstants.DATETIME:
+                            isMatch = ((DataType_DateTime) object1).compare((DataType_DateTime) object2, condition);
+                            break;
+
+                        default:
+                            throw new InternalException(InternalException.DATATYPE_MISMATCH_EXCEPTION, "Datetime");
+                    }
+                    break;
+
+                case DatabaseConstants.TEXT:
+                    switch (Utils.resolveClass(object2)) {
+                        case DatabaseConstants.TEXT:
+                            if (((DataType_Text) object1).getValue() != null) {
+                                if (condition != InternalCondition.EQUALS) {
+                                    throw new InternalException(InternalException.INVALID_CONDITION_EXCEPTION, "= is");
+                                } else
+                                    isMatch = ((DataType_Text) object1).getValue().equalsIgnoreCase(((DataType_Text) object2).getValue());
+                            }
+                            break;
+
+                        default:
+                            throw new InternalException(InternalException.DATATYPE_MISMATCH_EXCEPTION, "String");
+                    }
+                    break;
+            }
+        }
+        return isMatch;
+    }
+
+    private DataRecord readDataRecord(RandomAccessFile randomAccessFile, int pageNumber, short address) throws InternalException {
         try {
             if (pageNumber >= 0 && address >= 0) {
                 DataRecord record = new DataRecord();
@@ -1325,68 +1163,68 @@ public class IOManager {
                 Object object;
                 for (byte i = 0; i < numberOfColumns; i++) {
                     switch (serialTypeCodes[i]) {
-                        //case DT_TinyInt.nullSerialCode is overridden with DT_Text
+                        //case DataType_TinyInt.nullSerialCode is overridden with DataType_Text
 
-                        case Constants.ONE_BYTE_NULL_SERIAL_TYPE_CODE:
-                            object = new DT_Text(null);
+                        case DatabaseConstants.ONE_BYTE_NULL_SERIAL_TYPE_CODE:
+                            object = new DataType_Text(null);
                             break;
 
-                        case Constants.TWO_BYTE_NULL_SERIAL_TYPE_CODE:
-                            object = new DT_SmallInt(randomAccessFile.readShort(), true);
+                        case DatabaseConstants.TWO_BYTE_NULL_SERIAL_TYPE_CODE:
+                            object = new DataType_SmallInt(randomAccessFile.readShort(), true);
                             break;
 
-                        case Constants.FOUR_BYTE_NULL_SERIAL_TYPE_CODE:
-                            object = new DT_Real(randomAccessFile.readFloat(), true);
+                        case DatabaseConstants.FOUR_BYTE_NULL_SERIAL_TYPE_CODE:
+                            object = new DataType_Real(randomAccessFile.readFloat(), true);
                             break;
 
-                        case Constants.EIGHT_BYTE_NULL_SERIAL_TYPE_CODE:
-                            object = new DT_Double(randomAccessFile.readDouble(), true);
+                        case DatabaseConstants.EIGHT_BYTE_NULL_SERIAL_TYPE_CODE:
+                            object = new DataType_Double(randomAccessFile.readDouble(), true);
                             break;
 
-                        case Constants.TINY_INT_SERIAL_TYPE_CODE:
-                            object = new DT_TinyInt(randomAccessFile.readByte());
+                        case DatabaseConstants.TINY_INT_SERIAL_TYPE_CODE:
+                            object = new DataType_TinyInt(randomAccessFile.readByte());
                             break;
 
-                        case Constants.SMALL_INT_SERIAL_TYPE_CODE:
-                            object = new DT_SmallInt(randomAccessFile.readShort());
+                        case DatabaseConstants.SMALL_INT_SERIAL_TYPE_CODE:
+                            object = new DataType_SmallInt(randomAccessFile.readShort());
                             break;
 
-                        case Constants.INT_SERIAL_TYPE_CODE:
-                            object = new DT_Int(randomAccessFile.readInt());
+                        case DatabaseConstants.INT_SERIAL_TYPE_CODE:
+                            object = new DataType_Int(randomAccessFile.readInt());
                             break;
 
-                        case Constants.BIG_INT_SERIAL_TYPE_CODE:
-                            object = new DT_BigInt(randomAccessFile.readLong());
+                        case DatabaseConstants.BIG_INT_SERIAL_TYPE_CODE:
+                            object = new DataType_BigInt(randomAccessFile.readLong());
                             break;
 
-                        case Constants.REAL_SERIAL_TYPE_CODE:
-                            object = new DT_Real(randomAccessFile.readFloat());
+                        case DatabaseConstants.REAL_SERIAL_TYPE_CODE:
+                            object = new DataType_Real(randomAccessFile.readFloat());
                             break;
 
-                        case Constants.DOUBLE_SERIAL_TYPE_CODE:
-                            object = new DT_Double(randomAccessFile.readDouble());
+                        case DatabaseConstants.DOUBLE_SERIAL_TYPE_CODE:
+                            object = new DataType_Double(randomAccessFile.readDouble());
                             break;
 
-                        case Constants.DATE_SERIAL_TYPE_CODE:
-                            object = new DT_Date(randomAccessFile.readLong());
+                        case DatabaseConstants.DATE_SERIAL_TYPE_CODE:
+                            object = new DataType_Date(randomAccessFile.readLong());
                             break;
 
-                        case Constants.DATE_TIME_SERIAL_TYPE_CODE:
-                            object = new DT_DateTime(randomAccessFile.readLong());
+                        case DatabaseConstants.DATE_TIME_SERIAL_TYPE_CODE:
+                            object = new DataType_DateTime(randomAccessFile.readLong());
                             break;
 
-                        case Constants.TEXT_SERIAL_TYPE_CODE:
-                            object = new DT_Text("");
+                        case DatabaseConstants.TEXT_SERIAL_TYPE_CODE:
+                            object = new DataType_Text("");
                             break;
 
                         default:
-                            if (serialTypeCodes[i] > Constants.TEXT_SERIAL_TYPE_CODE) {
-                                byte length = (byte) (serialTypeCodes[i] - Constants.TEXT_SERIAL_TYPE_CODE);
+                            if (serialTypeCodes[i] > DatabaseConstants.TEXT_SERIAL_TYPE_CODE) {
+                                byte length = (byte) (serialTypeCodes[i] - DatabaseConstants.TEXT_SERIAL_TYPE_CODE);
                                 char[] text = new char[length];
                                 for (byte k = 0; k < length; k++) {
                                     text[k] = (char) randomAccessFile.readByte();
                                 }
-                                object = new DT_Text(new String(text));
+                                object = new DataType_Text(new String(text));
                             } else
                                 object = null;
                             break;

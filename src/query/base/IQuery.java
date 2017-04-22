@@ -1,9 +1,9 @@
 package query.base;
 
-import model.Result;
+import query.model.result.Result;
 
 /**
- * Created by Mahesh on 15/4/17.
+ * Created by parag on 15/4/17.
  */
 
 public interface IQuery {

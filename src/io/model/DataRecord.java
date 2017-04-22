@@ -1,6 +1,6 @@
 package io.model;
 
-import common.Constants;
+import common.DatabaseConstants;
 import common.Utils;
 import datatypes.*;
 
@@ -8,7 +8,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Created by Mahesh on 9/4/17.
+ * Created by parag on 9/4/17.
  */
 
 public class DataRecord {
@@ -49,32 +49,32 @@ public class DataRecord {
     public void populateSize() {
         this.size = (short) (this.columnValueList.size() + 1);
         for(Object object: columnValueList) {
-            if(object.getClass().equals(DT_TinyInt.class)) {
-                this.size += ((DT_TinyInt) object).getSIZE();
+            if(object.getClass().equals(DataType_TinyInt.class)) {
+                this.size += ((DataType_TinyInt) object).getSIZE();
             }
-            else if(object.getClass().equals(DT_SmallInt.class)) {
-                this.size += ((DT_SmallInt) object).getSIZE();
+            else if(object.getClass().equals(DataType_SmallInt.class)) {
+                this.size += ((DataType_SmallInt) object).getSIZE();
             }
-            else if(object.getClass().equals(DT_Int.class)) {
-                this.size += ((DT_Int) object).getSIZE();
+            else if(object.getClass().equals(DataType_Int.class)) {
+                this.size += ((DataType_Int) object).getSIZE();
             }
-            else if(object.getClass().equals(DT_BigInt.class)) {
-                this.size += ((DT_BigInt) object).getSIZE();
+            else if(object.getClass().equals(DataType_BigInt.class)) {
+                this.size += ((DataType_BigInt) object).getSIZE();
             }
-            else if(object.getClass().equals(DT_Real.class)) {
-                this.size += ((DT_Real) object).getSIZE();
+            else if(object.getClass().equals(DataType_Real.class)) {
+                this.size += ((DataType_Real) object).getSIZE();
             }
-            else if(object.getClass().equals(DT_Double.class)) {
-                this.size += ((DT_Double) object).getSIZE();
+            else if(object.getClass().equals(DataType_Double.class)) {
+                this.size += ((DataType_Double) object).getSIZE();
             }
-            else if(object.getClass().equals(DT_DateTime.class)) {
-                size += ((DT_DateTime) object).getSIZE();
+            else if(object.getClass().equals(DataType_DateTime.class)) {
+                size += ((DataType_DateTime) object).getSIZE();
             }
-            else if(object.getClass().equals(DT_Date.class)) {
-                this.size += ((DT_Date) object).getSIZE();
+            else if(object.getClass().equals(DataType_Date.class)) {
+                this.size += ((DataType_Date) object).getSIZE();
             }
-            else if(object.getClass().equals(DT_Text.class)) {
-                this.size += ((DT_Text) object).getSize();
+            else if(object.getClass().equals(DataType_Text.class)) {
+                this.size += ((DataType_Text) object).getSize();
             }
         }
     }
@@ -108,40 +108,40 @@ public class DataRecord {
         byte index = 0;
         for(Object object: columnValueList) {
             switch (Utils.resolveClass(object)) {
-                case Constants.TINYINT:
-                    serialTypeCodes[index++] = ((DT_TinyInt) object).getSerialCode();
+                case DatabaseConstants.TINYINT:
+                    serialTypeCodes[index++] = ((DataType_TinyInt) object).getSerialCode();
                     break;
 
-                case Constants.SMALLINT:
-                    serialTypeCodes[index++] = ((DT_SmallInt) object).getSerialCode();
+                case DatabaseConstants.SMALLINT:
+                    serialTypeCodes[index++] = ((DataType_SmallInt) object).getSerialCode();
                     break;
 
-                case Constants.INT:
-                    serialTypeCodes[index++] = ((DT_Int) object).getSerialCode();
+                case DatabaseConstants.INT:
+                    serialTypeCodes[index++] = ((DataType_Int) object).getSerialCode();
                     break;
 
-                case Constants.BIGINT:
-                    serialTypeCodes[index++] = ((DT_BigInt) object).getSerialCode();
+                case DatabaseConstants.BIGINT:
+                    serialTypeCodes[index++] = ((DataType_BigInt) object).getSerialCode();
                     break;
 
-                case Constants.REAL:
-                    serialTypeCodes[index++] = ((DT_Real) object).getSerialCode();
+                case DatabaseConstants.REAL:
+                    serialTypeCodes[index++] = ((DataType_Real) object).getSerialCode();
                     break;
 
-                case Constants.DOUBLE:
-                    serialTypeCodes[index++] = ((DT_Double) object).getSerialCode();
+                case DatabaseConstants.DOUBLE:
+                    serialTypeCodes[index++] = ((DataType_Double) object).getSerialCode();
                     break;
 
-                case Constants.DATETIME:
-                    serialTypeCodes[index++] = ((DT_DateTime) object).getSerialCode();
+                case DatabaseConstants.DATETIME:
+                    serialTypeCodes[index++] = ((DataType_DateTime) object).getSerialCode();
                     break;
 
-                case Constants.DATE:
-                    serialTypeCodes[index++] = ((DT_Date) object).getSerialCode();
+                case DatabaseConstants.DATE:
+                    serialTypeCodes[index++] = ((DataType_Date) object).getSerialCode();
                     break;
 
-                case Constants.TEXT:
-                    serialTypeCodes[index++] = ((DT_Text) object).getSerialCode();
+                case DatabaseConstants.TEXT:
+                    serialTypeCodes[index++] = ((DataType_Text) object).getSerialCode();
                     break;
             }
         }

@@ -1,7 +1,7 @@
 package io.model;
 
 /**
- * Created by Mahesh on 9/4/17.
+ * Created by parag on 9/4/17.
  */
 
 public class PointerRecord {

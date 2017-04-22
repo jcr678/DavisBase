@@ -1,7 +1,7 @@
 package io.model;
 
 /**
- * Created by Mahesh on 17/4/17.
+ * Created by parag on 17/4/17.
  */
 
 public class InternalColumn {
